@@ -10,7 +10,7 @@ Build a public-slim Android branch that removes frozen features from the reposit
 
 - Main full workspace: `/Users/a123/StudioProjects/my-cloud-music-android-java/code/video/MyCloudMusicAndroidJava`
 - Public slim worktree: `/private/tmp/museflow-public-slim`
-- Current branch in slim worktree: `codex/github-public-slim-clean`
+- Current branch in slim worktree: `codex/github-public-slim-ff`
 
 The main full workspace was intentionally not switched, cleaned, or reverted.
 
@@ -43,6 +43,10 @@ The main full workspace was intentionally not switched, cleaned, or reverted.
 - Added tiny compatibility behavior for retained paths that can still point at deleted features:
   - banner ad clicks are ignored in the slim build.
   - comment nickname clicks route to the no-op `UserDetailActivity` shell.
+- Synced the first retained-chain Kotlin migration from the full workspace:
+  - discovery aggregation: `DiscoveryPage.kt`, `DiscoveryRepository.kt`
+  - download facade: `DownloadRepository.kt`
+  - feed publish/list state entrypoints: `FeedPublishRepository.kt`, `ImageCompressionRepository.kt`, `FeedRepository.kt`, `FeedPublishViewModel.kt`
 - Added `local.properties` only in the temporary worktree so Gradle can find `/Users/a123/Library/Android/sdk`; this should stay local and not be pushed.
 
 ## Verification
@@ -51,6 +55,7 @@ Command used:
 
 ```bash
 ./gradlew :app:assembleDevDebug
+./gradlew :app:testDevDebugUnitTest
 ```
 
 Result: passed.
@@ -66,3 +71,4 @@ app/build/outputs/apk/dev/debug/app-dev-debug.apk
 - Do not push frozen feature code.
 - If continuing later, work in `/private/tmp/museflow-public-slim` unless a new strategy is chosen.
 - The full local project remains available in the main workspace and should not be damaged by public-slim cleanup.
+- Do not push directly from the full workspace to GitHub `master`; sync public-safe changes into this worktree first, then push `origin HEAD:master`.

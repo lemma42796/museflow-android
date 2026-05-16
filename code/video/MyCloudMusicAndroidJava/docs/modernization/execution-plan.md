@@ -14,13 +14,15 @@
 - `:app:assembleDevDebug` 构建通过。
 - 音乐播放链路已进入阶段 2，完成第一步 Media3 播放核心和旧 Manager 兼容桥接。
 - 聊天、动态发布、下载、发现/信息流链路已完成第一轮 Repository/ViewModel/兼容桥接闭环，旧入口继续保留。
+- 用户决定暂缓设备端人工冒烟，继续推进代码层迁移。
+- 发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin，Java 调用方兼容接口保持不变。
 
 当前尚未完成：
 
 - 音乐播放链路的在线/本地播放、通知控制、歌词进度人工冒烟尚未执行。
 - App 安装启动和五条链路完整人工冒烟尚未执行。
 
-因此下一步应进入阶段 7，在模拟器或真机上按五条链路统一做人工冒烟。
+因此下一步编码建议是继续把保留链路的 Java Activity/Fragment/Adapter 按小切片迁到 Kotlin；设备端人工冒烟仍是未完成验收项。
 
 ## 最新执行记录
 
@@ -38,6 +40,8 @@
 验证结果：
 
 - 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
 - 结果：通过。
 - 产物：`app/build/outputs/apk/dev/debug/app-dev-debug.apk`
 
@@ -179,6 +183,40 @@
 - 按当前策略尚未启动模拟器或真机，五条链路仍需人工冒烟。
 - 聊天、发现、动态、下载仍保留旧 XML/RecyclerView UI；本轮完成的是 Repository/ViewModel/状态入口和旧入口兼容桥接，未继续强行替换为 Compose。
 
+### 2026-05-16 保留链路 Kotlin 迁移第一批
+
+用户决定暂缓阶段 7 设备端冒烟，继续做编码迁移。
+
+已处理：
+
+- 将发现页聚合入口从 Java 迁到 Kotlin：
+  - `DiscoveryPage.kt`
+  - `DiscoveryRepository.kt`
+- 将下载 SDK facade 从 Java 迁到 Kotlin：
+  - `DownloadRepository.kt`
+- 将动态发布/动态列表状态入口从 Java 迁到 Kotlin：
+  - `FeedPublishRepository.kt`
+  - `ImageCompressionRepository.kt`
+  - `FeedRepository.kt`
+  - `FeedPublishViewModel.kt`
+- 保留 Java 旧调用方兼容：
+  - `Repository.getInstance()` 仍可从 Java 调用。
+  - `FeedPublishViewModel.getMediaItems()`、`getSelectedImages()` 仍可从 Java 调用。
+  - `DiscoveryPage.getSections()` 仍可从 Java 调用。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+
+下一步编码建议：
+
+- 继续从保留链路中挑小切片迁 Kotlin，优先级建议为：
+  - `DownloadingFragment`、`DownloadedFragment` 和下载 adapter。
+  - `FeedFragment`、`PublishFeedActivity` 和动态 adapter。
+  - `DiscoveryFragment`、`DiscoveryAdapter`。
+  - 最后再碰更大的播放器 Activity/Fragment。
+
 ### 2026-05-16 交接上下文
 
 当前代码状态：
@@ -188,6 +226,7 @@
   - 歌词小修：清理歌词绘制日志/测试画笔、复用 `FontMetrics`、回收 `TypedArray`、销毁歌词列表时取消拖拽倒计时。
   - 阶段 2 音乐播放链路：Media3 播放核心、Repository 状态入口、旧 Manager 兼容桥接、Media3 session 到旧队列控制的桥接。
   - 阶段 3-6：聊天、动态发布、下载、发现/信息流的 Repository/ViewModel/兼容桥接闭环。
+  - Kotlin 迁移第一批：发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin。
 - 关键新文件：
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackController.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackRepository.kt`
@@ -197,21 +236,25 @@
   - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/ChatClient.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/ConversationRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/MessageRepository.kt`
-  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/repository/DiscoveryRepository.java`
-  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/repository/DownloadRepository.java`
-  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedPublishRepository.java`
-  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedRepository.java`
-  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/ui/FeedPublishViewModel.java`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/model/DiscoveryPage.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/repository/DiscoveryRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/repository/DownloadRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedPublishRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/ImageCompressionRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/ui/FeedPublishViewModel.kt`
 
 验证状态：
 
-- `./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
+- `./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 曾通过。
+- Kotlin 迁移第一批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
 - 尚未连接模拟器或真机安装运行。
 
 后续建议：
 
 - 下一次继续时先读本文档，再看 `git status`。
-- 先启动模拟器或连接设备，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 如果继续编码，先从下载/动态/发现的 Fragment 或 Adapter 小切片迁 Kotlin。
+- 如果回到验收，先启动模拟器或连接设备，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
 - 冒烟顺序建议：
   - App 启动。
   - 音乐播放：在线/本地播放、暂停/继续、seek、上一首/下一首、通知按钮、Widget、歌词和小播放器进度。
@@ -230,15 +273,17 @@
 
 GitHub 发布策略：
 
-- 不能直接把本地 `master` 历史推到 GitHub，因为历史里包含旧 `Config.java` 等敏感配置，GitHub push protection 会拒绝。
-- GitHub `origin/master` 使用 `codex/github-origin-master` 这条脱敏快照分支推送。
-- 脱敏快照保留 `Config.java` 作为空值占位，保证代码引用仍可编译；不要只靠 `.gitignore` 忽略 `Config.java`，因为已跟踪文件和历史提交不会因此消失。
-- 脱敏快照清空了 `Config.java` 中的阿里云、IM、百度语音、小米 key，并清空 `app/build.gradle` 中的 `appSecret` 和小米 appkey。
-- `keystore.properties` 和 `config/*.jks` 不进入 GitHub 快照，并由根 `.gitignore` 忽略。
+- GitHub `origin/master` 现在是 public slim 版本，冻结功能主体已从当前文件树移除，但历史不重写。
+- 不能直接从主工程 `master` 推 GitHub；主工程仍保留完整代码和冻结模块，直接推会把冻结代码重新带回 GitHub。
+- GitHub 发布必须走 public slim worktree：`/private/tmp/museflow-public-slim`。
+- public slim 当前工作分支：`codex/github-public-slim-ff`，跟踪 `origin/master`。
+- 同步发布时只把 public-safe 的保留链路改动带到 public slim worktree，在那里构建、提交、推 `origin HEAD:master`。
+- `local.properties` 只允许留在临时 worktree 本地，不能进入提交。
 
 后续推送提醒：
 
-- 若继续在本地 `master` 开发，需要同步发布到 GitHub 时，应先把变更带到 `codex/github-origin-master` 的脱敏快照，再推 `origin codex/github-origin-master:master`。
+- 若继续在本地 `master` 开发，需要同步发布到 GitHub 时，应先把变更带到 `/private/tmp/museflow-public-slim`，确认没有冻结功能回流，再推 `origin HEAD:master`。
+- GitHub push 若提示私有邮箱保护，使用 GitHub noreply 邮箱 amend 未推送提交后再推。
 - 不要执行 `git push upstream master`。
 - 下次接手时先看本文档、`git status -sb`、`git remote -v`、`git log --oneline --decorate -5`。
 
