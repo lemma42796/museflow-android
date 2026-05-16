@@ -7,23 +7,20 @@ import androidx.annotation.NonNull;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.listener.OnItemClickListener;
-import com.ixuea.android.downloader.domain.DownloadInfo;
-import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.component.sheet.adapter.SongAdapter;
+import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository;
 import com.ixuea.courses.mymusic.component.song.model.Song;
 import com.ixuea.courses.mymusic.databinding.FragmentDownloadedBinding;
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment;
 import com.ixuea.superui.util.SuperRecyclerViewUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 下载完成界面
  */
 public class DownloadedFragment extends BaseViewModelFragment<FragmentDownloadedBinding> {
     private SongAdapter adapter;
+    private DownloadRepository repository;
 
     public static DownloadedFragment newInstance() {
 
@@ -43,6 +40,8 @@ public class DownloadedFragment extends BaseViewModelFragment<FragmentDownloaded
     @Override
     protected void initDatum() {
         super.initDatum();
+        repository = DownloadRepository.getInstance();
+
         //创建适配器
         adapter = new SongAdapter(R.layout.item_song, 1, getChildFragmentManager());
 
@@ -74,20 +73,6 @@ public class DownloadedFragment extends BaseViewModelFragment<FragmentDownloaded
     @Override
     protected void loadData(boolean isPlaceholder) {
         super.loadData(isPlaceholder);
-        //查询所有下载完成的任务
-        List<DownloadInfo> downloads = AppContext.getInstance().getDownloadManager().findAllDownloaded();
-
-        //转为音乐对象
-        //目的是播放的时候
-        //直接就可以播放了
-        ArrayList<Song> datum = new ArrayList<Song>();
-        Song data;
-        for (DownloadInfo downloadInfo : downloads) {
-            //查询音乐对象
-            data = getOrm().querySong(downloadInfo.getId());
-            datum.add(data);
-        }
-
-        adapter.setNewInstance(datum);
+        adapter.setNewInstance(repository.findDownloadedSongs(getOrm()));
     }
 }

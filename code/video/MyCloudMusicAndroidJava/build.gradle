@@ -7,9 +7,6 @@ buildscript {
         //依赖注入框架
         //https://developer.android.google.cn/training/dependency-injection/hilt-android
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
-
-        //sharesdk
-        classpath "com.mob.sdk:MobSDK:2018.0319.1724"
     }
 }
 

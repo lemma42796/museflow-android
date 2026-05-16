@@ -22,10 +22,10 @@ import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.ixuea.android.downloader.domain.DownloadInfo;
-import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity;
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener;
+import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository;
 import com.ixuea.courses.mymusic.component.lyric.activity.SelectLyricActivity;
 import com.ixuea.courses.mymusic.component.lyric.view.LyricListView;
 import com.ixuea.courses.mymusic.component.player.fragment.MusicPlayListDialogFragment;
@@ -59,6 +59,7 @@ import timber.log.Timber;
  */
 public class MusicPlayerActivity extends BaseTitleActivity<ActivityMusicPlayerBinding> implements MusicPlayerListener, SeekBar.OnSeekBarChangeListener, LyricListView.LyricListListener {
     private MusicPlayerManager musicPlayerManager;
+    private DownloadRepository downloadRepository;
     private boolean isSeekTracking;
 
     /**
@@ -183,6 +184,7 @@ public class MusicPlayerActivity extends BaseTitleActivity<ActivityMusicPlayerBi
     protected void initDatum() {
         super.initDatum();
         musicPlayerManager = MusicPlayerService.getMusicPlayerManager(getApplicationContext());
+        downloadRepository = DownloadRepository.getInstance();
 
         binding.record.initAdapter(getHostActivity());
 
@@ -212,8 +214,8 @@ public class MusicPlayerActivity extends BaseTitleActivity<ActivityMusicPlayerBi
                         //下载失败
                         SuperToast.success(R.string.already_in_download_list);
 
-                        if (downloadInfo.getStatus() != DownloadInfo.STATUS_DOWNLOADING || downloadInfo.getStatus() != DownloadInfo.STATUS_WAIT) {
-                            AppContext.getInstance().getDownloadManager().resume(downloadInfo);
+                        if (downloadInfo.getStatus() != DownloadInfo.STATUS_DOWNLOADING && downloadInfo.getStatus() != DownloadInfo.STATUS_WAIT) {
+                            downloadRepository.resume(downloadInfo);
                         }
                     }
                 } else {
@@ -300,7 +302,7 @@ public class MusicPlayerActivity extends BaseTitleActivity<ActivityMusicPlayerBi
         setDownloadCallback();
 
         //开始下载
-        AppContext.getInstance().getDownloadManager().download(downloadInfo);
+        downloadRepository.download(downloadInfo);
 
         //保存业务数据
         getOrm().saveSong(data);
@@ -556,7 +558,7 @@ public class MusicPlayerActivity extends BaseTitleActivity<ActivityMusicPlayerBi
         //下载状态
 
         //根据id查询是否有下载任务
-        downloadInfo = AppContext.getInstance().getDownloadManager().getDownloadById(data.getId());
+        downloadInfo = downloadRepository.getDownloadById(data.getId());
         if (null != downloadInfo) {
             //有下载任务
 

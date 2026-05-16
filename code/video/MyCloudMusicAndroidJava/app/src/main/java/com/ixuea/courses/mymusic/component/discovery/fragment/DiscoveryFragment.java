@@ -10,49 +10,29 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.FutureTarget;
-import com.ixuea.courses.mymusic.MainActivity;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseLogicActivity;
-import com.ixuea.courses.mymusic.component.ad.model.Ad;
 import com.ixuea.courses.mymusic.component.api.HttpObserver;
 import com.ixuea.courses.mymusic.component.discovery.activity.CustomDiscoveryActivity;
 import com.ixuea.courses.mymusic.component.discovery.adapter.DiscoveryAdapter;
+import com.ixuea.courses.mymusic.component.discovery.model.DiscoveryPage;
 import com.ixuea.courses.mymusic.component.discovery.model.event.SortChangedEvent;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.BannerData;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.BaseSort;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.ButtonData;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.FooterData;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.SheetData;
-import com.ixuea.courses.mymusic.component.discovery.model.ui.SongData;
-import com.ixuea.courses.mymusic.component.search.model.SearchHistory;
+import com.ixuea.courses.mymusic.component.discovery.repository.DiscoveryRepository;
 import com.ixuea.courses.mymusic.component.sheet.activity.SheetDetailActivity;
 import com.ixuea.courses.mymusic.component.sheet.model.Sheet;
 import com.ixuea.courses.mymusic.component.sheet.model.event.SheetChangedEvent;
 import com.ixuea.courses.mymusic.component.song.model.Song;
 import com.ixuea.courses.mymusic.databinding.FragmentDiscoveryBinding;
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment;
-import com.ixuea.courses.mymusic.model.response.ListResponse;
 import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity;
-import com.ixuea.courses.mymusic.repository.DefaultRepository;
 import com.ixuea.courses.mymusic.service.MusicPlayerService;
-import com.ixuea.courses.mymusic.util.Constant;
-import com.ixuea.courses.mymusic.util.FileUtil;
-import com.ixuea.courses.mymusic.util.LiteORMUtil;
-import com.ixuea.courses.mymusic.util.ResourceUtil;
 import com.ixuea.superui.util.SuperDelayUtil;
 import com.youth.banner.listener.OnBannerListener;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import autodispose2.androidx.lifecycle.AndroidLifecycleScopeProvider;
@@ -67,9 +47,9 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
     /**
      * 列表数据集合
      */
-    private List<BaseMultiItemEntity> datum;
     private LinearLayoutManager layoutManager;
     private DiscoveryAdapter adapter;
+    private DiscoveryRepository discoveryRepository;
     private long startTime;
 
     @Override
@@ -108,6 +88,8 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
     @Override
     protected void initDatum() {
         super.initDatum();
+        discoveryRepository = DiscoveryRepository.getInstance();
+
         //创建适配器
         adapter = new DiscoveryAdapter(this, this);
         adapter.setDiscoveryAdapterListener(this);
@@ -116,30 +98,6 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
         binding.list.setAdapter(adapter);
 
         loadData();
-
-        //测试数据库
-        LiteORMUtil orm = LiteORMUtil.getInstance(getHostActivity());
-
-        //创建对象
-        SearchHistory searchHistory = new SearchHistory();
-
-        //赋值
-        searchHistory.setContent("我们是爱学啊");
-        searchHistory.setCreatedAt(System.currentTimeMillis());
-
-        orm.createOrUpdate(searchHistory);
-
-        searchHistory = new SearchHistory();
-
-        //赋值
-        searchHistory.setContent("人生苦短");
-        searchHistory.setCreatedAt(System.currentTimeMillis());
-
-        orm.createOrUpdate(searchHistory);
-
-        //查询所有
-        List<SearchHistory> results = orm.querySearchHistory();
-        Log.d(TAG, "querySearchHistory: " + results.size());
     }
 
     @Override
@@ -169,77 +127,17 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
 
         binding.refresh.setRefreshing(true);
 
-        datum = new ArrayList<>();
-
-        //广告API
-        Observable<ListResponse<Ad>> ads = DefaultRepository.getInstance().bannerAd();
-
-        ads
+        discoveryRepository.homeSections(sp)
                 .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-                .subscribe(new HttpObserver<ListResponse<Ad>>(this) {
+                .subscribe(new HttpObserver<DiscoveryPage>(this) {
                     @Override
-                    public boolean onFailed(ListResponse<Ad> data, Throwable e) {
+                    public boolean onFailed(DiscoveryPage data, Throwable e) {
                         endRefresh();
                         return super.onFailed(data, e);
                     }
 
                     @Override
-                    public void onSucceeded(ListResponse<Ad> data) {
-                        //添加轮播图
-                        datum.add(new BannerData(
-                                data.getData().getData(),
-                                sp.getSort(Constant.STYLE_BANNER)
-                        ));
-
-                        //添加快捷按钮
-                        datum.add(new ButtonData(sp.getSort(Constant.STYLE_BUTTON)));
-
-                        //请求歌单数据
-                        loadSheetData();
-                    }
-                });
-    }
-
-    private void loadSheetData() {
-        //歌单API
-        Observable<ListResponse<Sheet>> api = DefaultRepository.getInstance().sheets(Constant.SIZE12);
-
-        api.to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-                .subscribe(new HttpObserver<ListResponse<Sheet>>(this) {
-                    @Override
-                    public boolean onFailed(ListResponse<Sheet> data, Throwable e) {
-                        endRefresh();
-                        return super.onFailed(data, e);
-                    }
-
-                    @Override
-                    public void onSucceeded(ListResponse<Sheet> data) {
-                        //添加歌单数据
-                        datum.add(new SheetData(data.getData().getData(), sp.getSort(Constant.STYLE_SHEET)));
-
-                        loadSongData();
-                    }
-                });
-    }
-
-    private void loadSongData() {
-        Observable<ListResponse<Song>> api = DefaultRepository.getInstance().songs();
-
-        api.to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-                .subscribe(new HttpObserver<ListResponse<Song>>(this) {
-                    @Override
-                    public boolean onFailed(ListResponse<Song> data, Throwable e) {
-                        endRefresh();
-                        return super.onFailed(data, e);
-                    }
-
-                    @Override
-                    public void onSucceeded(ListResponse<Song> data) {
-                        datum.add(new SongData(data.getData().getData(), sp.getSort(Constant.STYLE_SONG)));
-
-                        //添加尾部数据
-                        datum.add(new FooterData());
-
+                    public void onSucceeded(DiscoveryPage data) {
                         //结束时间
                         long endTime = System.currentTimeMillis();
 
@@ -248,99 +146,19 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
 
                         if (consumeTime < 1000) {
                             //小于1秒钟，要延迟
-                            SuperDelayUtil.delay(1000 - consumeTime, () -> show());
+                            SuperDelayUtil.delay(1000 - consumeTime, () -> show(data.getSections()));
                         } else {
-                            show();
+                            show(data.getSections());
                         }
 
-                        loadSplashAd();
                     }
                 });
 
     }
 
-    private void loadSplashAd() {
-        DefaultRepository.getInstance().splashAd()
-                .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-                .subscribe(new HttpObserver<ListResponse<Ad>>() {
-                    @Override
-                    public void onSucceeded(ListResponse<Ad> data) {
-                        List<Ad> results = data.getData().getData();
-                        if (CollectionUtils.isNotEmpty(results)) {
-                            downloadAd(results.get(0));
-                        } else {
-                            //删除本地广告数据
-                            deleteSplashAd();
-                        }
-                    }
-                });
-    }
-
-    private void downloadAd(Ad data) {
-//        if (SuperNetworkUtil.isWifiConnected(getHostActivity())) {
-        //wifi才下载
-        sp.setSplashAd(data);
-
-        //判断文件是否存在，如果存在就不下载
-        File targetFile = FileUtil.adFile(getHostActivity(), data.getIcon());
-        if (targetFile.exists()) {
-            return;
-        }
-
-        new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-
-                        try {
-                            //FutureTarget会阻塞
-                            //所以需要在子线程调用
-                            FutureTarget<File> target = Glide.with(getHostActivity().getApplicationContext())
-                                    .asFile()
-                                    .load(ResourceUtil.resourceUri(data.getIcon()))
-                                    .submit();
-
-                            //获取下载的文件
-                            File file = target.get();
-
-                            //将文件拷贝到我们需要的位置
-                            FileUtils.moveFile(file, targetFile);
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        ).start();
-//        }
-    }
-
-    /**
-     * 删除启动界面广告
-     */
-    private void deleteSplashAd() {
-        //获取广告信息
-        Ad ad = sp.getSplashAd();
-        if (ad != null) {
-            //删除配置文件
-            sp.setSplashAd(null);
-
-            //删除文件
-            FileUtils.deleteQuietly(FileUtil.adFile(getHostActivity(), ad.getIcon()));
-        }
-    }
-
-    private void show() {
+    private void show(List<BaseMultiItemEntity> data) {
         endRefresh();
-
-        //排序
-        Collections.sort(datum, (o1, o2) -> {
-            BaseSort d1 = (BaseSort) o1;
-            BaseSort d2 = (BaseSort) o2;
-            return d1.compareTo(d2);
-        });
-
-        adapter.setNewInstance(datum);
+        adapter.setNewInstance(data);
     }
 
     public static DiscoveryFragment newInstance() {
@@ -360,7 +178,7 @@ public class DiscoveryFragment extends BaseViewModelFragment<FragmentDiscoveryBi
      */
     @Override
     public void OnBannerClick(Object data, int position) {
-        ((MainActivity) getHostActivity()).processAdClick((Ad) data);
+        // Ads are not part of the public slim feature set.
     }
 
     @Override

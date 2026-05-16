@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImageCompressor {
     // 使用共享 Handler 实例
@@ -29,6 +30,7 @@ public class ImageCompressor {
 
     // 使用 ExecutorService 执行异步任务
     private static final ExecutorService executorService = Executors.newFixedThreadPool(4); // 可根据需要调整线程池大小
+    private static final AtomicInteger fileCounter = new AtomicInteger();
 
     public static void compressImagesAsync(Context context, List<Uri> imageUris, CompressionCallback callback) {
         for (Uri imageUri : imageUris) {
@@ -68,6 +70,10 @@ public class ImageCompressor {
             // 计算压缩比例
             int originalWidth = options.outWidth;
             int originalHeight = options.outHeight;
+            if (originalWidth <= 0 || originalHeight <= 0) {
+                throw new IOException("Unable to decode image bounds: " + imageUri);
+            }
+
             int newWidth = originalWidth;
             int newHeight = originalHeight;
 
@@ -92,6 +98,9 @@ public class ImageCompressor {
             try (InputStream inputStream2 = contentResolver.openInputStream(imageUri)) {
                 compressedBitmap = BitmapFactory.decodeStream(inputStream2, null, options);
             }
+            if (compressedBitmap == null) {
+                throw new IOException("Unable to decode image: " + imageUri);
+            }
 
             // 创建缩放后的位图
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(compressedBitmap, newWidth, newHeight, true);
@@ -100,13 +109,16 @@ public class ImageCompressor {
             String uniqueFileName;
             String fileExtension = getFileExtension(context, imageUri);
             if ("png".equalsIgnoreCase(fileExtension)) {
-                uniqueFileName = "compressed_" + System.currentTimeMillis() + ".png";
+                uniqueFileName = "compressed_" + System.currentTimeMillis() + "_" + fileCounter.incrementAndGet() + ".png";
             } else {
-                uniqueFileName = "compressed_" + System.currentTimeMillis() + ".jpg";
+                uniqueFileName = "compressed_" + System.currentTimeMillis() + "_" + fileCounter.incrementAndGet() + ".jpg";
             }
 
             // 创建子目录
             File cacheDir = context.getExternalCacheDir();
+            if (cacheDir == null) {
+                cacheDir = context.getCacheDir();
+            }
             File subDir = new File(cacheDir, "compressed_images");
             if (!subDir.exists()) {
                 subDir.mkdirs();
@@ -121,6 +133,10 @@ public class ImageCompressor {
                     scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, out);
                 }
             }
+            if (scaledBitmap != compressedBitmap) {
+                scaledBitmap.recycle();
+            }
+            compressedBitmap.recycle();
 
             // 返回压缩文件的路径
             return compressedFile.getAbsolutePath();

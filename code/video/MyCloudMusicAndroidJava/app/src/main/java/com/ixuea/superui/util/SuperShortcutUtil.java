@@ -7,7 +7,7 @@ import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
 
-import com.ixuea.courses.mymusic.component.splash.activity.SplashActivity;
+import com.ixuea.courses.mymusic.MainActivity;
 
 /**
  * 快捷方式工具类
@@ -24,7 +24,7 @@ public class SuperShortcutUtil {
      */
     public static void addShortcut(Context context, int title, int icon, String action, int rank) {
         //播放本地音乐
-        Intent intent = new Intent(context, SplashActivity.class);
+        Intent intent = new Intent(context, MainActivity.class);
         intent.setAction(action);
         ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context, action)
                 .setShortLabel(context.getString(title))

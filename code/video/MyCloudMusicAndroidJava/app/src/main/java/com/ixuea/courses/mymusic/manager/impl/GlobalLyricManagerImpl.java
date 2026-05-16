@@ -14,7 +14,7 @@ import android.view.WindowManager;
 import com.ixuea.courses.mymusic.MainActivity;
 import com.ixuea.courses.mymusic.component.lyric.view.GlobalLyricView;
 import com.ixuea.courses.mymusic.component.song.model.Song;
-import com.ixuea.courses.mymusic.component.splash.activity.SplashActivity;
+import com.ixuea.courses.mymusic.MainActivity;
 import com.ixuea.courses.mymusic.manager.GlobalLyricManager;
 import com.ixuea.courses.mymusic.manager.MusicListManager;
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener;
@@ -179,7 +179,7 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
     public void show() {
         //检查全局悬浮窗权限
         if (!Settings.canDrawOverlays(context)) {
-            Intent intent = new Intent(context, SplashActivity.class);
+            Intent intent = new Intent(context, MainActivity.class);
             intent.setAction(Constant.ACTION_LYRIC);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);

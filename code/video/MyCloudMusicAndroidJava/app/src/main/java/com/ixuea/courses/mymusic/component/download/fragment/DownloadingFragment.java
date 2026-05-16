@@ -2,11 +2,10 @@ package com.ixuea.courses.mymusic.component.download.fragment;
 
 import android.os.Bundle;
 
-import com.ixuea.android.downloader.callback.DownloadManager;
 import com.ixuea.android.downloader.domain.DownloadInfo;
-import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.component.download.adapter.DownloadingAdapter;
+import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository;
 import com.ixuea.courses.mymusic.databinding.FragmentDownloadingBinding;
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment;
 import com.ixuea.superui.toast.SuperToast;
@@ -19,6 +18,7 @@ import java.util.List;
  */
 public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadingBinding> {
     private DownloadingAdapter adapter;
+    private DownloadRepository repository;
 
     @Override
     protected void initViews() {
@@ -30,6 +30,8 @@ public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadi
     @Override
     protected void initDatum() {
         super.initDatum();
+        repository = DownloadRepository.getInstance();
+
         //创建适配器
         adapter = new DownloadingAdapter(getHostActivity(), getOrm(), getChildFragmentManager());
 
@@ -51,11 +53,11 @@ public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadi
                 case DownloadInfo.STATUS_PAUSED:
                 case DownloadInfo.STATUS_ERROR:
                     //继续下载
-                    getDownloadManager().resume(data);
+                    repository.resume(data);
                     break;
                 default:
                     //暂停下载
-                    getDownloadManager().pause(data);
+                    repository.pause(data);
                     break;
             }
 
@@ -76,7 +78,7 @@ public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadi
         //删除所有下载任务
         for (DownloadInfo downloadInfo : adapter.getDatum()
         ) {
-            getDownloadManager().remove(downloadInfo);
+            repository.remove(downloadInfo);
         }
 
         //清除适配器数据
@@ -112,12 +114,12 @@ public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadi
 
 
     private void resumeAll() {
-        getDownloadManager().resumeAll();
+        repository.resumeAll();
         adapter.notifyDataSetChanged();
     }
 
     private void pauseAll() {
-        getDownloadManager().pauseAll();
+        repository.pauseAll();
         adapter.notifyDataSetChanged();
     }
 
@@ -127,32 +129,17 @@ public class DownloadingFragment extends BaseViewModelFragment<FragmentDownloadi
      * @return
      */
     private boolean isDownloading() {
-        //获取所有下载任务
-        List<DownloadInfo> datum = adapter.getDatum();
-
-        //遍历所有下载任务
-        for (DownloadInfo downloadInfo : datum) {
-            if (downloadInfo.getStatus() == DownloadInfo.STATUS_DOWNLOADING) {
-                //只要有一个是下载
-                return true;
-            }
-        }
-
-        return false;
+        return repository.isDownloading(adapter.getDatum());
     }
 
     @Override
     protected void loadData(boolean isPlaceholder) {
         super.loadData(isPlaceholder);
-        List<DownloadInfo> downloads = getDownloadManager().findAllDownloading();
+        List<DownloadInfo> downloads = repository.findDownloading();
         adapter.setDatum(downloads);
 
         //显示按钮状态
         showButtonStatus();
-    }
-
-    private DownloadManager getDownloadManager() {
-        return AppContext.getInstance().getDownloadManager();
     }
 
     public static DownloadingFragment newInstance() {

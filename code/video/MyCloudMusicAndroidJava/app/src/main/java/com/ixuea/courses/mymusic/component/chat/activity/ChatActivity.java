@@ -3,21 +3,19 @@ package com.ixuea.courses.mymusic.component.chat.activity;
 import android.content.Context;
 import android.net.Uri;
 
-import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity;
 import com.ixuea.courses.mymusic.component.chat.adapter.ChatAdapter;
-import com.ixuea.courses.mymusic.component.chat.model.MediaMessageExtra;
 import com.ixuea.courses.mymusic.component.chat.model.event.MessageUnreadCountChangedEvent;
+import com.ixuea.courses.mymusic.component.chat.repository.ChatClient;
+import com.ixuea.courses.mymusic.component.chat.repository.ConversationRepository;
+import com.ixuea.courses.mymusic.component.chat.repository.MessageRepository;
 import com.ixuea.courses.mymusic.component.conversation.model.event.NewMessageEvent;
 import com.ixuea.courses.mymusic.component.user.model.User;
 import com.ixuea.courses.mymusic.config.glide.GlideEngine;
 import com.ixuea.courses.mymusic.databinding.ActivityChatBinding;
 import com.ixuea.courses.mymusic.manager.UserManager;
 import com.ixuea.courses.mymusic.util.Constant;
-import com.ixuea.courses.mymusic.util.ImageUtil;
-import com.ixuea.courses.mymusic.util.JSONUtil;
-import com.ixuea.courses.mymusic.util.MessageUtil;
 import com.ixuea.superui.toast.SuperToast;
 import com.luck.picture.lib.basic.PictureSelector;
 import com.luck.picture.lib.config.PictureMimeType;
@@ -35,16 +33,11 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-import io.rong.imlib.IRongCallback;
 import io.rong.imlib.RongIMClient;
 import io.rong.imlib.model.Conversation;
 import io.rong.imlib.model.Message;
-import io.rong.message.ImageMessage;
-import io.rong.message.TextMessage;
 import timber.log.Timber;
 import top.zibin.luban.Luban;
 import top.zibin.luban.OnNewCompressListener;
@@ -158,15 +151,15 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
         super.onResume();
         //由于我们这里没有区分消息具体的状态
         //比如：已读还是未读，所以只要进入了会话界面，该会话下面的所有消息都表示已读
-        AppContext.getInstance().getChatClient().clearMessagesUnreadStatus(Conversation.ConversationType.PRIVATE, targetId, new RongIMClient.ResultCallback<Boolean>() {
+        ConversationRepository.INSTANCE.clearUnread(targetId, new ChatClient.Callback<Boolean>() {
             @Override
-            public void onSuccess(Boolean aBoolean) {
+            public void onSuccess(Boolean data) {
                 //发送消息未读数改变了通知
                 EventBus.getDefault().post(new MessageUnreadCountChangedEvent());
             }
 
             @Override
-            public void onError(RongIMClient.ErrorCode e) {
+            public void onError(RongIMClient.ErrorCode errorCode) {
 
             }
         });
@@ -178,17 +171,7 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
      * @param path
      */
     private void sendImageMessage(String path) {
-        Uri uri = Uri.fromFile(new File(path));
-        ImageMessage message = ImageMessage.obtain(uri, false);
-
-        //计算尺寸
-        int[] size = ImageUtil.getImageSize(path);
-
-        //在扩展信息里面，保存图片的宽高，方便展示
-        MediaMessageExtra mediaMessageExtra = new MediaMessageExtra(size[0], size[1]);
-        message.setExtra(JSONUtil.toJSON(mediaMessageExtra));
-
-        RongIMClient.getInstance().sendImageMessage(Conversation.ConversationType.PRIVATE, targetId, message, null, MessageUtil.createPushData(MessageUtil.getContent(message), sp.getUserId()), new RongIMClient.SendImageMessageCallback() {
+        MessageRepository.INSTANCE.sendImage(targetId, path, sp.getUserId(), new ChatClient.ImageSendCallback() {
             @Override
             public void onAttached(Message message) {
                 Timber.d("sendImageMessage onAttached %s", message);
@@ -206,8 +189,8 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
             }
 
             @Override
-            public void onProgress(Message message, int i) {
-                Timber.d("sendImageMessage progress %d %s", i, message);
+            public void onProgress(Message message, int progress) {
+                Timber.d("sendImageMessage progress %d %s", progress, message);
             }
         });
     }
@@ -227,29 +210,16 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
     }
 
     private void loadMore() {
-        AppContext.getInstance().getChatClient().getHistoryMessages(Conversation.ConversationType.PRIVATE,
+        MessageRepository.INSTANCE.getHistoryMessages(
                 targetId,
                 oldMessageId,
                 Constant.DEFAULT_MESSAGE_COUNT,
-                new RongIMClient.ResultCallback<List<Message>>() {
+                new ChatClient.Callback<List<Message>>() {
                     @Override
                     public void onSuccess(List<Message> messages) {
                         binding.refresh.setRefreshing(false);
 
                         if (messages != null && messages.size() > 0) {
-                            //默认的排序是时间由近到远，因为聊天界面是倒着显示，所以排序也要倒过来
-                            Collections.sort(messages, new Comparator<Message>() {
-                                @Override
-                                public int compare(Message o1, Message o2) {
-                                    if (o1.getSentTime() > o2.getSentTime()) {
-                                        return 1;
-                                    } else if (o1.getSentTime() < o2.getSentTime()) {
-                                        return -1;
-                                    }
-                                    return 0;
-                                }
-                            });
-
                             adapter.addData(0, messages);
 
                             if (oldMessageId == -1) {
@@ -263,8 +233,8 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
                     }
 
                     @Override
-                    public void onError(RongIMClient.ErrorCode e) {
-
+                    public void onError(RongIMClient.ErrorCode errorCode) {
+                        binding.refresh.setRefreshing(false);
                     }
                 });
     }
@@ -276,8 +246,7 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
             return;
         }
 
-        TextMessage textMessage = TextMessage.obtain(content);
-        RongIMClient.getInstance().sendMessage(Conversation.ConversationType.PRIVATE, targetId, textMessage, null, MessageUtil.createPushData(MessageUtil.getContent(textMessage), sp.getUserId()), new IRongCallback.ISendMessageCallback() {
+        MessageRepository.INSTANCE.sendText(targetId, content, sp.getUserId(), new ChatClient.SendCallback() {
             @Override
             public void onAttached(Message message) {
                 // 消息成功存到本地数据库的回调
@@ -364,11 +333,7 @@ public class ChatActivity extends BaseTitleActivity<ActivityChatBinding> {
         }
 
         //既然在当前界面，那收到的消息也是已读的
-        // 更新内存中消息的已读状态
-        message.getReceivedStatus().setRead();
-
-        // 更新数据库中消息的状态
-        RongIMClient.getInstance().setMessageReceivedStatus(message.getMessageId(), message.getReceivedStatus(), null);
+        MessageRepository.INSTANCE.markRead(message);
 
         addMessage(message);
     }

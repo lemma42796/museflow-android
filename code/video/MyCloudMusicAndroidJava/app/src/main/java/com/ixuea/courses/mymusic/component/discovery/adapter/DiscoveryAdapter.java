@@ -18,6 +18,7 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.component.ad.model.Ad;
 import com.ixuea.courses.mymusic.component.discovery.model.ui.BannerData;
+import com.ixuea.courses.mymusic.component.discovery.model.ui.BaseSort;
 import com.ixuea.courses.mymusic.component.discovery.model.ui.ButtonData;
 import com.ixuea.courses.mymusic.component.discovery.model.ui.IconTitleButtonData;
 import com.ixuea.courses.mymusic.component.discovery.model.ui.SheetData;
@@ -57,6 +58,7 @@ public class DiscoveryAdapter extends BaseMultiItemQuickAdapter<BaseMultiItemEnt
         super(new ArrayList<>());
         this.fragment = fragment;
         this.onBannerListener = onBannerListener;
+        setHasStableIds(true);
 
         //添加多类型布局
 
@@ -74,6 +76,15 @@ public class DiscoveryAdapter extends BaseMultiItemQuickAdapter<BaseMultiItemEnt
 
         //添加尾部类型
         addItemType(Constant.STYLE_FOOTER, R.layout.item_discovery_footer);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        BaseMultiItemEntity item = getItem(position);
+        if (item instanceof BaseSort) {
+            return 31L * item.getItemType() + ((BaseSort) item).getSort();
+        }
+        return item.getItemType();
     }
 
     /**

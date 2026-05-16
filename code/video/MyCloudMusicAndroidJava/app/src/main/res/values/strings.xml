@@ -8,7 +8,9 @@
     <string name="activity_sheet_detail">歌单详情</string>
     <string name="activity_comment">评论</string>
     <string name="activity_user_detail">用户详情</string>
+    <string name="activity_music_player">音乐播放器</string>
     <string name="activity_simple_player">简单播放器</string>
+    <string name="sheet_detail">歌单详情</string>
     <string name="activity_share_lyric_image">歌词图片</string>
     <string name="activity_select_lyric">选择歌词</string>
     <string name="activity_topic_detail">话题详情</string>
@@ -295,7 +297,6 @@
     <string name="confirm_pay_price">确认付款</string>
     <string name="pay_remaining_time">支付剩余时间 %1$s</string>
     <string name="payment_before">请在%1$s之前完成支付</string>
-    <string name="alipay">支付宝</string>
     <string name="wechat">微信</string>
     <string name="huabei_stages">花呗分期</string>
     <string name="confirm_exit_pay">确认放弃付款吗？</string>
@@ -453,7 +454,6 @@
     <!--导航-->
     <string name="map_tencent">腾讯地图</string>
     <string name="map_baidu">百度地图</string>
-    <string name="map_amap">高德地图</string>
     <string name="map_sogou">搜狗地图</string>
     <string name="select_location_navigation">请选择导航应用</string>
     <string name="not_install_map">请先安装对应的地图软件</string>

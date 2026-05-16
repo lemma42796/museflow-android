@@ -13,14 +13,14 @@
 - 已建立 Kotlin/Compose/现代依赖基线。
 - `:app:assembleDevDebug` 构建通过。
 - 音乐播放链路已进入阶段 2，完成第一步 Media3 播放核心和旧 Manager 兼容桥接。
+- 聊天、动态发布、下载、发现/信息流链路已完成第一轮 Repository/ViewModel/兼容桥接闭环，旧入口继续保留。
 
 当前尚未完成：
 
 - 音乐播放链路的在线/本地播放、通知控制、歌词进度人工冒烟尚未执行。
-- 其余四条重点链路尚未开始迁移。
 - App 安装启动和五条链路完整人工冒烟尚未执行。
 
-因此下一步应先对音乐播放链路做设备端冒烟，再决定是否继续收敛旧通知和播放器 UI。
+因此下一步应进入阶段 7，在模拟器或真机上按五条链路统一做人工冒烟。
 
 ## 最新执行记录
 
@@ -142,20 +142,66 @@
 - 尚未安装 APK 启动 App。
 - 尚未完成在线/本地播放、seek、上一首/下一首、通知按钮、Widget、歌词进度的设备端冒烟。
 
+### 2026-05-16 阶段 3-6 兼容桥接闭环
+
+用户要求先完成所有重构，再统一跑模拟器测试，因此设备端冒烟后置到代码闭环之后。
+
+已处理：
+
+- 聊天 IM 链路：
+  - 新增 `ChatClient`，统一包装融云会话、历史消息、已读、文本发送、图片发送 callback。
+  - 新增 `ConversationRepository`、`MessageRepository`。
+  - `ConversationActivity`、`ChatActivity` 改为通过 Repository 访问聊天 SDK。
+  - `AppContext` 收到融云消息时同步写入新的 `SharedFlow` 入口，同时保留旧 EventBus/通知逻辑。
+- 动态图片压缩/上传链路：
+  - 新增 `FeedPublishRepository`、`ImageCompressionRepository`、`FeedPublishViewModel`。
+  - `PublishFeedActivity` 的选图状态迁移到 ViewModel，Multipart 上传组装迁移到 Repository。
+  - 删除旧 `UploadFeedImageAsyncTask` 和配套 `Result`。
+  - `ImageCompressor` 补齐解码失败保护、缓存目录兜底、唯一文件名和 Bitmap 回收。
+- 下载进度刷新链路：
+  - 新增 `DownloadRepository` 统一包装下载 SDK。
+  - `DownloadingFragment`、`DownloadedFragment`、`DownloadingAdapter`、播放器下载入口、歌单下载标记改为通过 Repository 访问下载任务。
+  - `MyDownloadListener` 将高频下载进度刷新节流到 300ms，并保证 UI 刷新回到主线程。
+  - `BaseRecyclerViewAdapter.setDatum` 修正为空列表时不清空旧数据的问题。
+- 首页/发现/信息流列表刷新链路：
+  - 新增 `DiscoveryRepository` 和 `DiscoveryPage`，把发现页 Banner、按钮、歌单、单曲聚合为 typed sections。
+  - `DiscoveryFragment` 移除串行嵌套请求，改为一次 Repository 聚合输出。
+  - `DiscoveryAdapter` 启用稳定 item id。
+  - 新增 `FeedRepository`，`FeedFragment` 通过 Repository 刷新动态列表。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 按当前策略尚未启动模拟器或真机，五条链路仍需人工冒烟。
+- 聊天、发现、动态、下载仍保留旧 XML/RecyclerView UI；本轮完成的是 Repository/ViewModel/状态入口和旧入口兼容桥接，未继续强行替换为 Compose。
+
 ### 2026-05-16 交接上下文
 
 当前代码状态：
 
 - 当前分支：`master`。
-- 本轮未拆提交，包含两个相邻工作：
+- 本轮未拆提交，包含三类相邻工作：
   - 歌词小修：清理歌词绘制日志/测试画笔、复用 `FontMetrics`、回收 `TypedArray`、销毁歌词列表时取消拖拽倒计时。
   - 阶段 2 音乐播放链路：Media3 播放核心、Repository 状态入口、旧 Manager 兼容桥接、Media3 session 到旧队列控制的桥接。
+  - 阶段 3-6：聊天、动态发布、下载、发现/信息流的 Repository/ViewModel/兼容桥接闭环。
 - 关键新文件：
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackController.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/LegacyMusicSessionPlayer.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackService.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackModels.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/ChatClient.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/ConversationRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/MessageRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/repository/DiscoveryRepository.java`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/repository/DownloadRepository.java`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedPublishRepository.java`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedRepository.java`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/ui/FeedPublishViewModel.java`
 
 验证状态：
 
@@ -168,15 +214,11 @@
 - 先启动模拟器或连接设备，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
 - 冒烟顺序建议：
   - App 启动。
-  - 播放在线歌曲。
-  - 暂停/继续。
-  - seek。
-  - 上一首/下一首。
-  - 本地或已下载歌曲。
-  - 通知按钮。
-  - Widget。
-  - 歌词和小播放器进度。
-- 若设备端冒烟通过，再考虑继续收敛旧 `MusicPlayerService` 通知视觉层；若失败，优先看 `PlaybackController`、`LegacyMusicSessionPlayer`、`MusicListManagerImpl` 的交界。
+  - 音乐播放：在线/本地播放、暂停/继续、seek、上一首/下一首、通知按钮、Widget、歌词和小播放器进度。
+  - 聊天：会话列表、进入聊天、历史消息、文本发送、图片发送入口。
+  - 动态发布：多图选择、压缩、上传、发布、动态列表刷新。
+  - 下载：下载中列表、已下载列表、单项暂停/继续、全部暂停/继续、删除、播放已下载歌曲。
+  - 发现/信息流：发现页加载、Banner/歌单/单曲点击、信息流滚动、图片预览。
 
 ### 2026-05-16 Git 远端和发布上下文
 
@@ -435,12 +477,13 @@ GitHub 发布策略：
 
 ## 推荐下一步
 
-继续阶段 2：音乐播放链路设备端冒烟。
+进入阶段 7：统一做模拟器或真机人工冒烟。
 
-建议先验证已接入的 Media3 桥接，不急着重写完整 UI：
+建议按以下顺序：
 
 - 安装 dev debug 包并启动 App。
-- 冒烟在线歌曲播放、暂停/继续、seek、上一首/下一首。
-- 冒烟本地或已下载歌曲播放。
-- 验证旧通知按钮、Widget、歌词进度是否仍可用。
-- 冒烟通过后再继续收敛后台通知和播放器 UI。
+- 冒烟音乐播放：在线/本地播放、暂停/继续、seek、上一首/下一首、通知、Widget、歌词进度。
+- 冒烟聊天：会话列表、进入聊天、历史消息、文本发送、图片发送入口。
+- 冒烟动态发布：多图选择、压缩、上传、发布、动态列表刷新。
+- 冒烟下载：下载中列表、已下载列表、单项暂停/继续、全部暂停/继续、删除、播放已下载歌曲。
+- 冒烟发现/信息流：发现页加载、Banner/歌单/单曲点击、信息流滚动、图片预览。

@@ -3,12 +3,7 @@ package com.ixuea.courses.mymusic.manager;
 import android.app.Activity;
 
 import com.ixuea.courses.mymusic.MainActivity;
-import com.ixuea.courses.mymusic.component.input.activity.InputCodeActivity;
-import com.ixuea.courses.mymusic.component.input.activity.InputUserIdentityActivity;
-import com.ixuea.courses.mymusic.component.login.activity.LoginActivity;
 import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity;
-import com.ixuea.courses.mymusic.component.password.activity.SetPasswordActivity;
-import com.ixuea.courses.mymusic.component.register.activity.RegisterActivity;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -108,13 +103,7 @@ public class MyActivityManager {
         Iterator<Activity> iterator = list.descendingIterator();
         while (iterator.hasNext()) {
             Activity activity = iterator.next();
-            if (activity instanceof LoginHomeActivity ||
-                    activity instanceof LoginActivity ||
-                    activity instanceof RegisterActivity ||
-                    activity instanceof InputUserIdentityActivity ||
-                    activity instanceof InputCodeActivity ||
-                    activity instanceof SetPasswordActivity
-            ) {
+            if (activity instanceof LoginHomeActivity) {
                 activity.finish();
             }
         }

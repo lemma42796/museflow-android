@@ -21,8 +21,6 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.ref.WeakReference;
 
-import cn.jiguang.analytics.android.api.JAnalyticsInterface;
-
 /**
  * 项目中特有逻辑
  * <p>
@@ -222,11 +220,6 @@ public class BaseLogicActivity extends BaseCommonActivity {
             globalLyricManager.tryHide();
         }
 
-        if (StringUtils.isNotBlank(pageId())) {
-            //使用极光分析
-            //统计页面
-            JAnalyticsInterface.onPageStart(getHostActivity(), pageId());
-        }
     }
 
     /**
@@ -256,10 +249,6 @@ public class BaseLogicActivity extends BaseCommonActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (StringUtils.isNotBlank(pageId())) {
-            //页面结束
-            JAnalyticsInterface.onPageEnd(getHostActivity(), pageId());
-        }
     }
 
     /**

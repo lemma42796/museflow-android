@@ -60,13 +60,13 @@ public abstract class BaseRecyclerViewAdapter<D, VH extends BaseRecyclerViewAdap
      * @param datum
      */
     public void setDatum(List<D> datum) {
-        if (datum != null && datum.size() > 0) {
-            this.datum.clear();
+        this.datum.clear();
+        if (datum != null) {
             this.datum.addAll(datum);
-
-            //通知数据改变了
-            notifyDataSetChanged();
         }
+
+        //通知数据改变了
+        notifyDataSetChanged();
     }
 
     public List<D> getDatum() {

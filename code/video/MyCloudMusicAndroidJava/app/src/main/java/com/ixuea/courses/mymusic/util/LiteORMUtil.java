@@ -2,7 +2,6 @@ package com.ixuea.courses.mymusic.util;
 
 import android.content.Context;
 
-import com.ixuea.courses.mymusic.component.search.model.SearchHistory;
 import com.ixuea.courses.mymusic.component.song.model.Song;
 import com.ixuea.courses.mymusic.config.Config;
 import com.litesuits.orm.LiteOrm;
@@ -44,38 +43,6 @@ public class LiteORMUtil {
     public static void destroy() {
         instance = null;
     }
-
-    //region 搜索历史
-
-    /**
-     * 创建或更新搜索历史
-     *
-     * @param data
-     */
-    public void createOrUpdate(SearchHistory data) {
-        orm.save(data);
-    }
-
-    /**
-     * 查询所有搜索历史
-     *
-     * @return
-     */
-    public List<SearchHistory> querySearchHistory() {
-        QueryBuilder<SearchHistory> queryBuilder = new QueryBuilder<SearchHistory>(SearchHistory.class)
-                .appendOrderDescBy("createdAt");
-        return orm.query(queryBuilder);
-    }
-
-    /**
-     * 删除搜索历史
-     *
-     * @param data
-     */
-    public void deleteSearchHistory(SearchHistory data) {
-        orm.delete(data);
-    }
-    //endregion
 
     //region 播放列表
 

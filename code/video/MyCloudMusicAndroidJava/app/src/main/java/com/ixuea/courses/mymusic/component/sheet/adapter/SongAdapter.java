@@ -11,6 +11,7 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.ixuea.android.downloader.domain.DownloadInfo;
 import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
+import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository;
 import com.ixuea.courses.mymusic.component.song.model.Song;
 import com.ixuea.superui.dialog.SuperDialog;
 
@@ -27,6 +28,7 @@ public class SongAdapter extends BaseQuickAdapter<Song, BaseViewHolder> {
     private int[] selectedIndexes;
     private FragmentManager fragmentManager;
     private int offset;
+    private final DownloadRepository downloadRepository = DownloadRepository.getInstance();
 
     /**
      * 是否进入编辑模式了
@@ -83,11 +85,11 @@ public class SongAdapter extends BaseQuickAdapter<Song, BaseViewHolder> {
                                         @Override
                                         public void onClick(View v) {
                                             //查询下载任务
-                                            DownloadInfo downloadInfo = AppContext.getInstance().getDownloadManager().getDownloadById(data.getId());
+                                            DownloadInfo downloadInfo = downloadRepository.getDownloadById(data.getId());
 
                                             if (downloadInfo != null) {
                                                 //从下载框架删除
-                                                AppContext.getInstance().getDownloadManager().remove(downloadInfo);
+                                                downloadRepository.remove(downloadInfo);
                                             } else {
                                                 AppContext.getInstance().getOrm().deleteSong(data);
                                             }
@@ -101,7 +103,7 @@ public class SongAdapter extends BaseQuickAdapter<Song, BaseViewHolder> {
                     });
         } else {
             //是否下载
-            DownloadInfo downloadInfo = AppContext.getInstance().getDownloadManager().getDownloadById(data.getId());
+            DownloadInfo downloadInfo = downloadRepository.getDownloadById(data.getId());
             if (downloadInfo != null && downloadInfo.getStatus() == DownloadInfo.STATUS_COMPLETED) {
                 //下载完成了
 

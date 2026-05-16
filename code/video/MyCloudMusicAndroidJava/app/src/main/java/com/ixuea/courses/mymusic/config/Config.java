@@ -75,26 +75,4 @@ public class Config {
      */
     public static final String USER_QRCODE_URL = String.format("%s?u=%%s", QRCODE_URL);
 
-    //region 百度语音
-    //https://ai.baidu.com/ai-doc/SPEECH/5khq3i39w#%E9%89%B4%E6%9D%83%E4%BF%A1%E6%81%AF
-    public static final String BAIDU_VOICE_ID = "24886876";
-    public static final String BAIDU_VOICE_KEY = "";
-    public static final String BAIDU_VOICE_SECRET = "";
-    //endregion
-
-    /**
-     * 小米推送信息
-     */
-    public static final String MI_ID = "2882303761519996251";
-    public static final String MI_KEY = "";
-
-    /**
-     * 微信id
-     */
-    public static final String WECHAT_AK = "wx672a5ce2ea3a3f4f";
-
-    /**
-     * 腾讯Bugly
-     */
-    public static final String BUGLY_APP_KEY = "acd062b1ac";
 }

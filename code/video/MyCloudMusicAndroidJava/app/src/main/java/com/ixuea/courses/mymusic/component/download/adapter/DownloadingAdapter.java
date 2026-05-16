@@ -8,11 +8,11 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
 import com.ixuea.android.downloader.domain.DownloadInfo;
-import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.adapter.BaseRecyclerViewAdapter;
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener;
 import com.ixuea.courses.mymusic.component.download.model.event.DownloadChangedEvent;
+import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository;
 import com.ixuea.courses.mymusic.component.song.model.Song;
 import com.ixuea.courses.mymusic.databinding.ItemDownloadingBinding;
 import com.ixuea.courses.mymusic.util.FileUtil;
@@ -29,11 +29,13 @@ import java.lang.ref.SoftReference;
 public class DownloadingAdapter extends BaseRecyclerViewAdapter<DownloadInfo, DownloadingAdapter.ViewHolder> {
     private final LiteORMUtil orm;
     private final FragmentManager fragmentManager;
+    private final DownloadRepository repository;
 
     public DownloadingAdapter(Context context, LiteORMUtil orm, FragmentManager fragmentManager) {
         super(context);
         this.orm = orm;
         this.fragmentManager = fragmentManager;
+        this.repository = DownloadRepository.getInstance();
     }
 
     @NonNull
@@ -122,7 +124,7 @@ public class DownloadingAdapter extends BaseRecyclerViewAdapter<DownloadInfo, Do
                                 @Override
                                 public void onClick(View v) {
                                     //从下载框架中删除
-                                    AppContext.getInstance().getDownloadManager().remove(data);
+                                    repository.remove(data);
 
                                     //从适配器中删除
                                     removeData(getBindingAdapterPosition());

@@ -4,9 +4,6 @@ plugins {
 
     //hilt注入框架
     id 'dagger.hilt.android.plugin'
-
-    //sharesdk
-    id 'com.mob.sdk'
 }
 
 
@@ -87,21 +84,7 @@ android {
                 signingConfig signingConfigs.debug
             }
 
-            //清单文件中的变量
-            //多渠道打包时，可以使用这种方法使用不同的配置
-            manifestPlaceholders = [
-                    //高德地图id
-                    "amap_id"    : "e22f474b2afadc50a11284fa6b29fdee",
-
-                    //极光统计
-                    JPUSH_APPKEY : "ba3f08e44440a942db10b46e", //JPush上注册的包名对应的appkey
-                    JPUSH_CHANNEL: "default", //暂时填写默认值即可
-
-                    //极光推送
-                    JPUSH_PKGNAME: 'com.ixuea.courses.mymusic',
-                    XIAOMI_APPKEY: "",
-                    XIAOMI_APPID : "MI-2882303761519996251",
-            ]
+            manifestPlaceholders = [:]
         }
 
         release {
@@ -114,21 +97,7 @@ android {
 
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            //清单文件中的变量
-            //多渠道打包时，可以使用这种方法使用不同的配置
-            manifestPlaceholders = [
-                    //高德地图id
-                    "amap_id"    : "e22f474b2afadc50a11284fa6b29fdee",
-
-                    //极光统计
-                    JPUSH_APPKEY : "ba3f08e44440a942db10b46e", //JPush上注册的包名对应的appkey
-                    JPUSH_CHANNEL: "default", //暂时填写默认值即可
-
-                    //极光推送
-                    JPUSH_PKGNAME: 'com.ixuea.courses.mymusic',
-                    XIAOMI_APPKEY: "",
-                    XIAOMI_APPID : "MI-2882303761519996251",
-            ]
+            manifestPlaceholders = [:]
         }
     }
 
@@ -191,396 +160,6 @@ android {
         }
     }
     namespace 'com.ixuea.courses.mymusic'
-}
-
-//sharesdk配置
-//真实项目只需要配置用到的平台
-//我们这里全写这里目的是方便大家参考
-MobSDK {
-    appKey "260604a3dbbea"
-    appSecret ""
-
-    //第三方平台配置
-    ShareSDK {
-        devInfo {
-            SinaWeibo {
-                id 1
-                sortId 1
-                appKey "1638318172"
-                appSecret ""
-                callbackUri "http://www.ixuea.com"
-                shareByAppClient true
-                enable true
-            }
-
-            TencentWeibo {
-                id 2
-                sortId 2
-                appKey "801307650"
-                appSecret ""
-                callbackUri "http://sharesdk.cn"
-                enable true
-            }
-
-            QZone {
-                id 3
-                sortId 3
-                appId "100371282"
-                appKey "aed9b0303e3ed1e27bae87c33761161d"
-                shareByAppClient true
-                bypassApproval false
-                enable true
-            }
-
-            /* Wechat微信和WechatMoments微信朋友圈的appid是一样的；
-              注意：开发者不能用我们这两个平台的appid,否则分享不了
-              微信测试的时候，微信测试需要先签名打包出apk,
-              sample测试微信，要先签名打包，keystore在sample项目中，密码123456
-              BypassApproval是绕过审核的标记，设置为true后AppId将被忽略，故不经过
-              审核的应用也可以执行分享，但是仅限于分享文字和图片，不能分享其他类型，
-              默认值为false。此外，微信收藏不支持此字段。wx4868b35061f87885
-              要分享微信小应用程序时用userName,path
-            */
-            Wechat {
-                id 4
-                sortId 4
-                appId "wx672a5ce2ea3a3f4f"
-                appSecret ""
-                userName "gh_afb25ac019c9"
-                path "pages/index/index.html?id=1"
-                bypassApproval false
-                enable true
-            }
-
-            WechatMoments {
-                id 5
-                sortId 5
-                appId "wx672a5ce2ea3a3f4f"
-                appSecret ""
-                bypassApproval false
-                enable true
-            }
-
-            WechatFavorite {
-                id 6
-                sortId 6
-                appId "wx672a5ce2ea3a3f4f"
-                appSecret ""
-                bypassApproval false
-                enable true
-            }
-
-
-            QQ {
-                id 7
-                sortId 7
-                appId "101481482"
-                appKey "b4304961e7299dde6b7b6964bfbb4a7f"
-                shareByAppClient true
-                bypassApproval false
-                enable true
-            }
-
-            Facebook {
-                id 8
-                sortId 8
-                appKey "1412473428822331"
-                appSecret ""
-                callbackUri "https://mob.com"
-                shareByAppClient true
-                enable true
-            }
-
-            Twitter {
-                id 9
-                sortId 9
-                appKey "LRBM0H75rWrU9gNHvlEAA2aOy"
-                appSecret ""
-                callbackUri "http://mob.com"
-                enable true
-            }
-
-            Renren {
-                id 10
-                sortId 10
-                appId "226427"
-                appKey "fc5b8aed373c4c27a05b712acba0f8c3"
-                appSecret ""
-                enable true
-            }
-
-            KaiXin {
-                id 11
-                sortId 11
-                appKey "358443394194887cee81ff5890870c7c"
-                appSecret ""
-                callbackUri "http://www.sharesdk.cn"
-                enable true
-            }
-
-            Email {
-                id 12
-                sortId 12
-                enable true
-            }
-
-            ShortMessage {
-                id 13
-                sortId 13
-                enable true
-            }
-
-            Douban {
-                id 16
-                sortId 16
-                appKey "031a96a3aa8b28af094fc3eaffa17a0d"
-                appSecret ""
-                callbackUri "http://mob.com"
-                enable true
-            }
-
-            YouDao {
-                id 17
-                sortId 17
-                hostType "product"
-                appKey "dcde25dca105bcc36884ed4534dab940"
-                appSecret ""
-                callbackUri "http://www.sharesdk.cn/"
-                enable true
-            }
-
-            /*在中国大陆，印象笔记有两个服务器，一个是沙箱（sandbox），一个是生产服务器（china）。
-            一般你注册应用，它会先让你使用sandbox，当你完成测试以后，可以到
-            http://dev.yinxiang.com/support/上激活你的ConsumerKey，激活成功后，修改HostType
-            为china就好了。至于如果您申请的是国际版的印象笔记（Evernote），则其生产服务器类型为
-            “product”。
-            如果目标设备上已经安装了印象笔记客户端，ShareSDK允许应用调用本地API来完成分享，但
-            是需要将应用信息中的“ShareByAppClient”设置为true，此字段默认值为false。*/
-            Evernote {
-                id 19
-                sortId 19
-                hostType "sandbox"
-                appKey "sharesdk-7807"
-                appSecret ""
-                shareByAppClient true
-                enable true
-            }
-
-            LinkedIn {
-                id 20
-                sortId 20
-                appKey "ejo5ibkye3vo"
-                appSecret ""
-                callbackUri "http://sharesdk.cn"
-                shareByAppClient true
-                enable true
-            }
-
-            GooglePlus {
-                id 21
-                sortId 21
-                appId "236300675100-am5pm8km7md1memjevq8rl9pg5c4s4b8.apps.googleusercontent.com"
-                callbackUri "http://localhost"
-                shareByAppClient true
-                enable true
-            }
-
-            FourSquare {
-                id 22
-                sortId 22
-                appId "G0ZI20FM30SJAJTX2RIBGD05QV1NE2KVIM2SPXML2XUJNXEU"
-                appSecret ""
-                callbackUri "http://www.sharesdk.cn"
-                enable true
-            }
-
-            Pinterest {
-                id 23
-                sortId 23
-                appId "1432928"
-                enable true
-            }
-
-            Flickr {
-                id 24
-                sortId 24
-                appKey "33d833ee6b6fca49943363282dd313dd"
-                appSecret ""
-                callbackUri "http://www.sharesdk.cn"
-                enable true
-            }
-
-            Tumblr {
-                id 25
-                sortId 25
-                appKey "2QUXqO9fcgGdtGG1FcvML6ZunIQzAEL8xY6hIaxdJnDti2DYwM"
-                appSecret ""
-                callbackUri "http://www.sharesdk.cn"
-                enable true
-            }
-
-            Dropbox {
-                id 26
-                sortId 26
-                appKey "i5vw2mex1zcgjcj"
-                appSecret ""
-                callbackUri "https://www.sharesdk.cn"
-                enable true
-            }
-
-            VKontakte {
-                id 27
-                sortId 27
-                appId "3921561"
-                enable true
-            }
-
-
-            Instagram {
-                id 28
-                sortId 28
-                appId "ff68e3216b4f4f989121aa1c2962d058"
-                appSecret ""
-                callbackUri "http://sharesdk.cn"
-                enable true
-            }
-
-            /*Yixin易信和YixinMoments易信朋友圈的appid是一样的；
-            注意：开发者不能用我们这两个平台的appid,否则分享不了
-            易信测试的时候需要先签名打包出apk,
-            sample测试易信，要先签名打包，keystore在sample项目中，密码123456
-            BypassApproval是绕过审核的标记，设置为true后AppId将被忽略，故不经过
-            审核的应用也可以执行分享，但是仅限于分享文字或图片，不能分享其他类型，
-            默认值为false。*/
-            Yixin {
-                id 29
-                sortId 29
-                appId "yx0d9a9f9088ea44d78680f3274da1765f"
-                bypassApproval false
-                enable true
-            }
-
-            YixinMoments {
-                id 30
-                sortId 30
-                appId "yx0d9a9f9088ea44d78680f3274da1765f"
-                bypassApproval false
-                enable true
-            }
-
-            Mingdao {
-                id 31
-                sortId 31
-                appKey "EEEE9578D1D431D3215D8C21BF5357E3"
-                appSecret ""
-                callbackUri "http://sharesdk.cn"
-                enable true
-            }
-
-            Line {
-                id 32
-                sortId 32
-                appId "1477692153"
-                appSecret ""
-                enable true
-            }
-
-            KakaoTalk {
-                id 33
-                sortId 33
-                appKey "48d3f524e4a636b08d81b3ceb50f1003"
-                enable true
-            }
-
-            KakaoStory {
-                id 34
-                sortId 34
-                appKey "48d3f524e4a636b08d81b3ceb50f1003"
-                enable true
-            }
-
-            WhatsApp {
-                id 35
-                sortId 35
-                enable true
-            }
-
-
-            Pocket {
-                id 37
-                sortId 37
-                appKey "32741-389c565043c49947ba7edf05"
-                enable true
-            }
-
-            Instapaper {
-                id 38
-                sortId 38
-                appKey "4rDJORmcOcSAZL1YpqGHRI605xUvrLbOhkJ07yO0wWrYrc61FA"
-                appSecret ""
-                enable true
-            }
-
-            FacebookMessenger {
-                id 39
-                sortId 39
-                appId "107704292745179"
-                enable true
-            }
-
-
-            Alipay {
-                id 50
-                sortId 50
-                appId "2015072400185895"
-                enable true
-            }
-
-            AlipayMoments {
-                id 51
-                sortId 51
-                appId "2015072400185895"
-                enable true
-            }
-
-            Dingding {
-                id 52
-                sortId 52
-                appId "dingoanxyrpiscaovl4qlw"
-                bypassApproval false
-                enable true
-            }
-
-            Youtube {
-                id 53
-                sortId 53
-                appId "370141748022-bicrnsjfiije93bvdt63dh3728m4shas.apps.googleusercontent.com"
-                appSecret ""
-                callbackUri "http://localhost"
-                shareByAppClient true
-                enable true
-            }
-
-            Meipai {
-                id 54
-                sortId 54
-                appId "1089867596"
-                appSecret ""
-                shareByAppClient true
-                enable true
-            }
-
-            Meipai {
-                id 54
-                sortId 54
-                appId "1089867596"
-                appSecret ""
-                shareByAppClient true
-                enable true
-            }
-
-        }
-    }
 }
 
 dependencies {
@@ -731,10 +310,6 @@ dependencies {
     implementation 'com.github.bingoogolapple.BGABadgeView-Android:api:1.2.0'
     annotationProcessor 'com.github.bingoogolapple.BGABadgeView-Android:compiler:1.2.0'
 
-    //webview进度条
-    //https://github.com/youlookwhat/WebProgress
-    implementation 'com.github.youlookwhat:WebProgress:1.2.0'
-
     //日志框架
     //https://github.com/JakeWharton/timber
     implementation 'com.jakewharton.timber:timber:5.0.1'
@@ -746,21 +321,6 @@ dependencies {
     //输入框右侧有清空按钮，类似iOS
     //https://github.com/Cielsk/clearable-edittext
     implementation 'com.github.Cielsk:clearable-edittext:0.0.8'
-
-    //类似滴滴出行验证码输入框控件
-    //https://github.com/jenly1314/SplitEditText
-//    implementation 'com.king.view:splitedittext:+'
-
-    //给任意控件添加闪光效果
-    //这里主要用到广告界面，打开广告按钮
-    //https://github.com/facebook/shimmer-android
-    implementation 'com.facebook.shimmer:shimmer:0.5.0'
-
-    //腾讯官方播放器，可以播放其他地址视频，不是说一定要播放腾讯点播服务的视频
-    //com.tencent.liteav:LiteAVSDK_Player：播放器核心
-    //super-player-tencent:更上层的接口和功能，例如：弹幕，滑动进度，滑动调整音量
-    //https://cloud.tencent.com/document/product/881/20213
-    implementation project(path: ':super-player-tencent')
 
     //更方便的使用glide和palette
     //https://github.com/florent37/GlidePalette
@@ -805,17 +365,15 @@ dependencies {
     implementation 'io.github.scwang90:refresh-footer-classics:2.0.5'    //经典加载头
     //endregion
 
-    //视频播放框架
-    //https://github.com/CarGuo/GSYVideoPlayer
-    //完整版引入
-    implementation 'com.github.CarGuo.GSYVideoPlayer:gsyvideoplayer:v10.0.0'
-
     //对Recyclerview进行了，使用更方便
     //https://github.com/jdsjlzx/LRecyclerView
     implementation project(path: ':LRecyclerview')
 
     //官方设置组件
     implementation 'androidx.preference:preference:1.1.1'
+
+    //可以嵌套的RadioGroup，桌面歌词控制面板仍在使用
+    implementation 'com.github.fodroid:XRadioGroup:1.5'
 
     //类似微信图片预览框架
     //https://github.com/wanglu1209/PhotoViewer
@@ -836,44 +394,12 @@ dependencies {
     implementation 'io.github.lucksiege:compress:v3.11.2'
     implementation 'io.github.lucksiege:ucrop:v3.11.2'
 
-    //阿里云oss
-    //官方文档：https://help.aliyun.com/document_detail/32043.html
-    //sdk地址：https://github.com/aliyun/aliyun-oss-android-sdk
-    implementation 'com.aliyun.dpa:oss-android-sdk:2.9.13'
-
-    //高德地图，这里引用的是3d
-    //https://lbs.amap.com/api/android-sdk/guide/create-project/android-studio-create-project#gradle_sdk
-    implementation 'com.amap.api:3dmap:9.8.3'
-
-    //定位功能，新版3dmap已经包含该依赖
-//    implementation 'com.amap.api:location:+'
-
-    //搜索
-    //    implementation 'com.amap.api:search:latest.integration'
-    implementation 'com.amap.api:search:9.7.0'
-
     //RecyclerView 下拉刷新/加载更多、item点击/长按、头布局/尾布局/状态布局、万能分割线、Skeleton骨架图、极简adapter、嵌套滑动置顶
     //使用该框架需要使用它提供的ByRecyclerView控件，所以依赖性比较强，但很多功能直接集成了，也更方便
     //https://github.com/youlookwhat/ByRecyclerView
     //骨架实现内部引用了：https://github.com/team-supercharge/ShimmerLayout
     //对于普通view，可以按照该框架主页介绍的使用，在用户详情顶部就是用这种方式实现
     implementation 'com.github.youlookwhat:ByRecyclerView:1.3.1'
-
-    //中文转拼音
-    //https://github.com/belerweb/pinyin4j
-    implementation 'com.belerweb:pinyin4j:2.5.1'
-
-    //类似微信联系人界面右侧字母索引
-    //https://github.com/lgdcoder/LetterIndexView
-    implementation project(path: ':LetterIndexView')
-
-    //二维码生成扫描框架
-    //https://github.com/jenly1314/ZXingLite
-    implementation 'com.github.jenly1314:ZXingLite:2.1.1'
-
-    //可以嵌套的RadioGroup
-    //https://github.com/fodroid/XRadioGroup
-    implementation 'com.github.fodroid:XRadioGroup:1.5'
 
     //https://developer.android.google.cn/training/dependency-injection/hilt-android
     implementation "com.google.dagger:hilt-android:$hilt_version"
@@ -893,78 +419,15 @@ dependencies {
     //https://github.com/hackware1993/MagicIndicator
     implementation 'com.github.hackware1993:MagicIndicator:1.7.0'
 
-    //百度语音相关技术，目前主要用在收货地址编辑界面，语音输入收货地址
-    //https://ai.baidu.com/ai-doc/SPEECH/Pkgt4wwdx#%E9%9B%86%E6%88%90%E6%8C%87%E5%8D%97
-    implementation project(path: ':super-speech-baidu')
-
-    //TextView显示富文本，目前主要用在商品详情界面，显示富文本商品描述
-    //https://github.com/wangchenyan/html-text
-//    implementation 'com.github.wangchenyan:html-text:1.0'
-
     //Hutool是一个小而全的Java工具类库
     // 通过静态方法封装，降低相关API的学习成本
     // 提高工作效率，使Java拥有函数式语言般的优雅
     //https://github.com/looly/hutool
     implementation 'cn.hutool:hutool-all:5.7.14'
 
-    //支付宝支付
-    //https://opendocs.alipay.com/open/204/105296
-//    implementation 'com.alipay.sdk:alipaysdk-android:+@aar'
-    implementation 'com.alipay.sdk:alipaysdk-android:15.8.17'
-
     //融云IM
     //https://docs.rongcloud.cn/v4/5X/views/im/ui/guide/quick/include/android.html
     implementation 'cn.rongcloud.sdk:im_lib:5.8.0'
-
-    //微信支付
-    //官方sdk下载文档：https://developers.weixin.qq.com/doc/oplatform/Downloads/Android_Resource.html
-    //官方集成文档：https://pay.weixin.qq.com/wiki/doc/api/app/app.php?chapter=8_5
-    implementation 'com.tencent.mm.opensdk:wechat-sdk-android:6.8.28'
-
-    //腾讯bugly
-    //https://bugly.qq.com/docs/user-guide/instruction-manual-android/?v=1.0.0#_3
-    //implementation 'com.tencent.bugly:crashreport:latest.release'
-    implementation 'com.tencent.bugly:crashreport_upgrade:1.6.1'
-    implementation 'com.tencent.bugly:nativecrashreport:3.9.2'
-
-    //极光统计
-    //https://docs.jiguang.cn/janalytics/client/android_guide
-    implementation 'cn.jiguang.sdk:janalytics:2.1.7'
-//    implementation 'cn.jiguang.sdk:jbasic:4.2.2'
-
-    //region 极光推送
-    // 此处以JPush 5.0.0 版本为例，5.0.0 版本开始可以自动拉取 JCore 包，无需另外配置
-    implementation 'cn.jiguang.sdk:jpush:5.0.3'
-
-    //若不集成厂商通道，可直接跳过以下依赖
-    // 极光厂商插件版本与接入 JPush 版本保持一致，下同
-    // 接入华为厂商
-//    implementation 'com.huawei.hms:push:6.5.0.300'
-//    implementation 'cn.jiguang.sdk.plugin:huawei:5.0.0'
-//    // 接入 FCM 厂商
-//    implementation 'com.google.firebase:firebase-messaging:23.0.5'
-//    implementation 'cn.jiguang.sdk.plugin:fcm:5.0.0'
-//    // 接入魅族厂商
-//    implementation 'cn.jiguang.sdk.plugin:meizu:5.0.0'
-//    // 接入 VIVO 厂商
-//    implementation 'cn.jiguang.sdk.plugin:vivo:5.0.0'
-    // 接入小米厂商
-    implementation 'cn.jiguang.sdk.plugin:xiaomi:5.0.3'
-
-    // 接入 OPPO 厂商
-//    implementation 'cn.jiguang.sdk.plugin:oppo:5.0.0'
-//    // JPush Android SDK v4.6.0 开始，需要单独引入 oppo 厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/oppo/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
-//    implementation(name: 'com.heytap.msp-push-3.1.0', ext: 'aar')
-//
-//    //以下为 OPPO 3.1.0 aar需要依赖
-//    implementation 'com.google.code.gson:gson:2.6.2'
-//    implementation 'commons-codec:commons-codec:1.6'
-//    implementation 'androidx.annotation:annotation:1.1.0'
-//    // 接入荣耀厂商
-//    implementation 'cn.jiguang.sdk.plugin:honor:5.0.0'
-//    //需要单独引入荣耀厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/honor/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
-//    implementation(name: 'HiPushSdk-v7.0.1.103', ext: 'aar')
-    //endregion
 
     //常用加密算法实现
     //aes,sha,md5

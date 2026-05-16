@@ -1,5 +1,9 @@
 package com.ixuea.courses.mymusic.component.download.listener;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+
 import com.ixuea.android.downloader.callback.AbsDownloadListener;
 import com.ixuea.android.downloader.exception.DownloadException;
 
@@ -10,6 +14,10 @@ import java.lang.ref.SoftReference;
  * 将所有回调都调用onRefresh
  */
 public abstract class MyDownloadListener extends AbsDownloadListener {
+    private static final long PROGRESS_THROTTLE_MS = 300;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private long lastProgressRefreshTime;
+
     public MyDownloadListener() {
     }
 
@@ -19,38 +27,50 @@ public abstract class MyDownloadListener extends AbsDownloadListener {
 
     @Override
     public void onStart() {
-        onRefresh();
+        postRefresh();
     }
 
     @Override
     public void onWaited() {
-        onRefresh();
+        postRefresh();
     }
 
     @Override
     public void onPaused() {
-        onRefresh();
+        postRefresh();
     }
 
     @Override
     public void onDownloading(long progress, long size) {
-        onRefresh();
+        long now = SystemClock.uptimeMillis();
+        if (now - lastProgressRefreshTime >= PROGRESS_THROTTLE_MS || (size > 0 && progress >= size)) {
+            lastProgressRefreshTime = now;
+            postRefresh();
+        }
     }
 
     @Override
     public void onRemoved() {
-        onRefresh();
+        postRefresh();
     }
 
     @Override
     public void onDownloadSuccess() {
-        onRefresh();
+        postRefresh();
     }
 
     @Override
     public void onDownloadFailed(DownloadException e) {
-        onRefresh();
+        postRefresh();
     }
 
     public abstract void onRefresh();
+
+    private void postRefresh() {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            onRefresh();
+        } else {
+            mainHandler.post(this::onRefresh);
+        }
+    }
 }

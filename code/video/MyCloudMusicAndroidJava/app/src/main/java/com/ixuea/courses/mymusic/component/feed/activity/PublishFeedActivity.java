@@ -1,6 +1,5 @@
 package com.ixuea.courses.mymusic.component.feed.activity;
 
-import static com.ixuea.courses.mymusic.util.ImageCompressor.compressImagesAsync;
 import static autodispose2.AutoDispose.autoDisposable;
 
 import android.content.Context;
@@ -12,13 +11,11 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import com.amap.api.services.core.PoiItem;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.listener.OnItemClickListener;
-import com.google.common.collect.Lists;
-import com.ixuea.courses.mymusic.BuildConfig;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity;
 import com.ixuea.courses.mymusic.adapter.TextWatcherAdapter;
@@ -26,20 +23,16 @@ import com.ixuea.courses.mymusic.component.api.HttpObserver;
 import com.ixuea.courses.mymusic.component.feed.adapter.ImageAdapter;
 import com.ixuea.courses.mymusic.component.feed.model.Feed;
 import com.ixuea.courses.mymusic.component.feed.model.event.FeedChangedEvent;
-import com.ixuea.courses.mymusic.component.feed.task.Result;
-import com.ixuea.courses.mymusic.component.feed.task.UploadFeedImageAsyncTask;
-import com.ixuea.courses.mymusic.component.location.activity.SelectLocationActivity;
-import com.ixuea.courses.mymusic.component.location.model.event.SelectLocationEvent;
+import com.ixuea.courses.mymusic.component.feed.repository.FeedPublishRepository;
+import com.ixuea.courses.mymusic.component.feed.repository.ImageCompressionRepository;
+import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishViewModel;
 import com.ixuea.courses.mymusic.config.glide.GlideEngine;
 import com.ixuea.courses.mymusic.databinding.ActivityPublishFeedBinding;
 import com.ixuea.courses.mymusic.model.Base;
 import com.ixuea.courses.mymusic.model.Resource;
 import com.ixuea.courses.mymusic.model.response.DetailResponse;
 import com.ixuea.courses.mymusic.model.response.ListResponse;
-import com.ixuea.courses.mymusic.repository.DefaultRepository;
-import com.ixuea.courses.mymusic.util.ExceptionHandlerUtil;
 import com.ixuea.courses.mymusic.util.ImageCompressor;
-import com.ixuea.courses.mymusic.util.ImageUtil;
 import com.ixuea.superui.decoration.GridDividerItemDecoration;
 import com.ixuea.superui.toast.SuperToast;
 import com.ixuea.superui.util.DensityUtil;
@@ -54,19 +47,11 @@ import com.luck.picture.lib.interfaces.OnResultCallbackListener;
 
 import org.apache.commons.lang3.StringUtils;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import autodispose2.androidx.lifecycle.AndroidLifecycleScopeProvider;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import top.zibin.luban.Luban;
-import top.zibin.luban.OnNewCompressListener;
 
 /**
  * 发布动态界面
@@ -79,16 +64,8 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
      */
     private Feed feed = new Feed();
     private ImageAdapter adapter;
-
-    /**
-     * 选择的位置
-     */
-    private PoiItem selectPosition;
-
-    @Override
-    protected boolean isRegisterEventBus() {
-        return true;
-    }
+    private FeedPublishViewModel viewModel;
+    private FeedPublishRepository publishRepository;
 
     @Override
     protected void initViews() {
@@ -99,24 +76,24 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
 
         GridDividerItemDecoration itemDecoration = new GridDividerItemDecoration(getHostActivity(), (int) DensityUtil.dip2px(getHostActivity(), 5F));
         binding.list.addItemDecoration(itemDecoration);
+        binding.position.setVisibility(View.GONE);
     }
 
     @Override
     protected void initDatum() {
         super.initDatum();
+        publishRepository = FeedPublishRepository.getInstance();
+        viewModel = new ViewModelProvider(this).get(FeedPublishViewModel.class);
+
         adapter = new ImageAdapter(R.layout.item_image);
         binding.list.setAdapter(adapter);
 
-        setData(new ArrayList<>());
+        viewModel.getMediaItems().observe(this, this::setData);
+        viewModel.setSelectedImages(new ArrayList<>());
     }
 
     private void setData(List<Object> datum) {
-        if (datum.size() < 9) {
-            //添加选择图片按钮
-            datum.add(R.drawable.add_fill);
-        }
-
-        adapter.setNewInstance(datum);
+        adapter.setNewInstance(new ArrayList<>(datum));
     }
 
     /**
@@ -168,9 +145,8 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
         });
 
         adapter.addChildClickViewIds(R.id.close);
-        adapter.setOnItemChildClickListener((adapter, view, position) -> adapter.removeAt(position));
+        adapter.setOnItemChildClickListener((adapter, view, position) -> viewModel.removeSelectedImage(position));
 
-        binding.position.setOnClickListener(v -> startActivity(SelectLocationActivity.class));
     }
 
     /**
@@ -191,7 +167,7 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
                 .setCompressEngine(new CompressFileEngine() {
                     @Override
                     public void onStartCompress(Context context, ArrayList<Uri> arrayList, OnKeyValueResultCallbackListener onKeyValueResultCallbackListener) {
-                        compressImagesAsync(context, arrayList, new ImageCompressor.CompressionCallback() {
+                        ImageCompressionRepository.getInstance().compressImages(context, arrayList, new ImageCompressor.CompressionCallback() {
                             @Override
                             public void onCompressionComplete(String originalFilePath, String compressedFilePath) {
                             Log.d("TAG", "onStartCompress: "+originalFilePath+","+compressedFilePath);
@@ -238,7 +214,7 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
                 .forResult(new OnResultCallbackListener<LocalMedia>() {
                     @Override
                     public void onResult(ArrayList<LocalMedia> result) {
-                        setData(Lists.newArrayList(result));
+                        viewModel.setSelectedImages(result);
                     }
 
                     @Override
@@ -288,99 +264,31 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
      * @return
      */
     private List<LocalMedia> getSelectedImages() {
-        List<Object> data = adapter.getData();
-
-        List<LocalMedia> datum = new ArrayList<>();
-        for (Object o : data) {
-            if (o instanceof LocalMedia) {
-                datum.add((LocalMedia) o);
-            }
-        }
-
-        return datum;
+        return viewModel.getSelectedImages();
     }
 
     private void uploadImages(List<LocalMedia> datum) {
-        //表单方式上传
-        //创建所有文件项
-        ArrayList<MultipartBody.Part> bodyFiles = new ArrayList<>();
-        for (LocalMedia it : datum) {
-            File file = new File(it.getCompressPath());
-
-            //文件表单项
-            RequestBody fileBody= RequestBody.Companion.create(file, MediaType.parse("image/*"));
-            MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("file", file.getName(), fileBody);
-            bodyFiles.add(multipartBody);
-        }
-
-
-        //渠道项
-        RequestBody flavorBody=RequestBody.Companion.create(BuildConfig.FLAVOR, MediaType.Companion.parse("multipart/form-data"));
-
-        DefaultRepository.getInstance()
-                .uploadFiles(bodyFiles, flavorBody)
+        showLoading(getString(R.string.loading_upload, 1));
+        publishRepository.uploadImages(datum)
                 .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
                 .subscribe(new HttpObserver<ListResponse<Resource>>() {
                     @Override
+                    public boolean onFailed(ListResponse<Resource> data, Throwable e) {
+                        hideLoading();
+                        return super.onFailed(data, e);
+                    }
+
+                    @Override
                     public void onSucceeded(ListResponse<Resource> data) {
-                        saveFeed(data.getData().getData());
+                        hideLoading();
+                        List<Resource> results = data.getData().getData();
+                        if (results != null && results.size() == datum.size()) {
+                            saveFeed(results);
+                        } else {
+                            SuperToast.show(R.string.error_upload_image);
+                        }
                     }
                 });
-
-//        new UploadFeedImageAsyncTask() {
-//            /**
-//             * 异步任务执行前调用
-//             * 主线程中调用
-//             */
-//            @Override
-//            protected void onPreExecute() {
-//                super.onPreExecute();
-//                showLoading(getString(R.string.loading_upload, 1));
-//            }
-//
-//            /**
-//             * 进度回调
-//             * 主线程中执行
-//             * @param values
-//             */
-//            @Override
-//            protected void onProgressUpdate(Integer... values) {
-//                super.onProgressUpdate(values);
-//                showLoading(getString(R.string.loading_upload, values[0]));
-//            }
-//
-//            /**
-//             * 异步任务执行完成了
-//             *
-//             * @param result
-//             */
-//            @Override
-//            protected void onPostExecute(Result<List<Resource>> result) {
-//                super.onPostExecute(result);
-//
-//                //隐藏提示框
-//                hideLoading();
-//
-//                List<Resource> results = result.getData();
-//                if (result.isSucceeded() && results.size() == datum.size()) {
-//                    //图片上传成功
-//
-//                    //保存动态
-//                    saveFeed(results);
-//                } else {
-//                    //上传图片失败
-//                    //真实项目中
-//                    //可以实现重试
-//                    //同时重试的时候
-//                    //只上传失败的图片
-//                    if (result.getThrowable() != null) {
-//                        ExceptionHandlerUtil.handleException(result.getThrowable(), null);
-//                    } else {
-//                        SuperToast.show(R.string.error_upload_image);
-//                    }
-//                }
-//            }
-//        }.execute(datum);
     }
 
     private void saveFeed(List<Resource> results) {
@@ -388,35 +296,7 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
         feed.setContent(String.format("%s\n📱来自【Android Java云音乐客户端】",content));
         feed.setMedias(results);
 
-        if (selectPosition != null) {
-            //地理位置信息
-            //经度
-            feed.setLongitude(selectPosition.getLatLonPoint().getLongitude());
-
-            //纬度
-            feed.setLatitude(selectPosition.getLatLonPoint().getLatitude());
-
-            //省
-            feed.setProvince(selectPosition.getProvinceName());
-            feed.setProvinceCode(selectPosition.getProvinceCode());
-
-            //市
-            feed.setCity(selectPosition.getCityName());
-            feed.setCityCode(selectPosition.getCityCode());
-
-            //区
-            feed.setArea(selectPosition.getAdName());
-            feed.setAreaCode(selectPosition.getAdCode());
-
-            //详细地址
-            feed.setAddress(selectPosition.getSnippet());
-
-            //位置名称
-            feed.setPosition(selectPosition.getTitle());
-        }
-
-        DefaultRepository.getInstance()
-                .createFeed(feed)
+        publishRepository.createFeed(feed)
                 .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
                 .subscribe(new HttpObserver<DetailResponse<Base>>() {
                     @Override
@@ -430,22 +310,4 @@ public class PublishFeedActivity extends BaseTitleActivity<ActivityPublishFeedBi
                 });
     }
 
-    /**
-     * 选择了位置
-     *
-     * @param event
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void selectLocationEvent(SelectLocationEvent event) {
-        Object d = event.getData();
-        if (d instanceof Integer) {
-            //不显示位置
-            binding.position.setTitle((Integer) d);
-            selectPosition = null;
-        } else {
-            selectPosition = (PoiItem) d;
-            binding.position.setTitle(((PoiItem) d).getTitle());
-        }
-
-    }
 }

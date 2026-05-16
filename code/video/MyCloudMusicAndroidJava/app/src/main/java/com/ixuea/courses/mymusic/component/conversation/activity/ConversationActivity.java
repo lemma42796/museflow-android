@@ -9,6 +9,8 @@ import com.chad.library.adapter.base.listener.OnItemLongClickListener;
 import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity;
 import com.ixuea.courses.mymusic.component.chat.activity.ChatActivity;
+import com.ixuea.courses.mymusic.component.chat.repository.ChatClient;
+import com.ixuea.courses.mymusic.component.chat.repository.ConversationRepository;
 import com.ixuea.courses.mymusic.component.conversation.adapter.ConversationAdapter;
 import com.ixuea.courses.mymusic.component.conversation.model.event.NewMessageEvent;
 import com.ixuea.courses.mymusic.databinding.ActivityConversationBinding;
@@ -76,12 +78,12 @@ public class ConversationActivity extends BaseTitleActivity<ActivityConversation
 //                });
 
                 //删除该会话下所有消息，真实项目中，一般是在聊天详情实现，这里写到这里的目只是测试这个功能
-                RongIMClient.getInstance().deleteMessages(data.getConversationType(), data.getTargetId(), new RongIMClient.ResultCallback<Boolean>() {
+                ConversationRepository.INSTANCE.deleteMessages(data.getConversationType(), data.getTargetId(), new ChatClient.Callback<Boolean>() {
                     /**
                      * 删除消息成功回调
                      */
                     @Override
-                    public void onSuccess(Boolean bool) {
+                    public void onSuccess(Boolean data) {
                         loadData(false);
                     }
 
@@ -117,14 +119,14 @@ public class ConversationActivity extends BaseTitleActivity<ActivityConversation
     protected void loadData(boolean isPlaceholder) {
         super.loadData(isPlaceholder);
         //这里获取所有会话，真实项目中，可以分页获取
-        RongIMClient.getInstance().getConversationList(new RongIMClient.ResultCallback<List<Conversation>>() {
+        ConversationRepository.INSTANCE.getConversationList(new ChatClient.Callback<List<Conversation>>() {
             @Override
             public void onSuccess(List<Conversation> conversations) {
                 adapter.setNewInstance(conversations);
             }
 
             @Override
-            public void onError(RongIMClient.ErrorCode e) {
+            public void onError(RongIMClient.ErrorCode errorCode) {
 
             }
         });
