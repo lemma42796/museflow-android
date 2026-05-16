@@ -1,0 +1,55 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--region Activity样式-->
+    <!--界面样式
+    背景：
+        白天：灰色
+        夜间：深黑-->
+    <style name="SuperUI.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!--背景色-->
+        <item name="android:colorBackground">@color/black17</item>
+
+        <!--主色调，按钮默认填充颜色-->
+        <item name="colorPrimary">@color/primary</item>
+
+        <!-- 次色调，例如floatActionButton背景，SeekBar进度颜色 -->
+        <item name="colorSecondary">@color/primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="colorLightWhite">@color/black183</item>
+
+        <!-- 分割线颜色 -->
+        <item name="colorDivider">@color/black33</item>
+
+        <!-- tab bar控件背景 -->
+        <item name="colorTabBar">@color/black31</item>
+
+        <!-- 分割线 -->
+        <item name="android:listDivider">@drawable/shape_divider</item>
+
+        <!-- 状态栏颜色 -->
+        <item name="android:statusBarColor" tools:targetApi="l">?android:attr/colorBackground</item>
+
+        <!--Toolbar背景颜色-->
+        <item name="colorToolbar">?attr/colorSurface</item>
+
+        <!--侧滑背景-->
+        <item name="colorSlideBackground">@color/divider</item>
+
+        <!--colorSurface点击颜色-->
+        <item name="colorSurfaceClick">@color/black322</item>
+    </style>
+
+    <!--Light界面样式
+   背景：
+       白天：白色
+       夜间：深黑-->
+    <style name="SuperUI.NoActionBar.Light">
+
+    </style>
+
+    <style name="SuperUI.NoActionBar.Grey">
+        <!--背景色-->
+        <item name="android:colorBackground">@color/black17</item>
+    </style>
+    <!--endregion-->
+</resources>

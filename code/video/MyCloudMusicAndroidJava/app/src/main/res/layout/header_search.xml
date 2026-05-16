@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!--热门搜索-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/title_height_small"
+        android:background="?attr/colorDivider"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/padding_outer">
+
+        <!--标题-->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hot_search" />
+    </LinearLayout>
+
+    <!--标签流-->
+    <com.qmuiteam.qmui.widget.QMUIFloatLayout
+        android:id="@+id/float_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/padding_meddle"
+        android:gravity="left"
+        app:qmui_childHorizontalSpacing="@dimen/padding_meddle"
+        app:qmui_childVerticalSpacing="@dimen/padding_meddle" />
+
+    <!--搜索历史-->
+    <TextView
+        android:id="@+id/search_history_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/title_height_small"
+        android:background="?attr/colorDivider"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="@dimen/padding_outer"
+        android:text="@string/search_history"
+        android:visibility="gone" />
+</LinearLayout>

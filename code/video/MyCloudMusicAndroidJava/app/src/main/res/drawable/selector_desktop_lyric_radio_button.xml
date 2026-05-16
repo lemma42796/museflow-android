@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--选中状态-->
+    <item android:drawable="@drawable/ic_desktop_color_check" android:state_checked="true" />
+
+    <!--未选中状态
+        这里不能直接使用color
+        所以定义一个透明颜色的drawable-->
+    <item android:drawable="@drawable/shape_transparent" />
+</selector>

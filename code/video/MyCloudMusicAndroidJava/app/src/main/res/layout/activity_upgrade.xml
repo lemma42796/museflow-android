@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/button_transparent_88"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="@dimen/d40">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/shape_upgrade_background"
+            android:orientation="vertical">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:src="@drawable/upgrade_background"
+                    app:layout_constraintDimensionRatio="H,0.44"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/d20"
+                android:paddingBottom="@dimen/d20">
+                <!--标题-->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:tag="beta_title"
+                    android:text="@string/update_title"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/text_large"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/padding_outer"
+                    android:lineSpacingMultiplier="@dimen/line_space"
+                    android:paddingHorizontal="@dimen/padding_outer"
+                    android:tag="beta_upgrade_feature"
+                    android:textColor="@color/black45"
+                    android:textSize="@dimen/text_meddle"
+                    tools:text="1.修复用户登录Bug\n2.修复有时候播放音乐失败问题\n3.修复若干Bug" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_outer"
+                    android:tag="beta_upgrade_info"
+                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    android:textColor="@color/black66"
+                    android:textSize="@dimen/s16"
+                    android:visibility="gone" />
+
+                <!--同意按钮-->
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/d46"
+                    android:layout_marginTop="@dimen/padding_large"
+                    android:background="@drawable/shape_color_primary2"
+                    android:tag="beta_confirm_button"
+                    android:text="@string/update"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!--关闭按钮-->
+        <TextView
+            android:layout_width="@dimen/d30"
+            android:layout_height="@dimen/d30"
+            android:layout_marginTop="@dimen/d30"
+            android:background="@drawable/close_circle"
+            android:tag="beta_cancel_button"
+            android:textSize="0sp" />
+    </LinearLayout>
+</RelativeLayout>

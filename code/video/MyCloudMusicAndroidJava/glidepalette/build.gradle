@@ -1,0 +1,23 @@
+apply plugin: 'com.android.library'
+
+//引入上层目录的common.gradle文件内容
+apply from: '../common.gradle'
+
+android {
+
+    namespace 'com.github.florent37.glidepalette'
+    defaultConfig {
+    }
+}
+
+// 定义一个变量来统一版本号，这是一个好习惯
+def glide_version = "4.16.0" // 这是 Glide v4 系列当前最新的稳定版本
+
+dependencies {
+    api 'androidx.palette:palette:1.0.0'
+
+    //图片加载框架，还引用他目的是，coil有些功能不好实现
+    //https://github.com/bumptech/glide
+    implementation "com.github.bumptech.glide:glide:$glide_version"
+    annotationProcessor "com.github.bumptech.glide:compiler:$glide_version"
+}

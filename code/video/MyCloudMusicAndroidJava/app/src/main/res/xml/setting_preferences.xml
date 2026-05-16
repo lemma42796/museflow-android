@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="@string/network">
+        <!--移动网络下播放开关
+        这里只实现了视频详情判断
+        真实项目中，像视频播放，音乐播放，短视频，直播位置都要判断-->
+        <SwitchPreferenceCompat
+            app:key="mobile_network_play"
+            app:summaryOff="@string/play_mobile_network_summary_off"
+            app:summaryOn="@string/play_mobile_network_summary_on"
+            app:title="@string/play_mobile_network" />
+
+        <!--移动网络下载，这里实现实现了菜单，项目中并没有实现这样的功能
+        如果要实现和上面差不多，但可能需要下载框架支持，才方便处理-->
+        <SwitchPreferenceCompat
+            app:key="mobile_network_download"
+            app:title="@string/download_mobile_network" />
+    </PreferenceCategory>
+</PreferenceScreen>

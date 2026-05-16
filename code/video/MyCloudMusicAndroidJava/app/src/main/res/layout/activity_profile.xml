@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".component.profile.activity.ProfileActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <!--滚动容器-->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!--内容容器-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingVertical="@dimen/padding_outer">
+            <!--头像容器-->
+            <LinearLayout
+                android:id="@+id/icon_container"
+                style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/avatar" />
+
+                <!--头像-->
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/icon"
+                    android:layout_width="@dimen/avatar_width60"
+                    android:layout_height="@dimen/avatar_width60"
+                    android:src="@drawable/default_avatar" />
+            </LinearLayout>
+
+
+            <!--昵称容器-->
+            <LinearLayout style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/nickname" />
+
+                <!--输入框-->
+                <EditText
+                    android:id="@+id/nickname"
+                    style="@style/SettingMoreInput" />
+            </LinearLayout>
+
+            <!--性别容器-->
+            <LinearLayout
+                android:id="@+id/gender_container"
+                style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/gender" />
+
+                <TextView
+                    android:id="@+id/gender"
+                    style="@style/SettingValue" />
+
+                <ImageView style="@style/SuperSettingMore" />
+            </LinearLayout>
+
+            <!--生日容器-->
+            <LinearLayout
+                android:id="@+id/birthday_container"
+                style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/birthday" />
+
+                <TextView
+                    android:id="@+id/birthday"
+                    style="@style/SettingValue" />
+
+                <ImageView style="@style/SuperSettingMore" />
+            </LinearLayout>
+
+            <!--地区容器-->
+            <LinearLayout
+                android:id="@+id/area_container"
+                style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/area" />
+
+                <TextView
+                    android:id="@+id/area"
+                    style="@style/SettingValue" />
+
+                <ImageView style="@style/SuperSettingMore" />
+            </LinearLayout>
+
+            <!--个人介绍容器-->
+            <LinearLayout
+                style="@style/SuperSettingContainer"
+                android:layout_marginTop="@dimen/padding_outer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/description" />
+            </LinearLayout>
+
+            <!--个人介绍输入框-->
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:background="?attr/colorSurface"
+                android:gravity="left|top"
+                android:hint="@string/hint_description"
+                android:lineSpacingMultiplier="@dimen/line_space"
+                android:maxLength="140"
+                android:paddingLeft="@dimen/padding_outer"
+                android:paddingRight="@dimen/padding_large"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_meddle" />
+
+            <!--手机号容器-->
+            <LinearLayout
+                style="@style/SuperSettingContainer"
+                android:layout_marginTop="@dimen/padding_outer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/phone" />
+
+                <TextView
+                    android:id="@+id/phone"
+                    style="@style/SettingValue" />
+
+            </LinearLayout>
+
+            <!--邮箱容器-->
+            <LinearLayout style="@style/SuperSettingContainer">
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/email" />
+
+                <TextView
+                    android:id="@+id/email"
+                    style="@style/SettingValue" />
+            </LinearLayout>
+
+            <!--菜单标题-->
+            <TextView
+                style="@style/SettingGroupTitle"
+                android:layout_marginTop="@dimen/padding_outer"
+                android:text="@string/third_account" />
+            <!--qq容器-->
+            <LinearLayout style="@style/SuperSettingContainer">
+
+                <ImageView
+                    style="@style/SuperSettingIcon.Large"
+                    android:src="@drawable/selector_login_qq" />
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/qq" />
+
+                <!--按钮-->
+                <TextView
+                    android:id="@+id/qq"
+                    style="@style/SettingMoreButton"
+                    android:text="@string/unbind" />
+            </LinearLayout>
+
+            <!--微信容器-->
+            <LinearLayout style="@style/SuperSettingContainer">
+
+                <ImageView
+                    style="@style/SuperSettingIcon.Large"
+                    android:src="@drawable/selector_login_wechat" />
+
+                <TextView
+                    style="@style/SuperSettingTitle"
+                    android:text="@string/wechat" />
+
+                <!--按钮-->
+                <TextView
+                    android:id="@+id/wechat"
+                    style="@style/SettingMoreButton"
+                    android:background="@drawable/shape_color_primary"
+                    android:text="@string/unbind"
+                    android:textColor="?attr/colorLightWhite" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

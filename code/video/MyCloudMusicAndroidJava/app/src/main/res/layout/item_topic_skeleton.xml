@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_meddle">
+
+    <!--封面-->
+    <View
+        android:id="@+id/icon"
+        android:layout_width="@dimen/topic_height"
+        android:layout_height="@dimen/topic_height"
+        android:background="@color/by_skeleton_light_transparent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder" />
+
+    <!--标题容器-->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!--标题-->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/by_skeleton_light_transparent"
+            android:textColor="?attr/colorOnSurface" />
+
+        <!--详细-->
+        <TextView
+            android:id="@+id/info"
+            android:layout_width="@dimen/d140"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:background="@color/by_skeleton_light_transparent"
+            android:textColor="@color/black80" />
+    </LinearLayout>
+</LinearLayout>

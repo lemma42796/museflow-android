@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+    <!--输入框-->
+    <androidx.emoji.widget.EmojiAppCompatEditText
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/padding_meddle"
+        android:layout_weight="1"
+        android:background="@null"
+        android:hint="@string/hint_comment"
+        android:maxLength="140"
+        android:paddingHorizontal="@dimen/padding_outer"
+        android:paddingVertical="@dimen/padding_meddle"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="@dimen/text_meddle" />
+
+    <!--发送按钮-->
+    <Button
+        android:id="@+id/send"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/padding_outer"
+        android:background="@null"
+        android:text="@string/send"
+        android:textColor="?attr/colorLightWhite" />
+</LinearLayout>

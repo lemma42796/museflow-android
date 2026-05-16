@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_outer">
+    <!--头像-->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/icon"
+        android:layout_width="@dimen/avatar_width_meddle"
+        android:layout_height="@dimen/avatar_width_meddle"
+        android:scaleType="centerCrop"
+        android:src="@drawable/default_avatar"
+        app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle" />
+
+    <!--头部容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/d10"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <!--昵称-->
+        <TextView
+            android:id="@+id/nickname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="这是昵称"
+            android:textColor="@color/primary_button"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!--动态内容-->
+        <androidx.emoji.widget.EmojiTextView
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/d5"
+            android:lineSpacingMultiplier="@dimen/line_space"
+            android:text="这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="17sp" />
+
+        <!--图片列表控件-->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:visibility="gone" />
+
+        <!--位置-->
+        <TextView
+            android:id="@+id/position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:text="成都市.天府广场"
+            android:textColor="@color/primary_button"
+            android:textSize="@dimen/text_small" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/d10"
+            android:gravity="center_vertical">
+            <!--时间-->
+            <TextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:28"
+                android:textColor="@color/black80"
+                android:textSize="@dimen/text_meddle" />
+
+            <!--删除按钮-->
+            <TextView
+                android:id="@+id/delete"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/d10"
+                android:layout_weight="1"
+                android:text="@string/delete"
+                android:textColor="@color/primary_button"
+                android:textSize="@dimen/text_meddle" />
+
+            <!--点赞图标-->
+            <ImageView
+                android:id="@+id/like"
+                android:layout_width="@dimen/d18"
+                android:layout_height="@dimen/d18"
+                android:layout_marginLeft="@dimen/padding_small"
+                android:src="@drawable/thumb" />
+
+            <!--评论图标-->
+            <ImageView
+                android:id="@+id/comment"
+                android:layout_width="@dimen/d18"
+                android:layout_height="@dimen/d18"
+                android:layout_marginLeft="@dimen/padding_outer"
+                android:src="@drawable/comment_count_small" />
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/d10"
+            app:cardCornerRadius="@dimen/d5"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:id="@+id/like_comment_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?colorDivider"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/d10">
+                <!--点赞列表-->
+                <LinearLayout
+                    android:id="@+id/like_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingVertical="@dimen/d5">
+
+                    <ImageView
+                        android:layout_width="@dimen/d18"
+                        android:layout_height="@dimen/d18"
+                        android:src="@drawable/heart_solid"
+                        app:tint="?attr/colorPrimary" />
+
+                    <TextView
+                        android:id="@+id/like_users"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/d10"
+                        android:layout_weight="1"
+                        android:text="爱学啊，爱学啊，爱学啊"
+                        android:textColor="@color/black80"
+                        android:textSize="@dimen/text_meddle"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:id="@+id/comment_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <include layout="@layout/divider_small" />
+
+                    <!--评论列表-->
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:id="@+id/comment_content_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <!--                        <include layout="@layout/item_feed_comment"/>-->
+                        <!--                        <include layout="@layout/item_feed_comment"/>-->
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+</LinearLayout>

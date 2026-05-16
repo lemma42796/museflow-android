@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><!--一个设置-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/setting"
+    style="@style/SuperSettingContainer.Large"
+    android:clickable="false">
+
+    <ImageView
+        android:id="@+id/icon"
+        style="@style/SuperSettingIcon"
+        android:visibility="gone"
+        tools:src="@drawable/super_chevron_right" />
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/SuperSettingTitle"
+        tools:text="标题" />
+
+    <TextView
+        android:id="@+id/more"
+        style="@style/SuperSettingValue"
+        tools:text="更多文本" />
+
+    <ImageView
+        android:id="@+id/more_icon"
+        style="@style/SuperSettingMore" />
+</LinearLayout><!--/一个设置-->

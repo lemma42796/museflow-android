@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="@dimen/padding_outer">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        tools:text="标题" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/more"
+        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="?attr/colorSurface"
+        android:minHeight="0dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:minWidth="0dp"
+        android:paddingVertical="@dimen/padding_small"
+        android:paddingHorizontal="@dimen/d8"
+        android:visibility="gone"
+        android:text="@string/more"
+        android:textColor="@color/black80"
+        android:textSize="@dimen/text_small"
+        app:cornerRadius="13dp"
+        app:elevation="0dp"
+        app:icon="@drawable/more"
+        app:iconGravity="end"
+        app:iconPadding="0dp"
+        app:iconSize="15dp"
+        app:iconTint="@color/black80"
+        app:strokeColor="@color/black80"
+        app:strokeWidth="@dimen/d0_5" />
+</LinearLayout>

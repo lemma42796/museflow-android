@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".component.location.activity.SelectLocationActivity">
+
+    <!--内容-->
+    <LinearLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <com.amap.api.maps.MapView
+                android:id="@+id/map_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/my_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:layout_marginRight="@dimen/d20"
+                android:layout_marginBottom="@dimen/d20"
+                android:src="@drawable/ic_position_location"
+                app:backgroundTint="?attr/colorLightWhite"
+                app:fabSize="mini"
+                app:tint="?attr/colorPrimary" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="?attr/colorSurface"
+            android:orientation="vertical">
+            <!--搜索输入框-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/d10"
+                    android:layout_weight="1"
+                    android:background="@drawable/shape_input_rounded"
+                    android:hint="@string/search_poi"
+                    android:minHeight="@dimen/d40"
+                    android:paddingLeft="@dimen/d10"
+                    android:textSize="@dimen/s16" />
+
+                <TextView
+                    android:id="@+id/cancel_button"
+                    android:layout_width="@dimen/d50"
+                    android:layout_height="@dimen/d40"
+                    android:layout_marginRight="@dimen/d10"
+                    android:backgroundTint="?attr/colorLightWhite"
+                    android:gravity="center"
+                    android:text="@string/cancel"
+                    android:textColor="@color/black80"
+                    android:textSize="@dimen/s13"
+                    android:visibility="gone" />
+            </LinearLayout><!--搜索输入框 end-->
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/no_search_data"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="@string/no_data"
+                    android:textSize="@dimen/s14"
+                    android:visibility="gone" />
+
+                <ProgressBar
+                    android:id="@+id/progress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:fitsSystemWindows="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/d10"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/SuperTheme.PopupOverlay.Light" />
+
+        <Button
+            android:id="@+id/right_button"
+            android:layout_width="@dimen/d80"
+            android:layout_height="wrap_content"
+            android:text="@string/send"
+            android:textAllCaps="false"
+            android:textColor="?attr/colorLightWhite"
+            android:textSize="@dimen/s14" />
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

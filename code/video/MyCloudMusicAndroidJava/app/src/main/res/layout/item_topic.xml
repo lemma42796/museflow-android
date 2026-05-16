@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?><!--ConstraintLayout可以减少布局层级，提高性能
+所以现在官方推荐能用ConstraintLayout的就用他
+课程中为了让大家也学习以前的那种方式，之所以还要学习以前的写法
+是因为大部分老项目都还是这种，所以都会使用
+虽然RelativeLayout也是相对布局，但ConstraintLayout功能更强大，性能更好
+肯定也就更复杂了，所以在前面基础课程中单独讲解了-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/padding_meddle">
+    <!--封面-->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/icon"
+        android:layout_width="@dimen/topic_height"
+        android:layout_height="@dimen/topic_height"
+        android:scaleType="centerCrop"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle"
+        app:srcCompat="@drawable/placeholder" />
+
+    <!--标题-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:text="这是歌单名称"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintBottom_toTopOf="@+id/info"
+        app:layout_constraintLeft_toRightOf="@+id/icon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!--详细-->
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:text="这是详细信息"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="@color/black80"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/icon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title" />
+</androidx.constraintlayout.widget.ConstraintLayout>

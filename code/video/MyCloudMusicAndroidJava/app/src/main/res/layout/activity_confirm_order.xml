@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".component.order.activity.ConfirmOrderActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!--内容容器-->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scroll_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_meddle"
+                android:orientation="vertical">
+                <!--收货信息-->
+                <include
+                    android:id="@+id/address"
+                    layout="@layout/item_address2" />
+                <!--/收货信息-->
+
+                <!--商品容器-->
+                <LinearLayout
+                    android:id="@+id/product_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_meddle"
+                    android:orientation="vertical">
+
+                    <!--                                        <include layout="@layout/item_order_product" />-->
+
+                </LinearLayout>
+                <!--/商品容器-->
+
+                <!--总计容器-->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/padding_meddle"
+                    android:background="?attr/colorSurface"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:padding="@dimen/padding_outer">
+
+                    <!--商品总价-->
+                    <LinearLayout
+                        style="@style/SuperSettingContainer.NoClickable.Small"
+                        android:layout_marginTop="0dp"
+                        android:padding="0dp">
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/product_total_price" />
+
+                        <TextView
+                            android:id="@+id/total_price"
+                            style="@style/SettingValue"
+                            android:text="@string/price"
+                            android:textColor="?attr/colorOnSurface" />
+                    </LinearLayout>
+
+                    <!--运费-->
+                    <LinearLayout
+                        style="@style/SuperSettingContainer.NoClickable.Small"
+                        android:padding="0dp">
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/freight" />
+
+                        <TextView
+                            style="@style/SettingValue"
+                            android:text="@string/free_freight"
+                            android:textColor="?attr/colorOnSurface" />
+                    </LinearLayout>
+
+                    <!--优惠券-->
+                    <LinearLayout
+                        android:id="@+id/coupon_container"
+                        style="@style/SuperSettingContainer.NoClickable.Small"
+                        android:padding="0dp">
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/coupon" />
+
+                        <TextView
+                            android:id="@+id/coupon"
+                            style="@style/SettingValue"
+                            android:text="@string/no_available"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <ImageView style="@style/SuperSettingMore" />
+                    </LinearLayout>
+                </LinearLayout>
+                <!--/总计容器-->
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+        <!--/内容容器-->
+
+        <include layout="@layout/divider_small" />
+
+        <!--底部菜单-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/d55"
+            android:background="?attr/colorSurface"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/padding_outer">
+            <!--合计-->
+            <TextView
+                android:id="@+id/total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/total_count"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_meddle" />
+
+            <!--价格-->
+            <TextView
+                android:id="@+id/price"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/price"
+                android:textColor="@color/text_price"
+                android:textSize="@dimen/text_meddle" />
+
+            <TextView
+                android:id="@+id/primary"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/button_height"
+                android:background="@drawable/shape_color_primary"
+                android:gravity="center"
+                android:paddingHorizontal="@dimen/d50"
+                android:text="@string/go_pay"
+                android:textColor="?attr/colorLightWhite" />
+        </LinearLayout>
+        <!--/底部菜单-->
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/item_video_height"
+        android:layout_marginHorizontal="@dimen/padding_meddle"
+        android:layout_marginVertical="@dimen/padding_meddle"
+        android:background="@drawable/shape_radius_black">
+        <!--封面-->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/placeholder"
+            app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle" />
+
+        <!--封面上的容器-->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/padding_meddle"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:layout_marginEnd="@dimen/padding_meddle"
+            android:layout_marginBottom="@dimen/padding_meddle">
+            <!--视频分类
+               真实项目中点击它
+               相当于获取该类别的视频
+               我们这里后端没有视频分类
+               所以我们在客户端
+               只是实现这个按钮界面-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/button_height_small"
+                android:background="@drawable/shape_white_radius_border"
+                android:paddingHorizontal="@dimen/d20"
+                android:paddingVertical="@dimen/d5"
+                android:text="创意视频"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/s12" />
+
+            <!--播放次数容器-->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!--图标-->
+                <ImageView
+                    android:layout_width="@dimen/d15"
+                    android:layout_height="@dimen/d15"
+                    android:src="@drawable/play"
+                    app:tint="?attr/colorLightWhite" />
+
+                <!--点击数-->
+                <TextView
+                    android:id="@+id/count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/padding_small"
+                    android:text="1228"
+                    android:textColor="?attr/colorLightWhite" />
+            </LinearLayout>
+
+            <!--时长-->
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:drawableLeft="@drawable/ic_video_time"
+                android:drawablePadding="@dimen/padding_small"
+                android:text="12:28"
+                android:textColor="?attr/colorLightWhite" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <!--标题-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_marginRight="@dimen/padding_meddle"
+        android:layout_marginBottom="@dimen/padding_meddle"
+        android:ellipsize="end"
+        android:lineSpacingMultiplier="@dimen/line_space"
+        android:maxLines="2"
+        android:text="这是标题这是标题这是标这是标题这是标题这是标题这是标题这是标题这是标题这是标题这是标题题这是标题这是标题这是标题这是标题这是标题"
+        android:textColor="?attr/colorOnSurface" />
+
+    <!--分割线-->
+    <include layout="@layout/divider_small" />
+
+    <!--用户容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:layout_marginRight="@dimen/padding_meddle"
+        android:layout_marginBottom="@dimen/padding_meddle"
+        android:gravity="center_vertical">
+        <!--头像-->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/avatar_width_meddle"
+            android:layout_height="@dimen/avatar_width_meddle"
+            android:src="@drawable/placeholder" />
+
+        <!--昵称-->
+        <TextView
+            android:id="@+id/nickname"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_small"
+            android:layout_weight="1"
+            android:text="这是昵称"
+            android:textColor="@color/black80" />
+
+        <!--点赞容器-->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!--图标-->
+            <ImageView
+                android:layout_width="@dimen/d18"
+                android:layout_height="@dimen/d18"
+                android:src="@drawable/thumb" />
+
+            <!--点赞数-->
+            <TextView
+                android:id="@+id/likes_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_small"
+                android:text="1228"
+                android:textColor="@color/black80" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_outer"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!--图标-->
+            <ImageView
+                android:layout_width="@dimen/d18"
+                android:layout_height="@dimen/d18"
+                android:src="@drawable/comment_count_small" />
+
+            <!--点赞数-->
+            <TextView
+                android:id="@+id/comments_count"
+                android:layout_width="@dimen/d18"
+                android:layout_height="@dimen/d18"
+                android:layout_marginTop="@dimen/padding_small"
+                android:text="1228"
+                android:textColor="@color/black80" />
+        </LinearLayout>
+
+        <!--更多-->
+        <ImageView
+            android:layout_width="@dimen/d40"
+            android:layout_height="@dimen/d40"
+            android:layout_marginLeft="@dimen/padding_meddle"
+            android:src="@drawable/ellipsis_vertical" />
+    </LinearLayout>
+
+    <!--分割线-->
+    <include layout="@layout/divider" />
+</LinearLayout>

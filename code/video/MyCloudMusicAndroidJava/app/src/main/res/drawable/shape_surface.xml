@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--填充颜色
+    因为在selector里面无法直接使用attr
+    所以这里定义一个shape-->
+    <solid android:color="?attr/colorSurface" />
+</shape>

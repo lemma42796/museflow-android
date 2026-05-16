@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/title_height_small"
+    android:background="?attr/colorDivider"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/padding_outer">
+    <!--展开状态图标
+        如果默认的满足需求
+        可以不用自定义-->
+    <ImageView
+        android:id="@+id/status"
+        android:layout_width="@dimen/d15"
+        android:layout_height="@dimen/d15"
+        android:layout_marginRight="@dimen/padding_meddle"
+        android:src="@drawable/chevron_down"
+        android:visibility="gone"
+        app:tint="@color/black80" />
+
+    <!--标题-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="这是标题" />
+
+    <!--更多按钮-->
+    <ImageView
+        android:id="@+id/more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/add"
+        android:visibility="gone"
+        app:tint="@color/black80" />
+</LinearLayout>

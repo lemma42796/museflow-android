@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <!--本地音乐-->
+    <LinearLayout
+        android:id="@+id/local_music"
+        style="@style/SuperSettingContainer">
+
+        <ImageView
+            style="@style/SuperSettingIcon"
+            android:src="@drawable/scan" />
+
+        <TextView
+            style="@style/SuperSettingTitle"
+            android:text="@string/local_music" />
+
+        <ImageView style="@style/SuperSettingMore" />
+    </LinearLayout>
+
+    <!--下载管理-->
+    <LinearLayout
+        android:id="@+id/download_manager"
+        style="@style/SuperSettingContainer">
+
+        <ImageView
+            style="@style/SuperSettingIcon"
+            android:src="@drawable/scan" />
+
+        <TextView
+            style="@style/SuperSettingTitle"
+            android:text="@string/download_manager" />
+
+        <ImageView style="@style/SuperSettingMore" />
+    </LinearLayout>
+
+    <!--下载管理-->
+    <LinearLayout style="@style/SuperSettingContainer">
+
+        <ImageView
+            style="@style/SuperSettingIcon"
+            android:src="@drawable/scan" />
+
+        <TextView
+            style="@style/SuperSettingTitle"
+            android:text="@string/play_history" />
+
+        <ImageView style="@style/SuperSettingMore" />
+    </LinearLayout>
+
+    <!--下载管理-->
+    <LinearLayout style="@style/SuperSettingContainer">
+
+        <ImageView
+            style="@style/SuperSettingIcon"
+            android:src="@drawable/scan" />
+
+        <TextView
+            style="@style/SuperSettingTitle"
+            android:text="@string/my_radio" />
+
+        <ImageView style="@style/SuperSettingMore" />
+    </LinearLayout>
+
+    <!--下载管理-->
+    <LinearLayout style="@style/SuperSettingContainer">
+
+        <ImageView
+            style="@style/SuperSettingIcon"
+            android:src="@drawable/scan" />
+
+        <TextView
+            style="@style/SuperSettingTitle"
+            android:text="@string/my_collect" />
+
+        <ImageView style="@style/SuperSettingMore" />
+    </LinearLayout>
+</LinearLayout>

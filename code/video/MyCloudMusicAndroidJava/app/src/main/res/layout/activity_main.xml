@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    tools:openDrawer="start">
+
+    <!--真实内容-->
+    <include
+        android:id="@+id/content"
+        layout="@layout/activity_main_content" />
+
+    <!--这部分是侧滑内容
+    layout_gravity:是控制侧滑方向的
+    start:表示从左侧滑出
+    end:表示从右侧
+    上面说的start并不一定是左侧
+    因为这个start其实是手机的布局方法
+    有些语言的手机是从右到左布局
+    那么如果还是start
+    那就是从右侧滑出-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="?attr/colorSlideBackground"
+        android:clickable="true"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical">
+
+        <!--用户信息-->
+        <RelativeLayout
+            android:id="@+id/user_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/padding_outer">
+
+            <com.rishabhharit.roundedimageview.RoundedImageView
+                android:id="@+id/avatar"
+                android:layout_width="@dimen/avatar_width_small"
+                android:layout_height="@dimen/avatar_width_small"
+                android:layout_centerVertical="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_avatar"
+                app:cornerRadius="@dimen/d5" />
+
+            <TextView
+                android:id="@+id/nickname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="@dimen/padding_meddle"
+                android:layout_toRightOf="@id/avatar"
+                android:text="这是昵称"
+                android:textColor="?attr/colorOnBackground"
+                android:textSize="@dimen/text_large" />
+
+            <ImageView
+                style="@style/SuperSettingMore"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="@dimen/padding_meddle"
+                android:layout_toRightOf="@id/nickname" />
+
+            <ImageView
+                android:id="@+id/scan"
+                android:layout_width="@dimen/avatar_width_small"
+                android:layout_height="@dimen/avatar_width_small"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/scan"
+                app:tint="?attr/colorOnSurface" />
+        </RelativeLayout>
+
+        <!--滚动容器-->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:scrollbars="none">
+            <!--侧滑内容布局-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="@dimen/padding_outer">
+                <!--开通黑胶唱片
+                CardView
+            主要是用来实现圆角和阴影
+            只是这里用不到阴影
+            所以去掉了
+
+            cardCornerRadius：圆角尺寸
+            cardElevation：阴影高度-->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="@dimen/radius_meddle"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/black42"
+                        android:orientation="vertical"
+                        android:padding="@dimen/padding_outer">
+                        <!--第一行-->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/buy_vip"
+                                android:textColor="@color/black183"
+                                android:textSize="@dimen/super_text_large" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/shape_vip_button"
+                                android:gravity="center"
+                                android:paddingHorizontal="@dimen/padding_meddle"
+                                android:paddingVertical="@dimen/padding_small"
+                                android:text="@string/member_center"
+                                android:textColor="#837774"
+                                android:textSize="@dimen/text_small" />
+                        </LinearLayout><!--end 第一行-->
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vip_hint"
+                            android:textColor="@color/vip_border"
+                            android:textSize="@dimen/text_small" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/divider_small"
+                            android:layout_marginVertical="@dimen/padding_meddle"
+                            android:background="@color/divider2" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/vip_hint_price"
+                            android:textColor="@color/vip_border"
+                            android:textSize="@dimen/text_small" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!--region 我的消息-->
+                <androidx.cardview.widget.CardView style="@style/SettingCard">
+
+                    <LinearLayout style="@style/SettingCardContainer">
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/message_container"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <cn.bingoogolapple.badgeview.BGABadgeTextView
+                                android:id="@+id/message"
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_message" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/friend_container"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_friend" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/fans_container"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_fans" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/short_video"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/short_video" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/my_code"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_code" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                <!--endregion-->
+
+                <!--region 商城-->
+                <androidx.cardview.widget.CardView style="@style/SettingCard">
+
+                    <LinearLayout style="@style/SettingCardContainer">
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/mall"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/shop" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/mall" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/my_order"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_order" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/shop_cart"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/shop_cart" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/receiving_address"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/receiving_address" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/my_coupon"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_coupon" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                <!--endregion-->
+
+                <!--region 其他-->
+                <androidx.cardview.widget.CardView style="@style/SettingCard">
+
+                    <LinearLayout style="@style/SettingCardContainer">
+                        <!--菜单标题-->
+                        <TextView
+                            style="@style/SettingGroupTitle"
+                            android:text="@string/other" />
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/setting"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/setting" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/dark_mode" />
+
+                            <Switch
+                                android:id="@+id/dark_mode"
+                                style="@style/Wrap" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/timed_off" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/person_dress" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/cache_while_list" />
+
+                            <TextView
+                                style="@style/SuperSettingValueSmall"
+                                android:text="@string/not_open" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/music_alarm_clock" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                <!--endregion-->
+
+                <!--region 关于-->
+                <androidx.cardview.widget.CardView style="@style/SettingCard">
+
+                    <LinearLayout style="@style/SettingCardContainer">
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/my_customer_service" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/share_app" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/about"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/about" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+
+                        <!--菜单-->
+                        <LinearLayout
+                            android:id="@+id/about_code"
+                            style="@style/SuperSettingContainer">
+
+                            <ImageView
+                                style="@style/SuperSettingIcon"
+                                android:src="@drawable/scan" />
+
+                            <TextView
+                                style="@style/SuperSettingTitle"
+                                android:text="@string/about_code" />
+
+                            <ImageView style="@style/SuperSettingMore" />
+                        </LinearLayout>
+                        <!--end 菜单-->
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+                <!--endregion-->
+
+                <!--Widget.MaterialComponents.Button.UnelevatedButton:去掉阴影-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/primary"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/d55"
+                    android:layout_marginTop="@dimen/padding_meddle"
+                    android:backgroundTint="?attr/colorSurface"
+                    android:text="@string/logout"
+                    android:textColor="@color/warning" />
+
+                <Button
+                    android:id="@+id/close_app"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/padding_large"
+                    android:text="@string/close_app"
+                    android:textColor="@color/black80" />
+            </LinearLayout><!--end 侧滑内容布局-->
+        </ScrollView><!--end 滚动容器-->
+    </LinearLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

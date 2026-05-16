@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/padding_large"
+        android:orientation="vertical">
+        <!--标题-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/person_info"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_large"
+            android:textStyle="bold" />
+
+        <!--昵称-->
+        <TextView
+            android:id="@+id/nickname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            tools:text="@string/nickname_value" />
+
+        <!--性别-->
+        <TextView
+            android:id="@+id/gender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            tools:text="@string/gender_value" />
+
+        <!--生日-->
+        <TextView
+            android:id="@+id/birthday"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            tools:text="@string/birthday_value" />
+
+        <!--地区-->
+        <TextView
+            android:id="@+id/area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            tools:text="@string/area_value" />
+
+        <!--标题-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_large"
+            android:text="@string/more_info"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_large"
+            android:textStyle="bold" />
+
+        <!--个人描述-->
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            tools:text="@string/description_value" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

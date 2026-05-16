@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_surface"
+    android:orientation="vertical">
+
+    <!--列表-->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:overScrollMode="never" />
+
+    <!--更多按钮-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/padding_outer">
+
+        <TextView
+            android:id="@+id/reset"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_height"
+            android:layout_weight="1"
+            android:background="@drawable/shape_color_primary_dark_left_round"
+            android:gravity="center"
+            android:text="@string/reset"
+            android:textColor="?attr/colorLightWhite"
+            android:textSize="@dimen/text_meddle" />
+
+        <TextView
+            android:id="@+id/confirm"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_height"
+            android:layout_weight="1"
+            android:background="@drawable/shape_color_primary_right_round"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:textColor="?attr/colorLightWhite" />
+    </LinearLayout>
+</LinearLayout>
+

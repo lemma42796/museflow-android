@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_outer">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/top_address_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <!--联系人信息-->
+                <TextView
+                    android:id="@+id/contact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="@dimen/text_meddle"
+                    tools:text="爱学啊 13141111222" />
+
+                <TextView
+                    android:id="@+id/default_address"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/padding_meddle"
+                    android:text="@string/default_address_text"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/text_small"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+            <!--省市区-->
+            <TextView
+                android:id="@+id/area"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="@dimen/padding_meddle"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_meddle"
+                tools:text="四川成都市天府新区" />
+        </LinearLayout>
+        <!--详情地址-->
+        <TextView
+            android:id="@+id/detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_large"
+            android:textStyle="bold"
+            tools:text="牧华路路远大中央公园 9栋1单元801" />
+    </LinearLayout>
+
+    <ImageView style="@style/SuperSettingMore" />
+</LinearLayout>

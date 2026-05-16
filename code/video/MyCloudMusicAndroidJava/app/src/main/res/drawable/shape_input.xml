@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--圆角的大小-->
+    <corners android:radius="@dimen/d20" />
+
+    <!--填充颜色，这里不能引用attr，所以日间，夜间模式分别创建-->
+    <solid android:color="?attr/colorDivider" />
+</shape>

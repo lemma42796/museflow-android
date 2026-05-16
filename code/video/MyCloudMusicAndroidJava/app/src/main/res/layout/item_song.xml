@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <!--内容容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:layout_width="@dimen/d50"
+            android:layout_height="@dimen/d50">
+
+            <!--索引-->
+            <TextView
+                android:id="@+id/index"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:textColor="@color/black80"
+                tools:text="12" />
+
+            <!--选择状态-->
+            <ImageView
+                android:id="@+id/check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                tools:src="@drawable/ic_checkbox_selected" />
+        </RelativeLayout>
+        <!--音乐信息容器-->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <!--标题-->
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/s15"
+                tools:text="这是歌曲名称" />
+
+            <!--信息容器-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!--下载完成图标-->
+                <ImageView
+                    android:id="@+id/download"
+                    android:layout_width="@dimen/d15"
+                    android:layout_height="@dimen/d15"
+                    android:layout_marginRight="@dimen/d5"
+                    android:src="@drawable/ic_song_downloaded"
+                    android:visibility="gone" />
+
+                <!--信息-->
+                <TextView
+                    android:id="@+id/info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="这是歌手信息"
+                    android:textColor="@color/black80"
+                    android:textSize="@dimen/s12" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!--更多按钮-->
+        <ImageButton
+            android:id="@+id/more"
+            android:layout_width="@dimen/d50"
+            android:layout_height="@dimen/d50"
+            android:background="@null"
+            android:padding="@dimen/padding_outer"
+            android:src="@drawable/more_vertical_dot" />
+    </LinearLayout>
+
+</LinearLayout>

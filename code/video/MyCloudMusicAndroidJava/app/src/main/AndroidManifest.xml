@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission
+        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission
+        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.WRITE_MEDIA_STORAGE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Android 13版本适配，细化存储权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!--region 后台播放权限-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <!--endregion-->
+
+    <!--
+使用的特性，如果再Google Play上浏览应用，如果当前设备不满足，就看不到这个应用；
+    因为这里是一个音乐应用，强制要求有相机，不太好，这里只是讲解这个知识点
+    -->
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-feature android:name="android.hardware.location.gps" />
+
+    <queries package="${applicationId}">
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.ACTION_VIDEO_CAPTURE" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".AppContext"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/SuperUI.NoActionBar"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:theme">
+        <activity
+            android:name=".component.about.activity.AboutCodeActivity"
+            android:exported="false"
+            android:label="@string/about_code"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.about.activity.AboutActivity"
+            android:exported="false"
+            android:label="@string/about"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.conversation.activity.ConversationActivity"
+            android:exported="false"
+            android:label="@string/my_message"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.chat.activity.ChatActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.cart.activity.ShopCartActivity"
+            android:exported="false"
+            android:label="@string/shop_cart"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.order.activity.OrderActivity"
+            android:exported="false"
+            android:label="@string/my_order"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.pay.activity.PayActivity"
+            android:exported="false"
+            android:label="@string/pay_order"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.order.activity.OrderDetailActivity"
+            android:exported="false"
+            android:label="@string/order_detail"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.order.activity.ConfirmOrderActivity"
+            android:exported="false"
+            android:label="@string/confirm_order"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.address.activity.AddressDetailActivity"
+            android:exported="false"
+            android:label="@string/receiving_address"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.address.activity.AddressActivity"
+            android:exported="false"
+            android:label="@string/receiving_address"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.product.activity.ProductDetailActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.product.activity.ProductActivity"
+            android:exported="false"
+            android:label="@string/mall"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.lyric.activity.ShareLyricImageActivity"
+            android:exported="false"
+            android:label="@string/share_lyric"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.lyric.activity.SelectLyricActivity"
+            android:exported="false"
+            android:label="@string/activity_select_lyric" />
+        <activity
+            android:name=".component.search.activity.SearchActivity"
+            android:exported="false"
+            android:label="@string/search"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.scan.activity.ScanActivity"
+            android:exported="false"
+            android:label="@string/scan" />
+        <activity
+            android:name=".component.code.activity.CodeActivity"
+            android:exported="false"
+            android:label="@string/my_code" />
+        <activity
+            android:name=".component.user.activity.UserActivity"
+            android:exported="false"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.profile.activity.ProfileActivity"
+            android:exported="false"
+            android:label="@string/my_profile"
+            android:theme="@style/SuperUI.NoActionBar.Grey" />
+        <activity
+            android:name=".component.location.activity.PreviewLocationActivity"
+            android:exported="false"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="${amap_id}" />
+
+        <activity
+            android:name=".component.location.activity.SelectLocationActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.feed.activity.PublishFeedActivity"
+            android:exported="false"
+            android:label="@string/activity_publish_feed"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.setting.activity.SettingActivity"
+            android:exported="false"
+            android:label="@string/setting"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".component.video.activity.VideoDetailActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.comment.activity.CommentActivity"
+            android:exported="false"
+            android:label="@string/comment"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.music.activity.ScanLocalMusicActivity"
+            android:exported="false"
+            android:label="@string/scan_local_music"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.download.activity.DownloadActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.music.activity.LocalMusicActivity"
+            android:exported="false"
+            android:label="@string/local_music"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.player.activity.MusicPlayerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".component.player.activity.SimplePlayerActivity"
+            android:exported="false"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.user.activity.UserDetailActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.ad.activity.AdActivity"
+            android:exported="false" />
+        <activity
+            android:name=".component.password.activity.SetPasswordActivity"
+            android:exported="false"
+            android:label="@string/set_password"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.input.activity.InputCodeActivity"
+            android:exported="false"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.register.activity.RegisterActivity"
+            android:exported="false"
+            android:label="@string/register"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.login.activity.LoginActivity"
+            android:exported="false"
+            android:label="@string/login"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.input.activity.InputUserIdentityActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.discovery.activity.CustomDiscoveryActivity"
+            android:exported="false"
+            android:label="@string/custom_discovery"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.sheet.activity.SheetDetailActivity"
+            android:exported="true"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light">
+            <intent-filter>
+
+                <!--
+                配置可以通过这样的连接打开该界面：mycloudmusic://sheets/detail?id=1
+
+                网页中这样实现：
+                <a href="[scheme]://[host]/[path]?[query]">启动应用程序</a>
+                -->
+                <data
+                    android:host="sheets"
+                    android:pathPrefix="/detail"
+                    android:scheme="mycloudmusic" />
+
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".component.web.activity.WebActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:label=""
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.login.activity.LoginHomeActivity"
+            android:exported="false"
+            android:label=""
+            android:screenOrientation="portrait" /> <!-- region 启动界面 -->
+        <activity
+            android:name=".component.splash.activity.SplashActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+            添加快捷方式
+            https://developer.android.google.cn/guide/topics/ui/shortcuts/creating-shortcuts
+            Android7.1才有该功能
+            -->
+            <!-- <meta-data -->
+            <!-- android:name="android.app.shortcuts" -->
+            <!-- android:resource="@xml/splash_shortcut" /> -->
+
+            <!--
+            region 推送
+            点击打开intent方式：intent:#Intent;action=com.ixuea.courses.mymusic.ACTION_PUSH;component=com.ixuea.courses.mymusic/com.ixuea.courses.mymusic.component.splash.activity.SplashActivity;i.style=20;S.sheet_id=1;end
+            -->
+            <intent-filter>
+                <action android:name="${applicationId}.ACTION_PUSH" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- endregion -->
+        </activity> <!-- endregion -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+        <activity
+            android:name=".component.guide.activity.GuideActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" /> <!-- region 音乐播放service -->
+        <service
+            android:name=".service.MusicPlayerService"
+            android:enabled="true"
+            android:exported="true"
+            android:persistent="true"
+            android:priority="1000"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </service> <!-- endregion -->
+        <service
+            android:name=".playback.PlaybackService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver> <!-- region 省市区选择 -->
+        <activity
+            android:name="com.ixuea.selector.region.RegionSelectActivity"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SuperUI.NoActionBar.Light" /> <!-- region Widget配置 -->
+        <receiver
+            android:name=".component.widget.MusicWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget" />
+        </receiver>
+        <!--
+region 小米推送
+        https://doc.rongcloud.cn/im/Android/5.X/noui/push/mi
+        -->
+        <service
+            android:name="com.xiaomi.push.service.XMPushService"
+            android:enabled="true" />
+        <service
+            android:name="com.xiaomi.mipush.sdk.PushMessageHandler"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name="com.xiaomi.mipush.sdk.MessageHandleService"
+            android:enabled="true" />
+
+        <activity
+            android:name="com.xiaomi.mipush.sdk.NotificationClickedActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name="com.xiaomi.push.service.XMJobService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver
+            android:name="com.xiaomi.push.service.receivers.NetworkStatusReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.xiaomi.push.service.receivers.PingReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.xiaomi.push.PING_TIMER" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="io.rong.push.platform.mi.MiMessageReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.xiaomi.mipush.RECEIVE_MESSAGE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.xiaomi.mipush.MESSAGE_ARRIVED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.xiaomi.mipush.ERROR" />
+            </intent-filter>
+        </receiver> <!-- endregion -->
+        <!--
+region 融云推送
+        https://doc.rongcloud.cn/im/Android/5.X/noui/push/config-push-notification#custom_click
+        -->
+        <receiver
+            android:name=".component.push.receiver.RongPushReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.rong.push.intent.MESSAGE_ARRIVED" />
+                <action android:name="io.rong.push.intent.MESSAGE_CLICKED" />
+                <action android:name="io.rong.push.intent.THIRD_PARTY_PUSH_STATE" />
+            </intent-filter>
+        </receiver> <!-- endregion -->
+        <!-- region 微信支付回调界面 -->
+        <activity
+            android:name=".wxapi.WXPayEntryActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!--region 极光-->
+        <meta-data
+            android:name="JPUSH_APPKEY"
+            android:value="${JPUSH_APPKEY}" />
+        <meta-data
+            android:name="JPUSH_CHANNEL"
+            android:value="${JPUSH_CHANNEL}" />
+
+        <!-- Since JCore2.0.0 Required SDK核心功能 -->
+        <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
+        <!-- 这个是自定义Service，要继承极光JCommonService，可以在更多手机平台上使得推送通道保持的更稳定 -->
+        <service
+            android:name=".component.push.PushService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":pushcore">
+            <intent-filter>
+                <action android:name="cn.jiguang.user.service.action" />
+            </intent-filter>
+        </service> <!-- Required since 3.0.7 -->
+        <!-- 新的 tag/alias 接口结果返回需要开发者配置一个自定的广播 -->
+        <!-- 3.3.0开始所有事件将通过该类回调 -->
+        <!-- 该广播需要继承 JPush 提供的 JPushMessageReceiver 类, 并如下新增一个 Intent-Filter -->
+        <receiver
+            android:name=".component.push.PushReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
+
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+        <!--endregion-->
+    </application>
+
+</manifest>

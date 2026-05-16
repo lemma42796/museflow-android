@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><!--头像-->
+<com.google.android.material.imageview.ShapeableImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/icon"
+    android:layout_width="@dimen/avatar_width_meddle"
+    android:layout_height="@dimen/avatar_width_meddle"
+    android:scaleType="centerCrop"
+    android:src="@drawable/default_avatar"
+    app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle" />

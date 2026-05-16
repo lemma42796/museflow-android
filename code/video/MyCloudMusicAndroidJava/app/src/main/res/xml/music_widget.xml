@@ -1,0 +1,10 @@
+<!--定义应用微件的基本特性，如应用微件的最小布局尺寸、应用微件的初始布局资源、应用微件的更新频率
+以及（可选）在应用微件创建时启动的配置 Activity。
+尺寸方法计算官方文档：https://developer.android.google.cn/guide/practices/ui_guidelines/widget_design#anatomy_determining_size-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/music_widget"
+    android:minWidth="272dp"
+    android:minHeight="50dp"
+    android:previewImage="@drawable/widget_preview"
+    android:updatePeriodMillis="180000"
+    android:widgetCategory="home_screen"></appwidget-provider>

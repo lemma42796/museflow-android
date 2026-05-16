@@ -1,0 +1,16 @@
+apply plugin: 'com.android.library'
+
+
+//引入上层目录的common.gradle文件内容
+apply from: '../common.gradle'
+
+android {
+
+
+    namespace 'com.github.jdsjlzx'
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.4.0'
+}

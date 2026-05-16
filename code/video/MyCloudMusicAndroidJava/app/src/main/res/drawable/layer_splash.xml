@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--背景-->
+    <item android:drawable="?android:attr/colorBackground"/>
+
+    <!--logo-->
+    <item>
+        <bitmap android:gravity="center"
+            android:src="@drawable/splash_banner"/>
+    </item>
+
+    <!--还可以显示更多图片
+    android:bottom:相当于marginBottom
+    一般这里不显示文本相关的图片，因为不好国际化，这里只是演示这个功能-->
+<!--    <item android:bottom="@dimen/d30">-->
+    <!--        <bitmap android:src="@drawable/button_live"-->
+<!--            android:gravity="bottom"/>-->
+<!--    </item>-->
+</layer-list>

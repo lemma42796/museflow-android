@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="@dimen/padding_outer"
+    android:paddingLeft="@dimen/padding_outer">
+
+    <!--第一行容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <!--头像-->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/avatar_width_meddle"
+            android:layout_height="@dimen/avatar_width_meddle"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/default_avatar" />
+
+        <!--用户信息容器-->
+        <LinearLayout
+            android:id="@+id/user_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_meddle"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <!--昵称-->
+            <TextView
+                android:id="@+id/nickname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/black80"
+                tools:text="这是昵称" />
+
+            <!--时间-->
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black80"
+                android:textSize="@dimen/text_small"
+                tools:text="一天前" />
+        </LinearLayout>
+
+        <!--点赞容器-->
+        <LinearLayout
+            android:id="@+id/like_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/d8"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!--点赞数-->
+            <TextView
+                android:id="@+id/like_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black80"
+                android:textSize="@dimen/text_small"
+                tools:text="1228" />
+
+            <!--图标-->
+            <ImageView
+                android:id="@+id/like"
+                android:layout_width="@dimen/d30"
+                android:layout_height="@dimen/d30"
+                android:padding="@dimen/d7"
+                android:src="@drawable/thumb" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--评论内容-->
+    <androidx.emoji.widget.EmojiAppCompatTextView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:layout_marginRight="@dimen/padding_outer"
+        android:lineSpacingMultiplier="1.3"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="@dimen/text_meddle"
+        tools:text="这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容" />
+
+    <!--被回复评论容器-->
+    <LinearLayout
+        android:id="@+id/reply_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:layout_marginRight="@dimen/padding_outer"
+        android:orientation="horizontal"
+        android:visibility="gone">
+        <!--分割线-->
+        <View
+            android:layout_width="@dimen/divider_comment_reply"
+            android:layout_height="match_parent"
+            android:background="@color/divider" />
+
+        <!--被回复评论的内容-->
+        <androidx.emoji.widget.EmojiAppCompatTextView
+            android:id="@+id/reply_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/padding_meddle"
+            android:lineSpacingMultiplier="@dimen/line_space"
+            android:text="这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容，这是评论内容"
+            android:textColor="@color/black80" />
+    </LinearLayout>
+</LinearLayout>

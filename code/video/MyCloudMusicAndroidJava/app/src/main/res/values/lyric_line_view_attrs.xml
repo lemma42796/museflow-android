@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--定义一个名为LyricLineView样式-->
+    <declare-styleable name="LyricLineView">
+        <!--歌词大小-->
+        <attr name="text_size" format="dimension"></attr>
+
+        <!--歌词默认颜色-->
+        <attr name="text_color" format="color" />
+
+        <!--歌词高亮颜色-->
+        <attr name="selected_text_color" format="color" />
+
+        <!--歌词位置-->
+        <attr name="gravity">
+            <flag name="left" value="0x01" />
+            <flag name="center" value="0x10" />
+        </attr>
+    </declare-styleable>
+</resources>

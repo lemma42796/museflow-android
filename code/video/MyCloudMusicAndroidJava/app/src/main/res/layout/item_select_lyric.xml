@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/container"
+    android:padding="@dimen/padding_outer">
+
+    <!--选中图标-->
+    <ImageView
+        android:id="@+id/select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_desktop_color_check"
+        android:visibility="gone" />
+
+    <!--歌词-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="这是歌词内容这是歌词内容这是歌词内容"
+        android:textColor="?attr/colorLightWhite"
+        android:textSize="@dimen/text_large" />
+</RelativeLayout>

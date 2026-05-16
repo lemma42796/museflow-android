@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/padding_outer"
+        android:layout_marginVertical="@dimen/d40"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="确认删除"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/s18"
+            android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/d25"
+            android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            android:textColor="@color/black66"
+            android:textSize="@dimen/s16"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!--输入框-->
+    <EditText
+        android:id="@+id/input"
+        style="@style/EditText.SingleLine.Border"
+        android:layout_marginHorizontal="@dimen/d20"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="@dimen/d20"
+        android:hint="@string/please_enter"
+        android:padding="@dimen/padding_meddle"
+        android:textSize="@dimen/text_meddle"
+        android:visibility="gone" />
+
+    <include layout="@layout/divider_small" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/d50"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/cancel"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/selector_surface"
+            android:clickable="true"
+            android:gravity="center"
+            android:text="@string/cancel"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/s17" />
+
+        <include layout="@layout/divider_small_vertical" />
+
+        <TextView
+            android:id="@+id/confirm"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/selector_surface"
+            android:clickable="true"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/s17" />
+    </LinearLayout>
+</LinearLayout>

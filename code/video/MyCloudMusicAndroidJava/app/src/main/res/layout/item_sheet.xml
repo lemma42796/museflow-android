@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!--正方形容器-->
+    <com.ixuea.superui.SquareLinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!--封面-->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/placeholder"
+                app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle" />
+
+            <!--点击数容器-->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="@dimen/padding_small"
+                android:layout_marginRight="@dimen/padding_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="@dimen/d10"
+                    android:layout_height="@dimen/d10"
+                    android:src="@drawable/play"
+                    app:tint="?attr/colorLightWhite" />
+
+                <TextView
+                    android:id="@+id/more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/padding_small"
+                    android:text="100"
+                    android:textColor="?attr/colorLightWhite"
+                    android:textSize="@dimen/s10" />
+            </LinearLayout>
+        </RelativeLayout>
+    </com.ixuea.superui.SquareLinearLayout>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:layout_marginBottom="@dimen/padding_meddle"
+        android:ellipsize="end"
+        android:lineSpacingMultiplier="@dimen/line_space"
+        android:maxLines="2"
+        android:text="这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题这是歌单标题"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="@dimen/text_meddle" />
+</LinearLayout>

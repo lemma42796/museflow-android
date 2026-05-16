@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="visible">
+
+    <!--分割线-->
+    <include layout="@layout/divider_small" />
+
+    <!--内容容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/colorBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/d16">
+
+        <!--ViewPager2使用到这里有内存泄漏
+        所以暂时用ViewPager-->
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/list"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/d40"
+            android:layout_weight="1"
+            android:overScrollMode="never" />
+
+        <!--播放暂停按钮-->
+        <ImageView
+            android:id="@+id/play"
+            android:layout_width="@dimen/d50"
+            android:layout_height="@dimen/d50"
+            android:padding="@dimen/d12"
+            android:scaleType="centerInside"
+            android:src="@drawable/selector_play_small"
+            app:tint="?attr/colorPrimary" />
+
+        <!--播放列表按钮-->
+        <ImageView
+            android:id="@+id/list_button"
+            android:layout_width="@dimen/d50"
+            android:layout_height="@dimen/d50"
+            android:padding="@dimen/d12"
+            android:src="@drawable/music_list"
+            app:tint="?attr/colorPrimary" />
+    </LinearLayout>
+
+    <!--进度条-->
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/d1"
+        android:progressDrawable="@drawable/shape_seek_bar"
+        tools:progress="50" />
+</LinearLayout>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".component.input.activity.InputCodeActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/d30"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/verification_code"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_large2"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/code_send_target"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:text="@string/verification_code_sent_to"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_meddle" />
+
+        <!--验证码输入框-->
+        <com.king.view.splitedittext.SplitEditText
+            android:id="@+id/code"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/button_height_large"
+            android:layout_marginTop="@dimen/d40"
+            android:inputType="number"
+            app:setBorderColor="@color/divider"
+            app:setBorderCornerRadius="@dimen/d5"
+            app:setInputBorderColor="?attr/colorPrimary" />
+
+        <Button
+            android:id="@+id/resend"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:textColor="@color/black80"
+            tools:text="@string/resend" />
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

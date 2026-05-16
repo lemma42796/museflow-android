@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--列表控件-->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!--按钮容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/padding_outer"
+        android:layout_marginBottom="@dimen/padding_outer"
+        android:orientation="horizontal">
+
+        <!--下载按钮-->
+        <Button
+            android:id="@+id/download"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/padding_outer"
+            android:layout_weight="1"
+            android:text="@string/pause_all"
+            android:textColor="?attr/colorLightWhite" />
+
+        <!--删除按钮
+        app:icon：这种方式设置的图标，会自动着色当前控件文本颜色-->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete"
+            style="@style/Widget.MaterialComponents.Button.Icon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/delete_all"
+            android:textColor="?attr/colorLightWhite" />
+    </LinearLayout>
+</LinearLayout>

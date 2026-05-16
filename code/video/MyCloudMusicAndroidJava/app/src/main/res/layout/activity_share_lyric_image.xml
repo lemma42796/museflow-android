@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".component.lyric.activity.ShareLyricImageActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <!--滚动容器-->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!--内容容器-->
+        <LinearLayout
+            android:id="@+id/lyric_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="@dimen/padding_outer">
+            <!--封面图容器-->
+            <com.ixuea.superui.SquareLinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!--封面-->
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/placeholder" />
+            </com.ixuea.superui.SquareLinearLayout>
+
+            <!--歌词-->
+            <TextView
+                android:id="@+id/lyric"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_meddle"
+                android:gravity="left"
+                android:lineSpacingMultiplier="1.5"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_large"
+                tools:text="这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词这是歌词这是歌词这是歌词这是歌词\n这是歌\n词这是歌词这是歌词" />
+
+            <!--歌曲信息-->
+            <TextView
+                android:id="@+id/song"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:gravity="right"
+                android:textColor="@color/black80"
+                tools:text="@string/share_song_name" />
+
+            <!--尾巴-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!--图标-->
+                <ImageView
+                    android:layout_width="@dimen/share_lyric_logo_width"
+                    android:layout_height="@dimen/share_lyric_logo_width"
+                    android:src="@mipmap/ic_launcher" />
+
+                <!--尾巴文本-->
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/padding_small"
+                    android:layout_weight="1"
+                    android:text="来自我的云音乐•歌词分享"
+                    android:textSize="@dimen/text_small" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

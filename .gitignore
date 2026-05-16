@@ -1,0 +1,4 @@
+# Local secret-bearing config
+/code/video/MyCloudMusicAndroidJava/app/src/main/java/com/ixuea/courses/mymusic/config/Config.local.java
+/code/video/MyCloudMusicAndroidJava/keystore.properties
+/code/video/MyCloudMusicAndroidJava/config/*.jks

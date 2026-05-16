@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CloudMusic</string>
+
+    <!--发现界面-->
+    <string name="discovery">Discovery</string>
+    <string name="video">Video</string>
+    <string name="me">Me</string>
+    <string name="feed">Feed</string>
+    <string name="live">Live</string>
+</resources>

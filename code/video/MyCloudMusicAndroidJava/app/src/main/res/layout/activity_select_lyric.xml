@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black42"
+    tools:context=".component.lyric.activity.SelectLyricActivity">
+
+    <include layout="@layout/toolbar_transparent_light" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!--列表控件-->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!--按钮容器-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/padding_outer">
+
+            <!--占位布局-->
+            <include layout="@layout/fill" />
+
+            <!--分享歌词-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/share_lyric"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/d40"
+                android:layout_centerVertical="true"
+                android:layout_marginHorizontal="@dimen/d5"
+                android:layout_toRightOf="@+id/select_image"
+                android:backgroundTint="@color/transparent"
+                android:text="@string/share_lyric"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/text_small"
+                app:cornerRadius="@dimen/d20"
+                app:elevation="0dp"
+                app:strokeColor="@color/black80"
+                app:strokeWidth="@dimen/d0_5" />
+
+            <!--占位布局-->
+            <include layout="@layout/fill" />
+
+            <!--歌词图片-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/share_lyric_image"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/d40"
+                android:layout_centerVertical="true"
+                android:layout_marginHorizontal="@dimen/d5"
+                android:layout_toRightOf="@+id/select_image"
+                android:backgroundTint="@color/transparent"
+                android:text="@string/share_lyric"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/text_small"
+                app:cornerRadius="@dimen/d20"
+                app:elevation="0dp"
+                app:strokeColor="@color/black80"
+                app:strokeWidth="@dimen/d0_5" />
+
+            <!--占位布局-->
+            <include layout="@layout/fill" />
+
+            <!--歌词视频-->
+            <com.google.android.material.button.MaterialButton
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/d40"
+                android:layout_centerVertical="true"
+                android:layout_marginHorizontal="@dimen/d5"
+                android:layout_toRightOf="@+id/select_image"
+                android:backgroundTint="@color/transparent"
+                android:text="@string/lyric_video"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/text_small"
+                app:cornerRadius="@dimen/d20"
+                app:elevation="0dp"
+                app:strokeColor="@color/black80"
+                app:strokeWidth="@dimen/d0_5" />
+
+            <!--占位布局-->
+            <include layout="@layout/fill" />
+
+        </LinearLayout>
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

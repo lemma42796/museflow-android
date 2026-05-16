@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/padding_outer"
+    android:paddingVertical="@dimen/padding_meddle">
+    <!--头像-->
+    <com.rishabhharit.roundedimageview.RoundedImageView
+        android:id="@+id/icon"
+        android:layout_width="@dimen/d50"
+        android:layout_height="@dimen/d50"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/default_avatar"
+        app:cornerRadius="@dimen/d5" />
+
+    <!--内容容器-->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!--标题容器-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <!--昵称-->
+            <TextView
+                android:id="@+id/nickname"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_meddle"
+                tools:text="这是昵称" />
+
+            <!--时间-->
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:28"
+                android:textColor="@color/black80"
+                android:textSize="@dimen/text_small" />
+        </LinearLayout>
+
+        <!--消息容器-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_small"
+            android:orientation="horizontal">
+            <!--消息-->
+            <TextView
+                android:id="@+id/info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="这是消息内容这是消息内容这是消息内容这是消息内容这是消息内容这是消息内容"
+                android:textColor="@color/black80"
+                android:textSize="@dimen/text_small" />
+
+            <!--未读消息数-->
+            <TextView
+                android:id="@+id/count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/padding_meddle"
+                android:background="@drawable/shape_color_primary"
+                android:paddingLeft="@dimen/padding_small"
+                android:paddingRight="@dimen/padding_small"
+                android:text="99+"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/text_small"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

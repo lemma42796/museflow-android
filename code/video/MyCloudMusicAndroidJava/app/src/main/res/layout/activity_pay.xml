@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".component.pay.activity.PayActivity">
+
+    <include layout="@layout/toolbar" />
+
+
+    <LinearLayout
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!--价格-->
+        <TextView
+            android:id="@+id/price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_large"
+            android:textColor="@color/text_price"
+            android:textSize="40sp"
+            tools:text="@string/price" />
+
+        <!--支付倒计时-->
+        <TextView
+            android:id="@+id/pay_remaining_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_large"
+            android:background="@drawable/shape_second_border_radius_15"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/d20"
+            android:paddingVertical="@dimen/d5"
+            android:textColor="@color/black80"
+            android:textSize="@dimen/s12"
+            tools:text="@string/pay_remaining_time" />
+
+        <!--支付方式容器-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/padding_large"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_meddle"
+                android:background="?attr/colorSurface"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <me.shihao.library.XRadioGroup
+                    android:id="@+id/radio_group_pay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!--支付宝-->
+
+                    <!--微信-->
+                    <LinearLayout
+                        style="@style/SuperSettingContainer"
+                        android:clickable="false"
+                        android:paddingRight="0dp">
+
+                        <ImageView
+                            style="@style/SuperSettingIcon.Large"
+                            android:src="@drawable/pay_aliapy"
+                            app:tint="@null" />
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/alipay" />
+
+                        <!--单选-->
+                        <RadioButton
+                            android:id="@+id/radio_alipay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/message_container"
+                        style="@style/SuperSettingContainer"
+                        android:clickable="false"
+                        android:paddingRight="0dp">
+
+                        <ImageView
+                            style="@style/SuperSettingIcon.Large"
+                            android:src="@drawable/pay_wechat"
+                            app:tint="@null" />
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/wechat" />
+
+                        <!--单选-->
+                        <RadioButton
+                            android:id="@+id/radio_wechat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <!--花呗分期-->
+                    <LinearLayout
+                        style="@style/SuperSettingContainer"
+                        android:clickable="false"
+                        android:paddingRight="0dp">
+
+                        <ImageView
+                            style="@style/SuperSettingIcon.Large"
+                            android:src="@drawable/pay_huabei_stage"
+                            app:tint="@null" />
+
+                        <TextView
+                            style="@style/SuperSettingTitle"
+                            android:text="@string/huabei_stages" />
+
+                        <!--单选-->
+                        <RadioButton
+                            android:id="@+id/radio_huawei_stage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                </me.shihao.library.XRadioGroup>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!--底部菜单-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/d55"
+            android:background="?attr/colorSurface"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/padding_outer">
+
+            <TextView
+                android:id="@+id/primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:background="@drawable/shape_color_primary"
+                android:gravity="center"
+                android:paddingHorizontal="@dimen/d50"
+                android:text="@string/confirm_pay_price"
+                android:textColor="?attr/colorLightWhite"
+                android:textSize="@dimen/text_meddle" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--圆角的大小
+    topRightRadius:右上角圆角大小
+    bottomRightRadius:右下角圆角大小
+    -->
+    <corners
+        android:bottomRightRadius="@dimen/radius_button"
+        android:topRightRadius="@dimen/radius_button" />
+
+    <!--填充颜色-->
+    <solid android:color="?attr/colorPrimary" />
+</shape>

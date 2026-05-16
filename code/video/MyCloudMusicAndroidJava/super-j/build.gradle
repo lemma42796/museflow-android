@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.library'
+}
+
+//引入上层目录的common.gradle文件内容
+apply from: '../common.gradle'
+
+android {
+    defaultConfig {
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    namespace 'com.ixuea.common'
+
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}

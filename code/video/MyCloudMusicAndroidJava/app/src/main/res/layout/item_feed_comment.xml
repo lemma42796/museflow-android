@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><!--动态的评论，类似微信朋友圈评论-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:lineSpacingMultiplier="@dimen/line_space"
+    android:paddingVertical="@dimen/d5"
+    android:textColor="?attr/colorOnSurface"
+    android:textSize="@dimen/text_meddle"
+    tools:text="爱学啊：这是一条评论，评论很长长长长长长长长长长长长长长长长"></TextView>

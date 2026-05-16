@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".component.address.activity.AddressDetailActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!--识别地址-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_meddle"
+            android:background="?attr/colorSurface"
+            android:orientation="vertical"
+            android:padding="@dimen/padding_outer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <!--输入框-->
+                <EditText
+                    android:id="@+id/input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:gravity="left|top"
+                    android:hint="@string/recognition_address_tip"
+                    android:textSize="@dimen/text_meddle" />
+
+                <!--清除按钮-->
+                <ImageView
+                    android:id="@+id/clear"
+                    android:layout_width="@dimen/d20"
+                    android:layout_height="@dimen/d20"
+                    android:src="@drawable/close"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!--按钮容器-->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_meddle"
+                android:orientation="horizontal">
+
+                <!--选择图片按钮-->
+                <ImageView
+                    android:id="@+id/select_image"
+                    android:layout_width="@dimen/d20"
+                    android:layout_height="@dimen/d20"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="@dimen/padding_large"
+                    android:src="@drawable/ic_select_image" />
+
+                <!--语音按钮按钮-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/voice_input"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginHorizontal="@dimen/d5"
+                    android:layout_toRightOf="@+id/select_image"
+                    android:backgroundTint="?attr/colorSurface"
+                    android:text="@string/voice_input"
+                    android:textColor="@color/black80"
+                    android:textSize="@dimen/text_small"
+                    app:cornerRadius="@dimen/radius_small"
+                    app:elevation="0dp"
+                    app:strokeColor="@color/black80"
+                    app:strokeWidth="@dimen/d0_5" />
+
+                <!--识别按钮-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/recognition"
+                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginHorizontal="@dimen/d5"
+                    android:backgroundTint="?attr/colorSurface"
+                    android:text="@string/recognition"
+                    android:textColor="@color/black80"
+                    android:textSize="@dimen/text_small"
+                    app:cornerRadius="@dimen/radius_small"
+                    app:elevation="0dp"
+                    app:strokeColor="@color/black80"
+                    app:strokeWidth="@dimen/d0_5" />
+            </RelativeLayout>
+
+        </LinearLayout><!--/识别地址-->
+
+        <LinearLayout
+            style="@style/SuperSettingContainer.NoClickable"
+            android:layout_marginTop="@dimen/padding_meddle">
+
+            <TextView
+                style="@style/SuperSettingTitle.Input"
+                android:text="@string/receive_name" />
+
+            <!--输入框-->
+            <EditText
+                android:id="@+id/name"
+                style="@style/SettingInput"
+                android:hint="@string/enter_receive_name" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/SuperSettingContainer.NoClickable">
+
+            <TextView
+                style="@style/SuperSettingTitle.Input"
+                android:text="@string/receive_telephone" />
+
+            <!--输入框-->
+            <EditText
+                android:id="@+id/phone"
+                style="@style/SettingInput"
+                android:hint="@string/enter_receive_telephone"
+                android:inputType="phone"
+                android:maxLength="12" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/SuperSettingContainer.NoClickable">
+
+            <TextView
+                style="@style/SuperSettingTitle.Input"
+                android:text="@string/receive_area" />
+
+            <!--输入框-->
+            <TextView
+                android:id="@+id/area"
+                style="@style/SettingInput"
+                android:hint="@string/enter_receive_area" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/SuperSettingContainer.NoClickable">
+
+            <TextView
+                style="@style/SuperSettingTitle.Input"
+                android:text="@string/detail_address" />
+
+            <!--输入框-->
+            <EditText
+                android:id="@+id/detail_address"
+                style="@style/SettingInput"
+                android:hint="@string/enter_detail_address" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/SuperSettingContainer.NoClickable">
+
+            <TextView
+                style="@style/SuperSettingTitle"
+                android:text="@string/default_address" />
+
+            <Switch
+                android:id="@+id/default_address"
+                style="@style/Wrap" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

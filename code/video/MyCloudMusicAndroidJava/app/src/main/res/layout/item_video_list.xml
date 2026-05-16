@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:padding="@dimen/padding_meddle">
+
+    <!--封面-->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/icon"
+        android:layout_width="140dp"
+        android:layout_height="80dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/RoundedCornerImageStyle"
+        tools:src="@drawable/placeholder" />
+
+    <!--标题-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintBottom_toTopOf="@+id/info"
+        app:layout_constraintLeft_toRightOf="@+id/icon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="这是视频名称,这是视频名称这是视频名称这是视频名称" />
+
+    <!--信息-->
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_marginTop="@dimen/padding_meddle"
+        android:textColor="@color/black80"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/icon"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        tools:text="@string/video_info" />
+</androidx.constraintlayout.widget.ConstraintLayout>

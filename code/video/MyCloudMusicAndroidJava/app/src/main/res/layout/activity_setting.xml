@@ -1,0 +1,25 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black183"
+    tools:context=".component.setting.activity.SettingActivity">
+
+    <!--标题控件-->
+    <include layout="@layout/toolbar" />
+
+    <!--内容布局-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <FrameLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorLightWhite" />
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

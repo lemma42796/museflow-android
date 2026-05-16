@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="right"
+    android:orientation="horizontal"
+    android:padding="@dimen/padding_meddle">
+
+    <!--消息
+    背景图设计规范：高120（头像是40，3倍就是120），宽145，圆角15（3*5）；箭头25，圆角5
+    设计稿在：/Users/smile/Documents/work/code/ixuea/course/MyCloudMusicAndroidJava3/resource/design/ic_chat_background/-->
+    <TextView
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_message"
+        android:layout_marginRight="@dimen/d5"
+        android:background="@drawable/ic_chat_background_right"
+        android:lineSpacingMultiplier="@dimen/line_space"
+        android:paddingVertical="@dimen/d10"
+        android:paddingLeft="@dimen/d10"
+        android:paddingRight="@dimen/d18"
+        android:textColor="?attr/colorLightWhite"
+        tools:text="这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这" />
+
+    <!--头像-->
+    <include layout="@layout/chat_message_avatar" />
+</LinearLayout>

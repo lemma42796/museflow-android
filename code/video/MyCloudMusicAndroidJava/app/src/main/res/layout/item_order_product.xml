@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/padding_outer"
+    android:paddingVertical="@dimen/padding_meddle">
+
+    <!--封面容器-->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/icon_container"
+        android:layout_width="@dimen/d100"
+        android:layout_height="@dimen/d100"
+        app:cardElevation="0dp">
+        <!--图片控件-->
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder" />
+    </androidx.cardview.widget.CardView>
+
+    <!--标题容器-->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/padding_meddle"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <!--标题-->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            android:text="这是标题这是标题这是标题这是标题这是标题"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/text_meddle" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_large"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <!--价格-->
+            <TextView
+                android:id="@+id/price"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="￥998"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_meddle" />
+
+            <!--数量-->
+            <TextView
+                android:id="@+id/count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/product_count"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/text_small" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

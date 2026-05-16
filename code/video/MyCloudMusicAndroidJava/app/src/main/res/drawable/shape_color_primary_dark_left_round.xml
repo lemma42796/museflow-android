@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--圆角的大小-->
+    <corners
+        android:bottomLeftRadius="@dimen/radius_button"
+        android:topLeftRadius="@dimen/radius_button" />
+
+    <!--渐变
+    linear：线性渐变
+    更多的参考官方文档-->
+    <gradient
+        android:endColor="@color/primary50"
+        android:startColor="@color/primary30"
+        android:type="linear" />
+</shape>

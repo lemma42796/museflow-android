@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".component.login.activity.LoginActivity">
+
+    <include layout="@layout/toolbar" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/padding_outer"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <!--这里不能使用maxLength限制最长字符数
+        因为我们这里用户名还有邮箱-->
+        <com.cielyang.android.clearableedittext.ClearableEditText
+            android:id="@+id/username"
+            style="@style/EditText.SingleLine.Border"
+            android:layout_width="0dp"
+            android:drawableStart="@drawable/input_username"
+            android:hint="@string/enter_phone_or_email"
+            app:clearIconDrawWhenFocused="true"
+            app:clearIconDrawable="@drawable/close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!--密码输入框-->
+        <com.cielyang.android.clearableedittext.ClearableEditText
+            android:id="@+id/password"
+            style="@style/EditText.SingleLine.Border"
+            android:layout_width="0dp"
+            android:drawableStart="@drawable/input_password"
+            android:hint="@string/enter_password"
+            android:inputType="textPassword"
+            android:maxLength="15"
+            app:clearIconDrawWhenFocused="true"
+            app:clearIconDrawable="@drawable/close"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/username" />
+
+        <!--登录按钮-->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/primary"
+            style="@style/SuperButton.Primary"
+            android:layout_marginTop="@dimen/padding_large"
+            android:layout_marginBottom="@dimen/padding_meddle"
+            android:text="@string/login"
+            app:cornerRadius="@dimen/d27_5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/password" />
+
+        <!--注册按钮-->
+        <Button
+            android:id="@+id/register"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/register"
+            android:textColor="@color/black80"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/primary" />
+
+        <!--忘记密码按钮-->
+        <Button
+            android:id="@+id/forgot_password"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/forgot_password"
+            android:textColor="@color/black80"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/primary" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

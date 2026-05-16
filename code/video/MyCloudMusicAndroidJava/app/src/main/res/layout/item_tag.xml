@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_second_border_radius_15"
+    android:paddingHorizontal="@dimen/padding_meddle"
+    android:paddingVertical="@dimen/padding_small"
+    android:textSize="@dimen/text_small"
+    tools:text="这是测试标签" />
