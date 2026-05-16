@@ -178,6 +178,28 @@
   - 歌词和小播放器进度。
 - 若设备端冒烟通过，再考虑继续收敛旧 `MusicPlayerService` 通知视觉层；若失败，优先看 `PlaybackController`、`LegacyMusicSessionPlayer`、`MusicListManagerImpl` 的交界。
 
+### 2026-05-16 Git 远端和发布上下文
+
+远端状态：
+
+- `origin` 指向 GitHub：`https://github.com/lemma42796/museflow-android.git`。
+- `upstream` 指向 Gitee：`git@gitee.com:yyh455/my-cloud-music-android-java.git`。
+- 不要再把本轮现代化提交推到 `upstream`；此前误推已经回滚，`upstream/master` 保持在 `4d6c675`。
+
+GitHub 发布策略：
+
+- 不能直接把本地 `master` 历史推到 GitHub，因为历史里包含旧 `Config.java` 等敏感配置，GitHub push protection 会拒绝。
+- GitHub `origin/master` 使用 `codex/github-origin-master` 这条脱敏快照分支推送。
+- 脱敏快照保留 `Config.java` 作为空值占位，保证代码引用仍可编译；不要只靠 `.gitignore` 忽略 `Config.java`，因为已跟踪文件和历史提交不会因此消失。
+- 脱敏快照清空了 `Config.java` 中的阿里云、IM、百度语音、小米 key，并清空 `app/build.gradle` 中的 `appSecret` 和小米 appkey。
+- `keystore.properties` 和 `config/*.jks` 不进入 GitHub 快照，并由根 `.gitignore` 忽略。
+
+后续推送提醒：
+
+- 若继续在本地 `master` 开发，需要同步发布到 GitHub 时，应先把变更带到 `codex/github-origin-master` 的脱敏快照，再推 `origin codex/github-origin-master:master`。
+- 不要执行 `git push upstream master`。
+- 下次接手时先看本文档、`git status -sb`、`git remote -v`、`git log --oneline --decorate -5`。
+
 ## 执行原则
 
 - 每个阶段都要形成最小闭环：能编译、能从旧入口进入、核心动作能跑。
