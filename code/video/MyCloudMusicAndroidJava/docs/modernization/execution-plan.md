@@ -16,13 +16,19 @@
 - 聊天、动态发布、下载、发现/信息流链路已完成第一轮 Repository/ViewModel/兼容桥接闭环，旧入口继续保留。
 - 用户决定暂缓设备端人工冒烟，继续推进代码层迁移。
 - 发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin，Java 调用方兼容接口保持不变。
+- 下载中/已下载 Fragment 和下载中 Adapter 已从 Java 迁到 Kotlin，下载 Repository 边界继续保持稳定。
+- 动态列表 `FeedFragment` 已从 Java 迁到 Kotlin，发布入口、图片预览、位置预览和 EventBus 刷新入口保持兼容。
+- 动态发布页 `PublishFeedActivity` 和图片适配器 `ImageAdapter` 已从 Java 迁到 Kotlin，选图、压缩、上传、位置选择和发布通知流程保持兼容。
+- 动态主适配器 `FeedAdapter` 已从 Java 迁到 Kotlin，动态卡片、九宫格图片、点赞和评论渲染保持兼容。
+- 发现页 `DiscoveryFragment` 和 `DiscoveryAdapter` 已从 Java 迁到 Kotlin，首页聚合刷新、Banner、推荐歌单/单曲和自定义入口保持兼容。
+- 发现页剩余小 adapter `SheetAdapter`、`DiscoverySongAdapter` 已从 Java 迁到 Kotlin，歌单/单曲 item 渲染保持兼容。
 
 当前尚未完成：
 
 - 音乐播放链路的在线/本地播放、通知控制、歌词进度人工冒烟尚未执行。
 - App 安装启动和五条链路完整人工冒烟尚未执行。
 
-因此下一步编码建议是继续把保留链路的 Java Activity/Fragment/Adapter 按小切片迁到 Kotlin；设备端人工冒烟仍是未完成验收项。
+因此下一步编码建议是暂停编码转入模拟器/真机人工冒烟，或继续挑播放器 Activity/Fragment 做 Kotlin 小切片；设备端人工冒烟仍是未完成验收项。
 
 ## 最新执行记录
 
@@ -212,10 +218,194 @@
 下一步编码建议：
 
 - 继续从保留链路中挑小切片迁 Kotlin，优先级建议为：
-  - `DownloadingFragment`、`DownloadedFragment` 和下载 adapter。
-  - `FeedFragment`、`PublishFeedActivity` 和动态 adapter。
   - `DiscoveryFragment`、`DiscoveryAdapter`。
   - 最后再碰更大的播放器 Activity/Fragment。
+
+### 2026-05-17 下载链路 Kotlin 迁移第二批
+
+已处理：
+
+- 将下载中列表从 Java 迁到 Kotlin：
+  - `DownloadingFragment.kt`
+  - `DownloadingAdapter.kt`
+- 将已下载列表从 Java 迁到 Kotlin：
+  - `DownloadedFragment.kt`
+- 保留旧入口兼容：
+  - `DownloadAdapter` 仍通过 `DownloadingFragment.newInstance()`、`DownloadedFragment.newInstance()` 创建页面。
+  - `DownloadingAdapter` 构造参数保持 `Context`、`LiteORMUtil`、`FragmentManager`。
+  - 下载中列表继续通过 `DownloadRepository` 执行暂停、继续、删除、全部暂停、全部继续。
+- 顺手补了窄范围防御：
+  - 下载删除回调中检查 `bindingAdapterPosition`，避免异步状态刷新后位置失效导致越界。
+  - 下载任务关联歌曲缺失时标题兜底为空，避免列表渲染直接崩溃。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，下载中/已下载列表的人工冒烟仍待执行。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收，或继续播放器 Activity/Fragment 小切片。
+
+### 2026-05-17 动态列表 Kotlin 迁移第三批
+
+已处理：
+
+- 将动态列表从 Java 迁到 Kotlin：
+  - `FeedFragment.kt`
+- 保留旧入口兼容：
+  - `MainAdapter` 仍通过 `FeedFragment.newInstance()` 创建首页动态页。
+  - `UserDetailAdapter` 仍通过 `FeedFragment.newInstance(userId)` 创建用户动态页。
+  - `FeedAdapter.FeedListener` 图片点击回调继续打开 `PhotoViewer`。
+  - `FeedChangedEvent`、`UserDetailEvent` 的 EventBus 入口继续保留。
+- 顺手修正用户动态页参数：
+  - `newInstance(userId)` 写入 `Constant.USER_ID`，与 `DefaultRepository.feeds(userId)` 查询字段一致。
+  - 读取参数时保留 `Constant.ID` 兜底，避免旧参数入口失效。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，动态列表加载、图片预览、用户动态过滤和发布后刷新仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收，或继续播放器 Activity/Fragment 小切片。
+
+### 2026-05-17 动态发布页和图片适配器 Kotlin 迁移第四批
+
+已处理：
+
+- 将发布动态页面从 Java 迁到 Kotlin：
+  - `PublishFeedActivity.kt`
+- 将动态图片适配器从 Java 迁到 Kotlin：
+  - `ImageAdapter.kt`
+- 保留旧入口兼容：
+  - `FeedFragment` 仍通过 `PublishFeedActivity::class.java` 打开发布页。
+  - `SelectLocationEvent` 的 EventBus 入口继续保留。
+  - `FeedChangedEvent` 发布成功通知继续保留。
+  - 选图、压缩、上传、发布仍通过现有 `PictureSelector`、`ImageCompressionRepository`、`FeedPublishRepository` 闭环。
+  - `PublishFeedActivity` 和 `FeedAdapter` 仍通过 `ImageAdapter(R.layout.item_image)` 渲染图片。
+- 顺手清理：
+  - 移除原压缩回调中的临时 `Log.d("TAG", ...)` 调试输出。
+  - 继续把选图状态保存在 `FeedPublishViewModel`，Activity 只做 UI 事件编排。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，发布页多图选择、压缩、上传、位置选择和发布成功刷新仍待人工冒烟。
+
+下一步编码建议：
+
+- 转到发现页：
+  - `DiscoveryFragment`
+  - `DiscoveryAdapter`
+
+### 2026-05-17 动态主适配器 Kotlin 迁移第五批
+
+已处理：
+
+- 将动态主适配器从 Java 迁到 Kotlin：
+  - `FeedAdapter.kt`
+- 保留旧入口兼容：
+  - `FeedFragment` 仍通过 `FeedAdapter(R.layout.item_feed)` 创建动态列表适配器。
+  - `FeedAdapter.FeedListener` 和 `setListener(...)` 继续保留，图片点击仍回调到 `FeedFragment` 打开 `PhotoViewer`。
+  - 动态卡片头像、昵称、时间、正文、位置、九宫格图片、删除按钮、点赞用户、评论列表渲染保持原行为。
+- 结构整理：
+  - 将媒体、删除按钮、点赞、评论渲染拆成 adapter 内部小方法，降低单个 `convert` 方法复杂度。
+  - 图片 URL 由 Kotlin `map` 生成，移除原 Java/Guava `Lists.transform` 依赖点。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，动态卡片渲染、图片预览、点赞/评论用户点击和发布后刷新仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收，或继续播放器 Activity/Fragment 小切片。
+
+### 2026-05-17 发现页 Fragment/Adapter Kotlin 迁移第六批
+
+已处理：
+
+- 将发现页主 Fragment 从 Java 迁到 Kotlin：
+  - `DiscoveryFragment.kt`
+- 将发现页多类型主 Adapter 从 Java 迁到 Kotlin：
+  - `DiscoveryAdapter.kt`
+- 保留旧入口兼容：
+  - `MainAdapter` 仍通过 `DiscoveryFragment.newInstance()` 创建首页发现页。
+  - `DiscoveryFragment` 仍实现 `OnBannerListener<Ad>` 和 `DiscoveryAdapter.DiscoveryAdapterListener`。
+  - Banner 点击、歌单点击、单曲点击、刷新按钮、自定义发现入口、排序变更和歌单变更刷新保持原行为。
+  - 启动广告 `splashAd` 拉取、缓存和清理逻辑保持原行为。
+- 结构整理：
+  - `DiscoveryAdapter` 将 Banner、按钮、歌单、单曲、Footer 渲染拆成内部小方法。
+  - Banner 泛型收窄为 `Banner<Ad, BannerImageAdapter<Ad>>` 和 `OnBannerListener<Ad>`。
+  - Adapter 保留 stable id 逻辑，继续基于 `BaseSort.sort` 和 item type 生成 id。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，发现页加载、Banner 点击、歌单点击、单曲播放、自定义发现入口和启动广告缓存仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收，或继续播放器 Activity/Fragment 小切片。
+
+### 2026-05-17 发现页小 Adapter Kotlin 迁移第七批
+
+已处理：
+
+- 将发现页歌单 item adapter 从 Java 迁到 Kotlin：
+  - `SheetAdapter.kt`
+- 将发现页单曲 item adapter 从 Java 迁到 Kotlin：
+  - `DiscoverySongAdapter.kt`
+- 保留旧入口兼容：
+  - `DiscoveryAdapter` 仍通过 `SheetAdapter(R.layout.item_sheet)` 和 `DiscoverySongAdapter(R.layout.item_discovery_song)` 创建内部列表。
+  - `SheetFragment` 仍通过 `SheetAdapter(R.layout.item_sheet)` 复用 Kotlin 版歌单适配器。
+  - 歌单封面、标题、播放量和单曲封面、标题、歌手/专辑占位文本、末尾分割线显示保持原行为。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，发现页歌单/单曲渲染和歌单页复用 `SheetAdapter` 仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收。
+- 如继续编码，可挑播放器 Activity/Fragment 做 Kotlin 小切片。
 
 ### 2026-05-16 交接上下文
 
@@ -227,6 +417,12 @@
   - 阶段 2 音乐播放链路：Media3 播放核心、Repository 状态入口、旧 Manager 兼容桥接、Media3 session 到旧队列控制的桥接。
   - 阶段 3-6：聊天、动态发布、下载、发现/信息流的 Repository/ViewModel/兼容桥接闭环。
   - Kotlin 迁移第一批：发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第二批：下载中/已下载 Fragment 和下载中 Adapter 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第三批：动态列表 `FeedFragment` 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第四批：动态发布页 `PublishFeedActivity` 和图片适配器 `ImageAdapter` 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第五批：动态主适配器 `FeedAdapter` 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第六批：发现页 `DiscoveryFragment` 和 `DiscoveryAdapter` 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第七批：发现页小 adapter `SheetAdapter` 和 `DiscoverySongAdapter` 已从 Java 迁到 Kotlin。
 - 关键新文件：
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackController.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackRepository.kt`
@@ -238,22 +434,38 @@
   - `app/src/main/java/com/ixuea/courses/mymusic/component/chat/repository/MessageRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/model/DiscoveryPage.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/repository/DiscoveryRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/fragment/DiscoveryFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/adapter/DiscoveryAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/adapter/SheetAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/discovery/adapter/DiscoverySongAdapter.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/download/repository/DownloadRepository.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/fragment/DownloadingFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/fragment/DownloadedFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/download/adapter/DownloadingAdapter.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedPublishRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/ImageCompressionRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/repository/FeedRepository.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/ui/FeedPublishViewModel.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/fragment/FeedFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/activity/PublishFeedActivity.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/adapter/ImageAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/adapter/FeedAdapter.kt`
 
 验证状态：
 
 - `./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 曾通过。
 - Kotlin 迁移第一批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
+- 下载链路 Kotlin 迁移第二批和动态列表 Kotlin 迁移第三批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
+- 动态发布页和图片适配器 Kotlin 迁移第四批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
+- 动态主适配器 Kotlin 迁移第五批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
+- 发现页 Fragment/Adapter Kotlin 迁移第六批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
+- 发现页小 adapter Kotlin 迁移第七批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
 - 尚未连接模拟器或真机安装运行。
 
 后续建议：
 
 - 下一次继续时先读本文档，再看 `git status`。
-- 如果继续编码，先从下载/动态/发现的 Fragment 或 Adapter 小切片迁 Kotlin。
+- 如果继续编码，先从播放器 Activity/Fragment 小切片迁 Kotlin；也可以转入设备端冒烟验收。
 - 如果回到验收，先启动模拟器或连接设备，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
 - 冒烟顺序建议：
   - App 启动。
@@ -279,6 +491,7 @@ GitHub 发布策略：
 - public slim 当前工作分支：`codex/github-public-slim-ff`，跟踪 `origin/master`。
 - 同步发布时只把 public-safe 的保留链路改动带到 public slim worktree，在那里构建、提交、推 `origin HEAD:master`。
 - `local.properties` 只允许留在临时 worktree 本地，不能进入提交。
+- 从主工程同步 Kotlin 迁移到 public slim 时，要继续保留 slim 裁剪语义：不要覆盖 slim 版 `AppContext.java`；搜索历史、完整广告落地、AMap/Poi 定位和位置预览相关代码不能回流，只保留能编译的 stub/降级入口。
 
 后续推送提醒：
 
