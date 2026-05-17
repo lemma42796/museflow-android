@@ -22,13 +22,16 @@
 - 动态主适配器 `FeedAdapter` 已从 Java 迁到 Kotlin，动态卡片、九宫格图片、点赞和评论渲染保持兼容。
 - 发现页 `DiscoveryFragment` 和 `DiscoveryAdapter` 已从 Java 迁到 Kotlin，首页聚合刷新、Banner、推荐歌单/单曲和自定义入口保持兼容。
 - 发现页剩余小 adapter `SheetAdapter`、`DiscoverySongAdapter` 已从 Java 迁到 Kotlin，歌单/单曲 item 渲染保持兼容。
+- 播放器底部控制、黑胶页、播放列表弹窗和相关 adapter 已从 Java 迁到 Kotlin，旧 Activity/Fragment 入口保持兼容。
+- 播放器主页面、简单播放器、自定义黑胶 View 和播放器事件已从 Java 迁到 Kotlin，`component/player` 包内业务代码已完成 Kotlin 化。
+- 歌词选择/分享页面、歌词列表 adapter 和 LRC/KSC parser 已从 Java 迁到 Kotlin，播放器歌词解析入口保持兼容。
 
 当前尚未完成：
 
 - 音乐播放链路的在线/本地播放、通知控制、歌词进度人工冒烟尚未执行。
 - App 安装启动和五条链路完整人工冒烟尚未执行。
 
-因此下一步编码建议是暂停编码转入模拟器/真机人工冒烟，或继续挑播放器 Activity/Fragment 做 Kotlin 小切片；设备端人工冒烟仍是未完成验收项。
+因此下一步编码建议是暂停编码转入模拟器/真机人工冒烟；如继续编码，可转向歌词 View/Manager 或通知/Widget 边界的小切片。设备端人工冒烟仍是未完成验收项。
 
 ## 最新执行记录
 
@@ -407,6 +410,154 @@
 - 转入设备端冒烟验收。
 - 如继续编码，可挑播放器 Activity/Fragment 做 Kotlin 小切片。
 
+### 2026-05-17 播放器底部控制和播放列表 Kotlin 迁移第八批
+
+已处理：
+
+- 将播放器底部控制条容器从 Java 迁到 Kotlin：
+  - `SmallAudioControlPageFragment.kt`
+- 将播放器底部控制条 item 和黑胶唱片页从 Java 迁到 Kotlin：
+  - `SmallAudioControlFragment.kt`
+  - `RecordFragment.kt`
+- 将播放器相关 adapter 从 Java 迁到 Kotlin：
+  - `SmallAudioControlAdapter.kt`
+  - `MusicPlayerRecordAdapter.kt`
+  - `MusicPlayListAdapter.kt`
+  - `SimplePlayerAdapter.kt`
+- 将播放列表弹窗从 Java 迁到 Kotlin：
+  - `MusicPlayListDialogFragment.kt`
+- 保留旧入口兼容：
+  - `SmallAudioControlAdapter` 仍通过 `SmallAudioControlFragment.newInstance(song)` 创建底部控制条页面。
+  - `MusicPlayerRecordAdapter` 仍通过 `RecordFragment.newInstance(song)` 创建黑胶唱片页面。
+  - `SmallAudioControlPageFragment`、`MusicPlayerActivity` 仍可通过 `MusicPlayListDialogFragment.show(...)` 打开播放列表弹窗。
+  - `SimplePlayerActivity` 仍通过 `SimplePlayerAdapter(android.R.layout.simple_list_item_1)` 创建简单播放器列表。
+- 顺手补了窄范围防御：
+  - 底部控制条歌词渲染在空歌词、空行列表时兜底为空，歌词行号限制在合法范围内。
+  - 播放列表弹窗 item 点击和侧滑删除会检查当前位置是否仍有效，避免列表变化后越界。
+  - 播放列表选中状态允许当前播放歌曲为空，避免 Media3 兼容桥接恢复期间空当前歌曲导致崩溃。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，底部控制条滑动切歌、播放/暂停、播放列表弹窗、侧滑删除、黑胶旋转和歌词单行进度仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收，或继续迁移 `SimplePlayerActivity`。
+- `MusicPlayerActivity` 体量较大，建议拆为播放按钮/进度条/歌词三个小切片处理。
+
+### 2026-05-17 播放器页面 Kotlin 迁移第九批
+
+已处理：
+
+- 将简单播放器页面从 Java 迁到 Kotlin：
+  - `SimplePlayerActivity.kt`
+- 将主播放器黑胶页面从 Java 迁到 Kotlin：
+  - `MusicPlayerActivity.kt`
+- 将播放器自定义 View 和事件从 Java 迁到 Kotlin：
+  - `RecordView.kt`
+  - `RecordPageView.kt`
+  - `RecordClickEvent.kt`
+- 保留旧入口兼容：
+  - `BaseLogicActivity.startMusicPlayerActivity()` 仍打开 `MusicPlayerActivity`。
+  - `activity_music_player.xml`、`fragment_record.xml` 仍引用原自定义 View 全限定类名。
+  - `RecordPageView` 继续暴露 Java 字段形态的 `binding`、`adapter`，兼容迁移过程中仍直接访问字段的调用方。
+  - `MusicPlayerActivity` 继续监听 `RecordClickEvent`、`MusicPlayListChangedEvent`，并保留播放列表、歌词切换、下载入口、循环模式和进度条入口。
+- 顺手补了窄范围防御：
+  - 主播放器翻页时检查播放列表索引，避免列表变化后 `ViewPager2` 当前位置越界。
+  - 上一首/下一首在当前歌曲为空或不在列表时兜底到列表第一首，避免旧 Manager 抛异常。
+  - 主播放器初始化、时长、进度、歌词、下载入口在当前歌曲为空时不再直接崩溃。
+  - 主播放器销毁时 unregister `ViewPager2.OnPageChangeCallback`。
+  - 自定义 View 使用 Kotlin `@JvmField`/公开字段保留旧 Java 访问方式。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，主播放器黑胶翻页、歌词切换、seek、上一首/下一首、下载入口和背景模糊切换仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收。
+- 如继续编码，可挑歌词视图、播放 Manager 或通知/Widget 边界做小切片。
+
+### 2026-05-17 歌词选择/分享和解析 Kotlin 迁移第十批
+
+已处理：
+
+- 将歌词选择和歌词图片分享页面从 Java 迁到 Kotlin：
+  - `SelectLyricActivity.kt`
+  - `ShareLyricImageActivity.kt`
+- 将歌词相关 adapter 从 Java 迁到 Kotlin：
+  - `LyricAdapter.kt`
+  - `SelectLyricAdapter.kt`
+- 将歌词 parser 从 Java 迁到 Kotlin：
+  - `LyricParser.kt`
+  - `LRCLyricParser.kt`
+  - `KSCLyricParser.kt`
+- 保留旧入口兼容：
+  - `MusicPlayerActivity` 长按歌词仍通过 `SelectLyricActivity` 进入歌词选择页。
+  - `ShareLyricImageActivity.start(activity, song, lyric)` 保留 `@JvmStatic` 静态入口。
+  - `MusicPlayerManagerImpl` 仍通过 `LyricParser.parse(...)` 解析歌词。
+  - `LyricListView` 仍通过 `LyricAdapter(R.layout.item_lyric)` 渲染歌词行。
+- 顺手补了窄范围防御：
+  - 选择歌词页面在歌曲或解析歌词为空时展示空列表，不再直接崩溃。
+  - `SelectLyricAdapter` 支持空列表并校验选中索引边界。
+  - LRC/KSC parser 对空歌词内容、格式不完整歌词行直接跳过。
+  - `LyricAdapter.setSelectedIndex(...)` 只刷新有效位置，避免空列表或旧索引越界。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 尚未启动模拟器或真机，歌词选择、文本分享、图片分享、LRC/KSC 逐字歌词解析仍待人工冒烟。
+
+下一步编码建议：
+
+- 转入设备端冒烟验收。
+- 如继续编码，可迁移 `LyricListView`/`LyricLineView` 或播放 Manager/通知/Widget 边界。
+
+### 2026-05-17 本次收口交接状态
+
+当前代码状态：
+
+- 主工程 `component/player` 包内业务代码已完成 Kotlin 化，原 Java 文件已替换为 Kotlin 文件。
+- 歌词链路已迁移：
+  - 歌词选择/分享 Activity。
+  - 歌词列表和选择歌词 adapter。
+  - LRC/KSC parser 和 `LyricParser` 入口。
+- 歌词模型和自定义 View 仍保留 Java：
+  - `Line.java`
+  - `Lyric.java`
+  - `GlobalLyricView.java`
+  - `LyricLineView.java`
+  - `LyricListView.java`
+- 最近一次验证：
+  - 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+  - 结果：通过。
+- 尚未执行设备端人工冒烟。
+
+下一次会话建议：
+
+- 先看 `git status -sb` 和本文档最新记录。
+- 优先做模拟器或真机冒烟，尤其是播放器和歌词链路：
+  - 主播放器进入、黑胶翻页、播放/暂停、上一首/下一首、seek。
+  - 歌词/黑胶切换、歌词滚动、长按歌词选择。
+  - 歌词文本分享、歌词图片分享、LRC/KSC 歌词解析。
+  - 下载按钮、通知控制、Widget 控制。
+- 如果继续编码，建议从 `LyricListView`/`LyricLineView` 或播放 Manager/通知/Widget 边界继续做小切片。
+- GitHub 发布仍走 `/private/tmp/museflow-public-slim`，不要直接从主工程 `master` 推 `origin/master`，也不要推 `upstream/master`。
+
 ### 2026-05-16 交接上下文
 
 当前代码状态：
@@ -423,6 +574,9 @@
   - Kotlin 迁移第五批：动态主适配器 `FeedAdapter` 已从 Java 迁到 Kotlin。
   - Kotlin 迁移第六批：发现页 `DiscoveryFragment` 和 `DiscoveryAdapter` 已从 Java 迁到 Kotlin。
   - Kotlin 迁移第七批：发现页小 adapter `SheetAdapter` 和 `DiscoverySongAdapter` 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第八批：播放器底部控制、黑胶页、播放列表弹窗和相关 adapter 已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第九批：播放器主页面、简单播放器、自定义黑胶 View 和事件已从 Java 迁到 Kotlin。
+  - Kotlin 迁移第十批：歌词选择/分享页面、歌词列表 adapter 和 LRC/KSC parser 已从 Java 迁到 Kotlin。
 - 关键新文件：
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackController.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackRepository.kt`
@@ -450,6 +604,26 @@
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/activity/PublishFeedActivity.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/adapter/ImageAdapter.kt`
   - `app/src/main/java/com/ixuea/courses/mymusic/component/feed/adapter/FeedAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/fragment/SmallAudioControlPageFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/fragment/SmallAudioControlFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/fragment/RecordFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/fragment/MusicPlayListDialogFragment.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/adapter/SmallAudioControlAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/adapter/MusicPlayerRecordAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/adapter/MusicPlayListAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/adapter/SimplePlayerAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/activity/MusicPlayerActivity.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/activity/SimplePlayerActivity.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/view/RecordPageView.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/view/RecordView.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/player/model/event/RecordClickEvent.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/activity/SelectLyricActivity.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/activity/ShareLyricImageActivity.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/adapter/LyricAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/adapter/SelectLyricAdapter.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/parser/LyricParser.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/parser/LRCLyricParser.kt`
+  - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/parser/KSCLyricParser.kt`
 
 验证状态：
 
@@ -460,12 +634,15 @@
 - 动态主适配器 Kotlin 迁移第五批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
 - 发现页 Fragment/Adapter Kotlin 迁移第六批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
 - 发现页小 adapter Kotlin 迁移第七批后，`./gradlew :app:assembleDevDebug` 和 `./gradlew :app:testDevDebugUnitTest` 通过。
+- 播放器底部控制和播放列表 Kotlin 迁移第八批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
+- 播放器页面 Kotlin 迁移第九批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
+- 歌词选择/分享和解析 Kotlin 迁移第十批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
 - 尚未连接模拟器或真机安装运行。
 
 后续建议：
 
 - 下一次继续时先读本文档，再看 `git status`。
-- 如果继续编码，先从播放器 Activity/Fragment 小切片迁 Kotlin；也可以转入设备端冒烟验收。
+- 如果继续编码，可挑歌词 View、播放 Manager 或通知/Widget 边界小切片；也可以转入设备端冒烟验收。
 - 如果回到验收，先启动模拟器或连接设备，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
 - 冒烟顺序建议：
   - App 启动。
