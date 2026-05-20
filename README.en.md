@@ -3,30 +3,46 @@
 ![Android](https://img.shields.io/badge/platform-Android-3DDC84.svg)
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.22-7F52FF.svg)
 ![Android Gradle Plugin](https://img.shields.io/badge/AGP-8.2.0-3F51B5.svg)
-![Status](https://img.shields.io/badge/status-public--slim-blue.svg)
+![Status](https://img.shields.io/badge/status-active-blue.svg)
 
 **Language**: [中文](README.md) | English
 
-MuseFlow Android is a public-slim Android music app snapshot. It keeps the runnable core music, discovery, feed, chat, download, and lyric paths while documenting an in-place modernization from a Java/XML codebase toward Kotlin, Media3, ViewModel state, UseCase/Repository boundaries, and eventually Compose.
-
-The repository is intentionally scoped: frozen commercial/demo integrations were removed from the public branch, and modernization work focuses on the user-facing chains that matter most for architecture and performance.
+MuseFlow Android is an Android music and community app with music playback, discovery, feed publishing, chat conversations, offline downloads, and lyric display. The project focuses on mobile music listening, content browsing, social interaction, and local media management.
 
 ## Contents
 
-- [Project Layout](#project-layout)
-- [Scope](#scope)
-- [Current Status](#current-status)
-- [Architecture Direction](#architecture-direction)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Build And Run](#build-and-run)
 - [Verification](#verification)
-- [Documentation](#documentation)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Project Layout
+## Features
+
+- Music playback: playback controls, queue, background notification, lyrics, and widget entry points.
+- Discovery: home recommendations, banners, playlists, songs, and content modules.
+- Community feed: image/text posts, image selection, image upload, feed list, and interaction entry points.
+- Chat: conversation list, chat detail, history messages, and text/image message entry points.
+- Downloads: downloading/downloaded lists, pause, resume, delete, and progress display.
+- Local app workflow: local configuration, signing setup, build variants, and Android device installation.
+
+## Tech Stack
+
+- Languages: Java, Kotlin
+- UI: XML, ViewBinding, Jetpack Compose
+- Architecture: ViewModel, UseCase, Repository
+- Async: Coroutines, Flow, RxJava
+- Media: Media3, MediaSession
+- Background work: WorkManager
+- Data and paging: DataStore, Paging
+- Dependency injection: Hilt
+- Build: Android Gradle Plugin 8.2.0, Kotlin 1.9.22, compileSdk 34, targetSdk 33, minSdk 23
+
+## Project Structure
 
 The Android project lives under:
 
@@ -40,80 +56,23 @@ Key directories:
 .
 `-- code/video/MyCloudMusicAndroidJava/
     |-- app/                         # Main Android application
-    |-- docs/modernization/          # Scope, target stack, progress, and handoff docs
-    |-- LRecyclerview/               # Legacy RecyclerView support module
+    |-- docs/                        # Project documentation
+    |-- LRecyclerview/               # RecyclerView support module
     |-- glidepalette/                # Palette helper module
-    |-- super-j/                     # Shared legacy utility module
+    |-- super-j/                     # Shared utility module
     |-- build.gradle                 # Android root build configuration
     |-- common.gradle                # Shared Android module configuration
     `-- settings.gradle              # Module registry and repositories
 ```
 
-## Scope
-
-The modernization plan focuses on five retained chains:
-
-- Music playback: player screen, queue, playback service, notifications, lyrics, and widget-facing compatibility.
-- Chat IM: conversation list, chat detail, history loading, text/image message paths, and retained navigation.
-- Feed publishing: image selection, compression, upload, feed creation, and feed list refresh.
-- Downloads: downloading/downloaded lists, pause/resume/delete operations, and progress refresh.
-- Discovery and feed lists: home sections, banners, song/sheet entries, feed cards, and scrolling.
-
-The public-slim branch removes or stubs frozen areas such as mall/order/payment/address/profile/settings/search/scan/video/web/push/splash/guide and heavy third-party SDK integrations that are not needed for the retained modernization surface.
-
-## Current Status
-
-According to the modernization docs in this branch:
-
-- Kotlin, Compose compilation, Media3, Coroutines, WorkManager, DataStore, Paging, and Hilt baselines are present.
-- `:app:assembleDevDebug` and unit tests passed in the public-slim handoff checkpoint.
-- Playback is bridged toward Media3 while preserving legacy manager-style compatibility.
-- Discovery, download, feed, chat, player, and lyric boundaries have been progressively migrated toward Kotlin.
-- Legacy XML/ViewBinding screens still exist and are expected during the transition.
-- Deep device smoke testing remains a separate acceptance step, especially across playback, chat, feed publishing, downloads, and discovery/feed lists.
-
-## Architecture Direction
-
-Current migration shape:
-
-```mermaid
-flowchart LR
-    UI["Legacy XML / RecyclerView UI"] --> VM["ViewModel / compatibility facade"]
-    VM --> Repo["Repository"]
-    Repo --> Legacy["Legacy SDKs, APIs, managers, and Rx/callback bridges"]
-```
-
-Target direction for retained chains:
-
-```mermaid
-flowchart LR
-    Compose["Compose UI"] --> State["Immutable UI State"]
-    State --> ViewModel["ViewModel"]
-    ViewModel --> UseCase["UseCase"]
-    UseCase --> Repository["Repository"]
-    Repository --> DataSource["DataSource / SDK wrapper"]
-```
-
-The compatibility rule is simple: keep old Java/XML entry points runnable while replacing selected internals behind stable Kotlin boundaries.
-
-## Tech Stack
-
-- Language: Java and Kotlin, with new selected-chain work favoring Kotlin.
-- UI: legacy XML/ViewBinding today, Compose enabled for gradual migration.
-- State: ViewModel and immutable UI state direction for new code.
-- Async: RxJava/EventBus in legacy areas; Coroutines/Flow direction for new boundaries.
-- Playback: Media3/MediaSession direction behind legacy manager compatibility.
-- Dependency injection: Hilt baseline.
-- Build: Android Gradle Plugin 8.2.0, Kotlin 1.9.22, compileSdk 34, targetSdk 33, minSdk 23.
-
 ## Getting Started
 
 ### Prerequisites
 
-- Android Studio with JDK 17.
-- Android SDK 34.
-- A device or emulator running Android 6.0 or newer.
-- Network access to Google Maven, Maven Central, JitPack, and RongCloud Maven.
+- Android Studio with JDK 17
+- Android SDK 34
+- A device or emulator running Android 6.0 or newer
+- Network access to Google Maven, Maven Central, JitPack, and RongCloud Maven
 
 ### Clone
 
@@ -166,43 +125,33 @@ git diff --check
 ./gradlew :app:testDevDebugUnitTest
 ```
 
-Manual smoke testing should prioritize:
+Recommended manual verification paths:
 
-- App launch and session preservation.
-- Playback: play, pause, seek, next/previous, background notification, widget, lyrics.
-- Chat: conversation list, chat entry, history loading, text send, image send entry.
-- Feed: list refresh, image selection, compression/upload path, publish completion.
-- Downloads: downloading/downloaded tabs, pause/resume/delete, progress refresh.
-- Discovery/feed: banners, modules, song/sheet entries, list scroll, retained detail routes.
-
-## Documentation
-
-The modernization docs are the source of truth for scope and progress:
-
-- [Modernization overview](code/video/MyCloudMusicAndroidJava/docs/modernization/README.md)
-- [Execution plan and progress](code/video/MyCloudMusicAndroidJava/docs/modernization/execution-plan.md)
-- [Target Android stack](code/video/MyCloudMusicAndroidJava/docs/modernization/target-stack.md)
-- [Selected-chain module plans](code/video/MyCloudMusicAndroidJava/docs/modernization/module-plans.md)
-- [Freeze strategy and acceptance rules](code/video/MyCloudMusicAndroidJava/docs/modernization/freeze-and-acceptance.md)
-- [Public-slim handoff](code/video/MyCloudMusicAndroidJava/docs/modernization/public-slim-progress.md)
+- App launch and session state
+- Playback, pause, seek, previous/next, background notification, and lyrics
+- Discovery banners, recommendation modules, songs, and playlist entry points
+- Feed list, image selection, image upload, and publishing flow
+- Conversation list, chat detail, history messages, and message entry points
+- Downloading/downloaded lists, pause, resume, delete, and progress display
 
 ## Roadmap
 
-1. Finish deep manual smoke testing for the five retained chains.
-2. Continue moving retained chain state behind ViewModel, UseCase, and Repository boundaries.
-3. Replace RxJava/EventBus only where the retained chains already touch the boundary.
-4. Migrate selected screens to Compose one page or component at a time.
-5. Split stable boundaries into clearer core and feature modules after behavior is proven.
+- Improve end-to-end music, discovery, feed, chat, and download experiences.
+- Continue improving playback state, list refresh, image processing, and background task stability.
+- Add more complete device verification notes.
+- Add screenshots, demo videos, and release notes.
+- Add an open-source license and contribution guidelines.
 
 ## Contributing
 
-This repository favors narrow, behavior-preserving changes:
+Issues, suggestions, and pull requests are welcome. Before submitting code, run:
 
-- Keep changes inside retained modernization chains unless a small bridge is required.
-- Preserve legacy Java/XML entry points while migration is in progress.
-- Avoid broad formatting, package moves, or style-only cleanup in frozen modules.
-- Update the modernization docs when a milestone, risk, or handoff point changes.
-- Run `git diff --check` and the dev debug build before publishing code changes when validation is in scope.
+```bash
+git diff --check
+./gradlew :app:assembleDevDebug
+```
+
+If the change affects a user-visible flow, include the corresponding device verification notes.
 
 ## License
 
