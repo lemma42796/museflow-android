@@ -42,10 +42,10 @@ class DiscoveryRepository private constructor(
         songs: ListResponse<Song>,
     ): List<BaseMultiItemEntity> {
         val sections = mutableListOf<BaseMultiItemEntity>()
-        sections += BannerData(ads.data.data.orEmpty(), sp.getSort(Constant.STYLE_BANNER))
+        sections += BannerData(ads.data.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_BANNER))
         sections += ButtonData(sp.getSort(Constant.STYLE_BUTTON))
-        sections += SheetData(sheets.data.data.orEmpty(), sp.getSort(Constant.STYLE_SHEET))
-        sections += SongData(songs.data.data.orEmpty(), sp.getSort(Constant.STYLE_SONG))
+        sections += SheetData(sheets.data.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_SHEET))
+        sections += SongData(songs.data.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_SONG))
         sections += FooterData()
         sections.sortWith { first, second ->
             (first as BaseSort).compareTo(second as BaseSort)

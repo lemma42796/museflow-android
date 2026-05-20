@@ -51,6 +51,11 @@
 - 首页 tab 模型 `TabEntity` 已从 Java 迁到 Kotlin，继续实现 `CustomTabEntity` 并保留 Java public 字段访问形态。
 - 播放/歌单相关小事件 `MusicPlayListChangedEvent`、`ScanLocalMusicCompleteEvent`、`SheetChangedEvent` 已从 Java 迁到 Kotlin，继续保留 Java 构造和 getter/setter 调用面。
 - 阶段 8 已按用户要求启动；发现页首页数据加载已推进到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`，下载中/已下载页已引入 `DownloadingViewModel`/`DownloadedViewModel` 承接下载操作和列表状态，动态 Feed 列表也已推进到 `FeedViewModel(StateFlow) -> LoadFeedListUseCase -> FeedRepository`，动态发布上传/创建动态已推进到 `FeedPublishViewModel(StateFlow) -> Publish UseCase -> FeedPublishRepository`，聊天会话列表已推进到 `ConversationListViewModel(StateFlow) -> Conversation UseCase -> ConversationRepository`，新消息后的会话列表延迟刷新和会话行 UI 数据也已收敛到 ViewModel，聊天详情历史消息分页、文本/图片发送状态、清未读、标记已读、页面标题用户资料和消息行头像 UI 数据已推进到 `ChatViewModel(StateFlow) -> Chat UseCase -> MessageRepository`，旧 RecyclerView UI 暂时保留。
+- 播放器主页面下载按钮的下载状态查询、创建下载和继续下载入口已从 `MusicPlayerActivity` 直连 `DownloadRepository` 收敛到 `DownloadActionsUseCase`。
+- 歌曲列表通用适配器 `SongAdapter` 已从 Java 迁到 Kotlin，本地/已下载歌曲删除和下载完成状态查询已从直连 `DownloadRepository` 收敛到 `DownloadActionsUseCase`。
+- 歌单详情页 `SheetDetailActivity` 已从 Java 迁到 Kotlin，详情加载、收藏和取消收藏已推进到 `SheetDetailViewModel(StateFlow) -> Sheet UseCase -> SheetRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
+- 评论页 `CommentActivity` 已从 Java 迁到 Kotlin，评论分页加载、创建评论、点赞和取消点赞已推进到 `CommentViewModel(StateFlow) -> Comment UseCase -> CommentRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
+- 评论列表 `CommentAdapter`、评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
 
 当前尚未完成：
 
@@ -69,6 +74,168 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-20 阶段 8 继续：评论模块剩余 Java 清理
+
+本轮决策：
+
+- 继续编码，不做设备端冒烟。
+- 在评论页状态链路收口后，继续清理 `component/comment` 里剩余 Java 文件。
+- 本轮只迁移评论 model/adapter/dialog，并补齐 Kotlin 空值保护，不扩大到新 UI 或 Compose。
+
+本轮代码变更：
+
+- `Comment.java` -> `Comment.kt`，保留评论内容、点赞数、歌单/动态 id、父评论、发布人和 `isLiked` 行为。
+- `CommentAdapter.java` -> `CommentAdapter.kt`，保留头像、昵称、时间、点赞状态、正文富文本、回复评论富文本和 mention/hash 点击处理。
+- `CommentMoreDialogFragment.java` -> `CommentMoreDialogFragment.kt`，保留 `showDialog(...)` 静态入口和评论更多菜单。
+- `CommentActivity`、`CommentViewModel` 和 `FeedAdapter` 已适配 Kotlin 化后的 `Comment` 可空字段，后端缺 user/parent/content 时不再依赖 Java platform type。
+
+本轮验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/comment -maxdepth 3 -name '*.java' -print` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 如果继续清 Java 残留，下一刀可处理 `component/sheet` 下的 `Sheet`/`SheetWrapper`/`SheetChangedEvent`，或继续检查其他外围模块。
+- 如果转入阶段 8 核心目标，可以挑评论页、歌单详情页或发现页做最小 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：评论页状态链路
+
+本轮决策：
+
+- 继续编码，不做设备端冒烟。
+- 在歌单详情页收口后，继续处理最后一个明显外围旧页面 `CommentActivity` 的直接 `DefaultRepository` + Rx/`HttpObserver` 边界。
+- 本轮只处理评论分页加载、创建评论、点赞和取消点赞，不扩大到评论适配器/model Kotlin 化或评论更多弹窗重构。
+
+本轮代码变更：
+
+- `CommentActivity.java` -> `CommentActivity.kt`，保留歌单评论入口 `startWithSheetId(...)`、下拉刷新、上拉加载更多、回复评论、复制评论、@好友选择、登录状态变化刷新和富文本高亮。
+- 新增 `CommentRepository`，封装 `comments(...)`、`createComment(...)`、`commentLike(...)`、`cancelCommentLike(...)`。
+- 新增 `LoadCommentsUseCase`、`CreateCommentUseCase`、`LikeCommentUseCase`、`CancelCommentLikeUseCase`，把 Rx 订阅封装到 suspend use case。
+- 新增 `CommentViewModel`、`CommentUiState` 和 `CommentLoadOperation`，用 `StateFlow` 驱动分页列表、创建成功事件、点赞更新事件和错误状态。
+- `CommentActivity` 不再 import/调用 `DefaultRepository`、`HttpObserver` 或 AutoDispose；刷新仍走 `setNewInstance(...)`，加载更多保留旧的 `addData(...)` 追加行为。
+
+本轮验证：
+
+- `rg "DefaultRepository|HttpObserver|autoDisposable|subscribe\\(" component/comment` 仅剩 Repository/UseCase 内部封装命中，Activity 层无命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 如继续清 Java 残留，可以迁移 `CommentAdapter`、`CommentMoreDialogFragment`、`Comment` model，或继续清 `component/sheet` 下的 `Sheet`/事件小模型。
+- 如转向阶段 8 核心目标，可以从评论页、歌单详情页或发现页挑最小 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：歌单详情状态链路
+
+本轮决策：
+
+- 继续编码，不做设备端冒烟。
+- 在 `SongAdapter` 下载边界收口后，继续处理 `SheetDetailActivity` 的直接 `DefaultRepository` + Rx/`HttpObserver` 边界。
+- 本轮只处理歌单详情页的详情加载、收藏和取消收藏，不扩大到评论页或删除歌单 TODO。
+
+本轮代码变更：
+
+- `SheetDetailActivity.java` -> `SheetDetailActivity.kt`，保留隐式 intent 打开、头图调色、播放全部/单曲、用户入口、评论入口、删除菜单显示和收藏按钮 UI。
+- 新增 `SheetRepository`，封装 `sheetDetail(...)`、`collect(...)`、`deleteCollect(...)`。
+- 新增 `LoadSheetDetailUseCase`、`CollectSheetUseCase`、`DeleteSheetCollectUseCase`，把 Rx 订阅封装到 suspend use case。
+- 新增 `SheetDetailViewModel`、`SheetDetailUiState` 和 `SheetCollectOperation`，用 `StateFlow` 驱动详情数据、loading、错误和收藏成功事件。
+- `SheetDetailActivity` 不再 import/调用 `DefaultRepository`、`HttpObserver` 或 AutoDispose；收藏成功后仍本地更新收藏状态/数量并发布 `SheetChangedEvent`。
+
+本轮验证：
+
+- `rg "DefaultRepository|HttpObserver|autoDisposable|subscribe\\(" component/sheet` 仅剩 Repository/UseCase 内部封装命中，Activity 层无命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 `FragmentStatePagerAdapter` deprecated、Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 继续外围旧页面收口时，下一刀优先处理 `CommentActivity` 直连 `DefaultRepository` + Rx/`HttpObserver`。
+- 若转向阶段 8 核心目标，可以从歌单详情或发现页选一个小区域做 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：SongAdapter 下载边界收口
+
+本轮决策：
+
+- 继续编码，不做设备端冒烟。
+- 在 `feed`/`discovery` Java 残留清理之后，优先处理外围旧页面里最小的下载 Repository 直连点。
+- 本轮只迁移 `SongAdapter` 和必要调用点小清理，不扩大到 `SheetDetailActivity`/`CommentActivity` 的 Rx 页面重构。
+
+本轮代码变更：
+
+- `SongAdapter.java` -> `SongAdapter.kt`，保留 Java 调用方需要的 `SongAdapter(int)`、`SongAdapter(int, int, FragmentManager)`、`isEditing()`、`setEditing(...)`、`isSelected(...)`、`setSelected(...)`、`getSelectedIndexes()` 调用面。
+- `SongAdapter` 不再 import/持有 `DownloadRepository`；下载状态查询和下载任务删除改为调用 `DownloadActionsUseCase`。
+- 已下载页点击歌曲时去掉 Kotlin 化后的多余空值 Elvis 分支。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 继续外围旧页面收口时，优先处理 `SheetDetailActivity` 或 `CommentActivity` 直连 `DefaultRepository` + Rx/`HttpObserver`。
+- 若不继续外围页面，下一步可以转向发现页或动态列表的最小 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：动态/发现 Java 残留清理
+
+本轮决策：
+
+- 继续编码，不做设备端冒烟。
+- 优先修正文档与代码事实不一致的问题：`feed`/`discovery` 目录仍有 git 跟踪的 Java 文件，本轮把这批边界迁到 Kotlin。
+- 本轮只处理动态/发现目录 Java 残留和必要的 Kotlin 空值/可变列表适配，不扩大到歌单/评论外围旧页面。
+
+本轮代码变更：
+
+- `Feed.java` -> `Feed.kt`、`FeedChangedEvent.java` -> `FeedChangedEvent.kt`，保留动态发布/列表接口字段和 Java bean getter/setter。
+- `FeedAdapter` 对动态缺少 `user` 的场景改为 Kotlin 空值保护，避免模型迁 Kotlin 后继续依赖 Java platform type。
+- `SortChangedEvent`、发现页 UI 模型 `BaseSort`/`BannerData`/`ButtonData`/`SheetData`/`SongData`/`FooterData`/`CustomDiscoveryItem`/`IconTitleButtonData` 已迁到 Kotlin。
+- `CustomDiscoveryActivity` 和 `CustomDiscoveryAdapter` 已迁到 Kotlin，保留自定义发现页拖拽排序、恢复默认排序、保存排序并发布 `SortChangedEvent`。
+- `DiscoveryRepository` 为 Kotlin 化后的 Banner/Sheet/Song 容器显式传入 mutable list，继续兼容现有 adapter `setNewInstance(...)` 数据入口。
+
+本轮验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/feed app/src/main/java/com/ixuea/courses/mymusic/component/discovery -name '*.java' -print` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 `FragmentStatePagerAdapter` deprecated、Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 如果继续清旧边界，下一刀优先处理外围旧页面：`SongAdapter` 直连 `DownloadRepository`，`SheetDetailActivity`/`CommentActivity` 直连 `DefaultRepository` + Rx/`HttpObserver`。
+- 如果继续阶段 8 核心目标，可以挑发现页或动态列表的最小区域做 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：播放器下载动作边界收口
+
+本轮决策：
+
+- 按用户要求继续编码，不做设备端冒烟。
+- 优先执行上轮建议里的“五条链路 UI 直连 Repository/Rx 扫描”，先处理最小且清晰的播放器下载边界。
+- 本轮不扩大到歌单/评论等旧外围页面，也不启动模拟器。
+
+本轮代码变更：
+
+- `DownloadActionsUseCase` 增加 `getDownloadById(...)` 和 `download(...)`，继续作为下载 SDK/Repository 的 domain 动作门面。
+- `MusicPlayerActivity` 不再 import/持有 `DownloadRepository`。
+- 播放器页下载按钮的“已下载/下载中/继续下载/创建下载任务”旧行为保持不变，但 Repository 访问改由 `DownloadActionsUseCase` 承接。
+
+本轮验证：
+
+- 已扫描核心链路 UI 层，播放器页不再直接 import 下载 Repository。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮按要求未做设备端冒烟。
+
+下个会话建议：
+
+- 继续核对歌单/评论等外围旧页面是否纳入当前五条链路的收口范围；如果纳入，再把 `SongAdapter`、`SheetDetailActivity`、`CommentActivity` 的直接 Repository/Rx 调用按小刀迁出。
+- 若仍限定核心五条链路，可以开始选择一个最低风险页面做 Compose UI 试点。
 
 ### 2026-05-20 收尾交接：阶段 8 下载与动态发布小补
 
@@ -1985,15 +2152,52 @@ GitHub 发布策略：
 - 单条链路迁移需要连带重写多个冻结模块。
 - 新模块拆分暴露出无法短期解决的循环依赖。
 
-## 推荐下一步
+## 阶段 8 继续：歌单/登录/用户/歌词模型收口
 
-进入阶段 7：统一做模拟器或真机人工冒烟。
+本轮继续按“先清边界、保持可编译”的节奏推进，不做设备端冒烟。
 
-建议按以下顺序：
+已完成：
 
-- 安装 dev debug 包并启动 App。
-- 冒烟音乐播放：在线/本地播放、暂停/继续、seek、上一首/下一首、通知、Widget、歌词进度。
-- 冒烟聊天：会话列表、进入聊天、历史消息、文本发送、图片发送入口。
-- 冒烟动态发布：多图选择、压缩、上传、发布、动态列表刷新。
-- 冒烟下载：下载中列表、已下载列表、单项暂停/继续、全部暂停/继续、删除、播放已下载歌曲。
-- 冒烟发现/信息流：发现页加载、Banner/歌单/单曲点击、信息流滚动、图片预览。
+- `component/sheet` 剩余 Java 残留清零：`Sheet`、`SheetWrapper`、`SheetChangedEvent` 已迁到 Kotlin。
+- `component/login` 模型/事件迁到 Kotlin：`Session`、`LoginStatusChangedEvent` 保留旧 Java 调用面。
+- `component/user` 事件和核心 `User` 模型迁到 Kotlin，保留 `User(id)`、`createLogin(...)`、Parcelable、关注/性别/描述格式化 API。
+- `component/ad/model/Ad` 和 `component/lyric/model/Line`、`Lyric` 迁到 Kotlin，保留 Parcelable/CREATOR。
+- `component/song/model/Song` 迁到 Kotlin，保留 LiteORM `@Table/@Column/@Ignore`、`SORT_KEYS`、`SOURCE_*`、Parcelable/CREATOR、`isRotate/setRotate`、`isPlayList/setPlayList`、`isLocal`。
+- 对迁移后真实可空字段做最小调用点修正，例如歌单图标、选择好友昵称、`SheetWrapper` 泛型类型。
+- 对发现页歌曲列表的歌手展示补充空安全，避免 `Song.singer` 为空时崩溃。
+
+验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/sheet -maxdepth 4 -name '*.java' -print` 无输出。
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/user/model/event -maxdepth 1 -name '*.java' -print` 无输出。
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/ad -maxdepth 3 -name '*.java' -print` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；仅剩既有 Java deprecated/unchecked、Kotlin deprecated API warning 和 BGABadge 非增量注解处理提示。
+
+当前剩余 Java 边界：
+
+- 网络/基础观察层：`component/api/*`、`component/observer/ObserverAdapter.java`。
+- 旧页面/系统入口：`location`、`login/activity/LoginHomeActivity.java`、`music` 本地音乐扫描链路、`user/activity/*`、`widget/MusicWidget.java`。
+- 歌词自定义 View：`GlobalLyricView.java`、`LyricLineView.java`、`LyricListView.java`。
+
+建议下一刀：
+
+- 优先拆 `music` 本地扫描链路或歌词自定义 View；两者都仍是 Java，但 `Song/User/Lyric` 中心模型已经先完成 Kotlin 化。
+
+## 最新交接
+
+当前分支：`codex/emulator-smoke-progress`。
+
+当前策略：用户已明确要求继续编码、不做设备端冒烟；下一会话从文档和 git 状态恢复即可。
+
+恢复步骤：
+
+- 先看 `git status --short` 和本节内容，确认当前迁移面。
+- 如继续编码，优先处理 `component/music` 本地音乐扫描链路，或 `component/lyric/view` 三个 Java 自定义 View。
+- 每个切片保持 `./gradlew :app:assembleDevDebug` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
+
+剩余 Java 清单以当前仓库为准，可用：
+
+```bash
+find app/src/main/java/com/ixuea/courses/mymusic/component -maxdepth 4 -name '*.java' -print | sort
+```

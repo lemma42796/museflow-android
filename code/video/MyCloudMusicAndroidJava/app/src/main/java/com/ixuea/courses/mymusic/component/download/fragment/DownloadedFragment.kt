@@ -41,7 +41,7 @@ class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
     override fun initListeners() {
         super.initListeners()
         adapter.setOnItemClickListener { _, _, position ->
-            val data = adapter.getItem(position) ?: return@setOnItemClickListener
+            val data = adapter.getItem(position)
 
             musicListManager.setDatum(adapter.data)
             musicListManager.play(data)

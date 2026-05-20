@@ -14,7 +14,7 @@ class DiscoverySongAdapter(layoutResId: Int) : BaseQuickAdapter<Song, BaseViewHo
     override fun convert(holder: BaseViewHolder, item: Song) {
         ImageUtil.show(context, holder.getView<ImageView>(R.id.icon), item.icon)
         holder.setText(R.id.title, item.title)
-        holder.setText(R.id.more, "%s-%s".format(item.singer.nickname, "专辑名称"))
+        holder.setText(R.id.more, "%s-%s".format(item.singer?.nickname.orEmpty(), "专辑名称"))
         holder.setGone(R.id.divider_small, holder.layoutPosition == itemCount - 1)
     }
 }

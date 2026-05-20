@@ -39,15 +39,15 @@ class FeedAdapter(layoutResId: Int) : BaseQuickAdapter<Feed, BaseViewHolder>(lay
         ImageUtil.showAvatar(
             context as Activity,
             holder.getView<ImageView>(R.id.icon),
-            user.icon
+            user?.icon
         )
 
-        holder.setText(R.id.nickname, user.nickname)
+        holder.setText(R.id.nickname, user?.nickname.orEmpty())
         holder.setText(R.id.date, SuperDateUtil.commonFormat(item.createdAt))
         holder.setText(R.id.content, item.content)
 
         if (!item.province.isNullOrBlank()) {
-            holder.setText(R.id.position, "%s . %s".format(item.city, item.position))
+            holder.setText(R.id.position, "%s . %s".format(item.city.orEmpty(), item.position.orEmpty()))
             holder.setGone(R.id.position, false)
         } else {
             holder.setGone(R.id.position, true)
@@ -100,7 +100,7 @@ class FeedAdapter(layoutResId: Int) : BaseQuickAdapter<Feed, BaseViewHolder>(lay
 
     private fun bindDelete(holder: BaseViewHolder, item: Feed) {
         val preference = AppContext.getInstance().preference
-        if (preference.isLogin && item.user.id == preference.userId) {
+        if (preference.isLogin && item.user?.id == preference.userId) {
             holder.setGone(R.id.delete, false)
         } else {
             holder.setGone(R.id.delete, true)
@@ -167,19 +167,20 @@ class FeedAdapter(layoutResId: Int) : BaseQuickAdapter<Feed, BaseViewHolder>(lay
     private fun processContent(data: Comment): SpannableStringBuilder {
         val result = SpannableStringBuilder()
 
-        result.append(data.user.nickname)
-        SpannableStringBuilderUtil.setUserClickSpan(result, 0, result.length, data.user.id)
+        val user = data.user
+        result.append(user?.nickname.orEmpty())
+        SpannableStringBuilderUtil.setUserClickSpan(result, 0, result.length, user?.id)
 
         data.parent?.let { parent ->
             result.append(context.getString(R.string.reply))
 
             val start = result.length
-            result.append(parent.user.nickname)
-            SpannableStringBuilderUtil.setUserClickSpan(result, start, result.length, parent.user.id)
+            result.append(parent.user?.nickname.orEmpty())
+            SpannableStringBuilderUtil.setUserClickSpan(result, start, result.length, parent.user?.id)
         }
 
         result.append(context.getString(R.string.colon_separator))
-        result.append(data.content)
+        result.append(data.content.orEmpty())
 
         return result
     }

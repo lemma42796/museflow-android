@@ -16,8 +16,8 @@ import com.bumptech.glide.request.transition.Transition
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
+import com.ixuea.courses.mymusic.component.download.domain.DownloadActionsUseCase
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener
-import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository
 import com.ixuea.courses.mymusic.component.lyric.activity.SelectLyricActivity
 import com.ixuea.courses.mymusic.component.lyric.view.LyricListView
 import com.ixuea.courses.mymusic.component.player.fragment.MusicPlayListDialogFragment
@@ -53,7 +53,7 @@ class MusicPlayerActivity :
     LyricListView.LyricListListener {
 
     private lateinit var musicPlayerManager: MusicPlayerManager
-    private lateinit var downloadRepository: DownloadRepository
+    private lateinit var downloadActionsUseCase: DownloadActionsUseCase
     private var isSeekTracking = false
 
     /**
@@ -157,7 +157,7 @@ class MusicPlayerActivity :
     override fun initDatum() {
         super.initDatum()
         musicPlayerManager = MusicPlayerService.getMusicPlayerManager(applicationContext)
-        downloadRepository = DownloadRepository.getInstance()
+        downloadActionsUseCase = DownloadActionsUseCase()
 
         binding.record.initAdapter(hostActivity)
         binding.record.setData(musicListManager.datum)
@@ -208,7 +208,7 @@ class MusicPlayerActivity :
                 if (info.status != DownloadInfo.STATUS_DOWNLOADING &&
                     info.status != DownloadInfo.STATUS_WAIT
                 ) {
-                    downloadRepository.resume(info)
+                    downloadActionsUseCase.resume(info)
                 }
             }
         } else {
@@ -272,7 +272,7 @@ class MusicPlayerActivity :
 
         setDownloadCallback()
         downloadInfo?.let { info ->
-            downloadRepository.download(info)
+            downloadActionsUseCase.download(info)
         }
 
         orm.saveSong(data)
@@ -436,7 +436,7 @@ class MusicPlayerActivity :
         toolbar.subtitle = data.singer?.nickname.orEmpty()
         loadBackground(data)
 
-        downloadInfo = downloadRepository.getDownloadById(data.id)
+        downloadInfo = downloadActionsUseCase.getDownloadById(data.id)
         if (downloadInfo != null) {
             setDownloadCallback()
         }

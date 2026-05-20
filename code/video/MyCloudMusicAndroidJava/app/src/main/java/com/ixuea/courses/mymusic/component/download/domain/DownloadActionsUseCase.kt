@@ -6,6 +6,14 @@ import com.ixuea.courses.mymusic.component.download.repository.DownloadRepositor
 class DownloadActionsUseCase(
     private val repository: DownloadRepository = DownloadRepository.getInstance(),
 ) {
+    fun getDownloadById(id: String): DownloadInfo? {
+        return repository.getDownloadById(id)
+    }
+
+    fun download(data: DownloadInfo) {
+        repository.download(data)
+    }
+
     fun resume(data: DownloadInfo) {
         repository.resume(data)
     }
