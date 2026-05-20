@@ -13,3 +13,16 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local IDE and runtime noise
+/.idea/deploymentTargetSelector.xml
+/.idea/deviceManager.xml
+/.idea/vcs.xml
+/hs_err_pid*.log
+/replay_pid*.log
+/tmpmob/
+
+# Local/generated module build outputs from legacy optional modules
+/LetterIndexView/build/
+/super-player-tencent/build/
+/super-speech-baidu/build/
