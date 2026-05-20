@@ -6,26 +6,23 @@ import android.text.Editable
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
-import autodispose2.AutoDispose.autoDisposable
-import autodispose2.androidx.lifecycle.AndroidLifecycleScopeProvider
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.adapter.TextWatcherAdapter
-import com.ixuea.courses.mymusic.component.api.HttpObserver
 import com.ixuea.courses.mymusic.component.feed.adapter.ImageAdapter
 import com.ixuea.courses.mymusic.component.feed.model.Feed
 import com.ixuea.courses.mymusic.component.feed.model.event.FeedChangedEvent
-import com.ixuea.courses.mymusic.component.feed.repository.FeedPublishRepository
 import com.ixuea.courses.mymusic.component.feed.repository.ImageCompressionRepository
+import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishOperation
+import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishViewModel
 import com.ixuea.courses.mymusic.config.glide.GlideEngine
 import com.ixuea.courses.mymusic.databinding.ActivityPublishFeedBinding
-import com.ixuea.courses.mymusic.model.Base
-import com.ixuea.courses.mymusic.model.Resource
-import com.ixuea.courses.mymusic.model.response.DetailResponse
-import com.ixuea.courses.mymusic.model.response.ListResponse
 import com.ixuea.courses.mymusic.util.ImageCompressor
 import com.ixuea.superui.decoration.GridDividerItemDecoration
 import com.ixuea.superui.toast.SuperToast
@@ -38,22 +35,25 @@ import com.luck.picture.lib.engine.CompressFileEngine
 import com.luck.picture.lib.entity.LocalMedia
 import com.luck.picture.lib.interfaces.OnKeyValueResultCallbackListener
 import com.luck.picture.lib.interfaces.OnResultCallbackListener
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
+import timber.log.Timber
 import java.util.ArrayList
 
 /**
  * 发布动态界面
  */
 class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
-    private var content: String = ""
-
     /**
      * 动态
      */
     private val feed = Feed()
     private lateinit var adapter: ImageAdapter
     private lateinit var viewModel: FeedPublishViewModel
-    private val publishRepository = FeedPublishRepository.getInstance()
+    private var currentOperation = FeedPublishOperation.NONE
+    private var handledRequestErrorVersion = 0L
+    private var handledUploadCountErrorVersion = 0L
+    private var handledPublishCompleteVersion = 0L
 
     override fun initViews() {
         super.initViews()
@@ -74,7 +74,7 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
         adapter = ImageAdapter(R.layout.item_image)
         binding.list.adapter = adapter
 
-        viewModel.mediaItems.observe(this, ::setData)
+        observePublishState()
         viewModel.setSelectedImages(emptyList())
     }
 
@@ -87,6 +87,7 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
      */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.publish, menu)
+        menu.findItem(R.id.publish)?.isEnabled = currentOperation == FeedPublishOperation.NONE
         return true
     }
 
@@ -169,8 +170,61 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
             })
     }
 
+    private fun observePublishState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    render(state)
+                }
+            }
+        }
+    }
+
+    private fun render(state: FeedPublishUiState) {
+        setData(state.mediaItems)
+        renderOperation(state.operation)
+
+        if (state.requestErrorVersion != handledRequestErrorVersion) {
+            handledRequestErrorVersion = state.requestErrorVersion
+            if (state.requestError != null) {
+                Timber.e(state.requestError, "publish feed error %s", state.requestErrorMessage)
+            } else {
+                Timber.e("publish feed error %s", state.requestErrorMessage)
+            }
+            val message = state.requestErrorMessage
+                ?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.error_upload_image)
+            SuperToast.show(message)
+        }
+
+        if (state.uploadCountErrorVersion != handledUploadCountErrorVersion) {
+            handledUploadCountErrorVersion = state.uploadCountErrorVersion
+            SuperToast.show(R.string.error_upload_image)
+        }
+
+        if (state.publishCompleteVersion != handledPublishCompleteVersion) {
+            handledPublishCompleteVersion = state.publishCompleteVersion
+            EventBus.getDefault().post(FeedChangedEvent())
+            finish()
+        }
+    }
+
+    private fun renderOperation(operation: FeedPublishOperation) {
+        if (currentOperation == operation) {
+            return
+        }
+
+        currentOperation = operation
+        invalidateOptionsMenu()
+        when (operation) {
+            FeedPublishOperation.NONE -> hideLoading()
+            FeedPublishOperation.UPLOADING_IMAGES -> showLoading(getString(R.string.loading_upload, 1))
+            FeedPublishOperation.CREATING_FEED -> showLoading(getString(R.string.loading))
+        }
+    }
+
     private fun sendClick() {
-        content = binding.content.text.toString().trim()
+        val content = binding.content.text.toString().trim()
 
         if (content.isBlank()) {
             SuperToast.error(R.string.hint_feed)
@@ -182,48 +236,8 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
             return
         }
 
-        val selectedImages = viewModel.getSelectedImages()
-        if (selectedImages.isNotEmpty()) {
-            uploadImages(selectedImages)
-        } else {
-            saveFeed(null)
-        }
-    }
-
-    private fun uploadImages(datum: List<LocalMedia>) {
-        showLoading(getString(R.string.loading_upload, 1))
-        publishRepository.uploadImages(datum)
-            .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-            .subscribe(object : HttpObserver<ListResponse<Resource>>() {
-                override fun onFailed(data: ListResponse<Resource>?, e: Throwable?): Boolean {
-                    hideLoading()
-                    return super.onFailed(data, e)
-                }
-
-                override fun onSucceeded(data: ListResponse<Resource>) {
-                    hideLoading()
-                    val results = data.data?.data
-                    if (results != null && results.size == datum.size) {
-                        saveFeed(results)
-                    } else {
-                        SuperToast.show(R.string.error_upload_image)
-                    }
-                }
-            })
-    }
-
-    private fun saveFeed(results: List<Resource>?) {
         // 真实项目中应该由服务端判断发送设备，避免客户端破解后，可以设置任意值
         feed.content = "%s\n📱来自【Android Java云音乐客户端】".format(content)
-        feed.medias = results
-
-        publishRepository.createFeed(feed)
-            .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-            .subscribe(object : HttpObserver<DetailResponse<Base>>() {
-                override fun onSucceeded(data: DetailResponse<Base>) {
-                    EventBus.getDefault().post(FeedChangedEvent())
-                    finish()
-                }
-            })
+        viewModel.publish(feed)
     }
 }

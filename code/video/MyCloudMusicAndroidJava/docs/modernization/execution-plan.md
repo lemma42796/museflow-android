@@ -69,6 +69,61 @@
 
 ## 最新执行记录
 
+### 2026-05-20 阶段 8 继续：动态 Feed 列表状态链路
+
+本轮决策：
+
+- 继续阶段 8 编码，把 `FeedFragment` 的动态列表加载从 Fragment 直接 Rx 订阅推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮只处理动态列表刷新状态，不扩大到点赞、评论、图片预览、用户详情跳转或发布页之外的 EventBus 替换。
+- 旧 XML/RecyclerView UI 继续保留，Fragment 仍负责发布入口登录校验、图片预览和用户详情路由。
+
+本轮代码变更：
+
+- 新增 `LoadFeedListUseCase`：桥接 `FeedRepository.feeds(userId)` Rx 接口，返回动态列表或请求错误。
+- 新增 `FeedUiState` 和 `FeedViewModel`：使用 `StateFlow` 暴露加载中、feed 列表、数据版本和错误版本。
+- `FeedFragment` 不再直接持有 `FeedRepository`、`HttpObserver` 或 AutoDispose 订阅；改为通过 `ViewModelProvider` 获取 `FeedViewModel`，用 `viewLifecycleOwner.lifecycleScope` + `repeatOnLifecycle` 收集状态。
+- 发布成功后的 `FeedChangedEvent` 仍触发列表刷新，但刷新入口改为 `viewModel.load(userId)`。
+- 旧行为保留：发布入口登录校验、动态图片大图预览、用户详情跳转和发布成功刷新列表。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做动态列表网络数据、滚动、图片预览或发布后刷新人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以转向发现页 `DiscoveryFragment` 首页数据加载，按同样方式收敛到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`。
+- 如先验收，优先跑动态列表加载、发布页选图压缩上传、发布完成返回后列表刷新。
+
+### 2026-05-20 阶段 8 补齐：动态发布上传/创建状态链路
+
+本轮决策：
+
+- 继续阶段 8 编码，优先补齐当前工作区里仍保留 Activity 直接 Rx 订阅的动态发布页。
+- 本轮只处理 `PublishFeedActivity` 的图片上传和创建动态状态，不扩大到动态列表、评论、点赞或全局 EventBus 替换。
+- 图片选择器和压缩引擎仍保留在 Activity/PictureSelector 边界；选图结果、上传、发布和完成事件收敛到 `FeedPublishViewModel`。
+
+本轮代码变更：
+
+- 新增 `UploadFeedImagesUseCase`：桥接 `FeedPublishRepository.uploadImages(...)` Rx 接口，返回上传后的 `Resource` 列表或请求错误。
+- 新增 `CreateFeedUseCase`：桥接 `FeedPublishRepository.createFeed(...)` Rx 接口，返回创建成功或请求错误。
+- 新增 `FeedPublishUiState` 和 `FeedPublishOperation`：用 `StateFlow` 表示九宫格媒体数据、图片上传中、动态创建中、请求错误、上传数量异常和发布完成事件。
+- `FeedPublishViewModel` 从只持有选图 LiveData 扩展为发布状态机：保留选择/删除图片状态，发布时先上传图片并校验返回资源数量，再创建动态；无图发布直接创建动态。
+- `PublishFeedActivity` 不再直接持有 `FeedPublishRepository`、`HttpObserver` 或 AutoDispose 订阅；改为收集 `FeedPublishViewModel.uiState` 渲染九宫格、loading、上传失败 toast、发布完成后的 `FeedChangedEvent` 和 `finish()`。
+- 旧行为保留：内容为空提示、140 字校验、发布内容追加客户端来源、选择/删除图片、压缩回调和发布成功刷新动态列表。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有播放器 adapter deprecated 警告、Java deprecation/unchecked 提示和 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做动态发布选图、压缩、上传或发布完成人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以转向动态列表或发现页剩余 Fragment 直接 Rx 订阅边界。
+- 如先验收，优先跑动态发布入口、选图压缩、多图上传、发布完成刷新动态列表。
+
 ### 2026-05-20 阶段 8 继续：聊天详情发送/已读状态链路
 
 本轮决策：
