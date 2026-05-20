@@ -5,6 +5,10 @@
 
 ## 当前状态
 
+## 进度查询约定
+
+以后用户询问“最新进度”“进度到哪了”或类似问题时，先阅读本文档，尤其是“当前状态”和“最新执行记录”；再结合 `git status -sb`、`git log --oneline --decorate -5`、必要时的终端/构建状态补充说明。进度回答应以文档记录为主，Git 状态只作为辅助校验。
+
 当前已完成：
 
 - 已确认本轮只处理五条重点链路。
@@ -14,7 +18,7 @@
 - `:app:assembleDevDebug` 构建通过。
 - 音乐播放链路已进入阶段 2，完成第一步 Media3 播放核心和旧 Manager 兼容桥接。
 - 聊天、动态发布、下载、发现/信息流链路已完成第一轮 Repository/ViewModel/兼容桥接闭环，旧入口继续保留。
-- 用户决定暂缓设备端人工冒烟，继续推进代码层迁移。
+- 已在模拟器 `emulator-5554` 完成阶段 7 第一轮入口冒烟，App 可安装启动，播放器、聊天、动态发布、下载页等核心入口可打开。
 - 发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin，Java 调用方兼容接口保持不变。
 - 下载中/已下载 Fragment 和下载中 Adapter 已从 Java 迁到 Kotlin，下载 Repository 边界继续保持稳定。
 - 动态列表 `FeedFragment` 已从 Java 迁到 Kotlin，发布入口、图片预览、位置预览和 EventBus 刷新入口保持兼容。
@@ -25,15 +29,764 @@
 - 播放器底部控制、黑胶页、播放列表弹窗和相关 adapter 已从 Java 迁到 Kotlin，旧 Activity/Fragment 入口保持兼容。
 - 播放器主页面、简单播放器、自定义黑胶 View 和播放器事件已从 Java 迁到 Kotlin，`component/player` 包内业务代码已完成 Kotlin 化。
 - 歌词选择/分享页面、歌词列表 adapter 和 LRC/KSC parser 已从 Java 迁到 Kotlin，播放器歌词解析入口保持兼容。
+- 歌词模型 `Line`/`Lyric`、`LyricUtil` 和单行歌词 View `LyricLineView` 已从 Java 迁到 Kotlin，并补齐空歌词/逐字歌词边界保护。
+- 歌词列表 View `LyricListView` 和桌面歌词 View `GlobalLyricView` 已从 Java 迁到 Kotlin，歌词自定义 View 已完成 Kotlin 化。
+- 桌面歌词管理器 `GlobalLyricManagerImpl` 已从 Java 迁到 Kotlin，保留 Java 静态 `getInstance(Context)` 入口和悬浮窗控制接口。
+- 音乐 Widget 边界 `WidgetUtil` 和 `MusicWidget` 已从 Java 迁到 Kotlin，保留桌面微件 provider 类名和 Java 静态工具调用入口。
+- 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留消息通知、播放通知、桌面歌词解锁通知和前台服务通知的静态调用入口。
+- 播放管理器兼容门面 `MusicPlayerManagerImpl` 已从 Java 迁到 Kotlin，继续通过 Media3 `PlaybackRepository` 承接旧 `MusicPlayerManager` API。
+- 播放列表管理器 `MusicListManagerImpl` 已从 Java 迁到 Kotlin，继续保留旧 `MusicListManager` 接口、静态 `getInstance(Context)` 入口、队列持久化和 `PlaybackRepository.setQueue(...)` 同步。
+- 播放服务边界 `MusicPlayerService` 已从 Java 迁到 Kotlin，继续保留 Manifest service 类名、MediaSession、通知、Widget 和桌面歌词控制入口。
+- 播放链路已完成一轮更完整的模拟器时间线复测：播放/暂停、seek、通知媒体卡片播放/暂停、后台播放在 MediaSession 和 UI 层面通过；上一轮“播放未推进”的判断已修正。
+- 聊天详情页 `ChatActivity` 已从 Java 迁到 Kotlin，保留旧 XML/RecyclerView、图片选择压缩、文本/图片发送、历史消息分页、EventBus 新消息入口和 Repository 调用边界。
+- 会话列表页 `ConversationActivity` 和 `ConversationAdapter` 已从 Java 迁到 Kotlin，保留会话列表、点击进聊天、长按清消息、未读角标和新消息节流刷新逻辑。
+- 聊天链路事件/消息 extra 小模型 `NewMessageEvent`、`MessageUnreadCountChangedEvent`、`MediaMessageExtra` 已从 Java 迁到 Kotlin，Java 调用入口保持兼容。
+- 聊天消息列表 `ChatAdapter` 已从 Java 迁到 Kotlin，继续保留文本/图片消息左右布局、头像加载、图片尺寸适配和 RongCloud 消息类型判断，并补齐图片 extra/宽高缺失时的保护。
+- 聊天消息工具 `MessageUtil`、离线推送小模型 `Push`/`PushMessage` 和推送入口 `RongPushReceiver`/`PushReceiver`/`PushService` 已从 Java 迁到 Kotlin，继续保留 `MessageUtil.getContent(...)`、`MessageUtil.createPushData(...)`、`Push.PUSH_STYLE_CHAT`、Manifest receiver/service 类名等兼容入口。
+- 下载链路入口 `DownloadActivity`、分页适配器、下载监听器、点击 listener 和下载事件已从 Java 迁到 Kotlin，下载目录当前不再包含 Java 文件。
+- 发现/信息流相关的自定义排序页、排序 adapter、发现页 UI 数据模型和排序事件已从 Java 迁到 Kotlin；`DiscoveryAdapter` 已适配 Kotlin 模型列表拷贝，发现目录当前不再包含 Java 文件。
+- 动态主模型 `Feed` 和动态刷新事件已从 Java 迁到 Kotlin，动态目录当前不再包含 Java 文件；`FeedAdapter` 已补齐动态缺少 user 时的空值保护。
+- 首页主 ViewPager 边界 `MainAdapter` 已从 Java 迁到 Kotlin，继续保留发现/视频/我的/动态/直播五个 tab 的 Fragment 创建顺序。
+- 首页 tab 模型 `TabEntity` 已从 Java 迁到 Kotlin，继续实现 `CustomTabEntity` 并保留 Java public 字段访问形态。
+- 播放/歌单相关小事件 `MusicPlayListChangedEvent`、`ScanLocalMusicCompleteEvent`、`SheetChangedEvent` 已从 Java 迁到 Kotlin，继续保留 Java 构造和 getter/setter 调用面。
+- 阶段 8 已按用户要求启动；发现页首页数据加载已先推进到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`，启动广告预下载也已下沉到 `RefreshSplashAdUseCase`，下载中/已下载页已引入 `DownloadingViewModel`/`DownloadedViewModel` 承接下载操作和列表状态，动态 Feed 列表也已推进到 `FeedViewModel(StateFlow) -> LoadFeedListUseCase -> FeedRepository`，动态发布上传/创建动态已推进到 `FeedPublishViewModel(StateFlow) -> Publish UseCase -> FeedPublishRepository`，聊天会话列表已推进到 `ConversationListViewModel(StateFlow) -> Conversation UseCase -> ConversationRepository`，新消息后的会话列表延迟刷新和会话行 UI 数据也已收敛到 ViewModel，聊天详情历史消息分页、文本/图片发送状态、清未读、标记已读、页面标题用户资料和消息行头像 UI 数据已推进到 `ChatViewModel(StateFlow) -> Chat UseCase -> MessageRepository`，旧 RecyclerView UI 暂时保留。
 
 当前尚未完成：
 
-- 音乐播放链路的在线/本地播放、通知控制、歌词进度人工冒烟尚未执行。
-- App 安装启动和五条链路完整人工冒烟尚未执行。
+- 五条链路仍未完成深度人工冒烟；目前只完成入口级检查。
+- 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
+- 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
+- 播放通知刷新已做去重和低频保护，本轮 logcat 未看到新的通知限流日志，但系统累计 `numRateViolations` 已到 `28`，仍需继续观察是否还有增量。
 
-因此下一步编码建议是暂停编码转入模拟器/真机人工冒烟；如继续编码，可转向歌词 View/Manager 或通知/Widget 边界的小切片。设备端人工冒烟仍是未完成验收项。
+用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
+
+深度迁移方向：
+
+- 后续继续在当前项目内渐进迁移，不新建 Android Studio 项目搬代码。
+- 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
+- 先把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`。
+- 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-20 阶段 8 继续：聊天详情发送/已读状态链路
+
+本轮决策：
+
+- 继续阶段 8，把 `ChatActivity` 的文本/图片发送 callback 从 Activity 直接 Repository 调用推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 顺手把会话清未读和收到当前聊天对象消息后的标记已读从 Activity 直接 Repository 调用收敛到 `ChatViewModel`。
+- 本轮不替换 RongCloud SDK、不重写图片选择和 Luban 压缩；图片选择/压缩仍留在 Activity 边界，发送和已读异步状态先收敛到 `ChatViewModel`。
+
+本轮代码变更：
+
+- 新增 `SendTextMessageUseCase`：桥接现有 `MessageRepository.sendText(...)` callback，返回成功消息或 RongCloud 错误。
+- 新增 `SendImageMessageUseCase`：桥接现有 `MessageRepository.sendImage(...)` callback，并把图片发送进度回传给 ViewModel。
+- 新增 `ClearConversationUnreadUseCase` 和 `MarkMessageReadUseCase`：分别承接会话清未读和单条消息标记已读。
+- 新增 `LoadConversationUserUseCase` 和 `ConversationItemUiState`：会话列表先发布基础行数据，再异步补齐用户昵称/头像。
+- 新增 `LoadChatUserUseCase` 和 `ChatMessageUiState`：聊天消息列表先发布 RongCloud 消息行，再由 ViewModel 异步补齐发送者头像。
+- 新增 `ChatSendOperation`，扩展 `ChatUiState`：统一表示文本发送中、图片发送中、图片发送进度、发送错误、清空输入框事件。
+- `ChatViewModel` 新增 `sendText(...)`、`sendImage(...)`、`clearUnread(...)` 和 `appendIncomingMessage(...)`，发送成功后统一追加消息、驱动列表平滑滚底；文本发送成功通过 `clearInputVersion` 驱动 Activity 清空输入框；历史消息和新消息都包装为 `ChatMessageUiState` 后再输出给 adapter；聊天目标用户昵称通过 `targetTitleVersion` 驱动页面标题。
+- `ChatActivity` 不再直接调用 `UserManager.getUser(...)`、`MessageRepository.sendText(...)` / `sendImage(...)` / `markRead(...)` 或 `ConversationRepository.clearUnread(...)`；Activity 只负责空内容校验、图片选择/压缩入口、收集 `uiState`、设置标题、禁用发送按钮、派发未读数刷新事件和日志记录错误。
+- `ChatAdapter` 不再在消息 bind 时调用 `UserManager.getUser(...)`，只按 `ChatMessageUiState.senderIcon` 渲染头像，降低消息列表 holder 复用时异步回调串行的风险。
+- `ConversationListViewModel` 新增 `refreshAfterNewMessage()`，把新消息后的 1 秒节流刷新从 `ConversationActivity` 移入 ViewModel；同时把会话时间、最近消息、未读数文本和用户昵称/头像整理为 `ConversationItemUiState` 输出。
+- `ConversationAdapter` 不再在 `convert(...)` 中直接调用 `UserManager.getUser(...)`；现在只按 ViewModel 输出的行状态渲染，降低 RecyclerView holder 复用时异步回调串行的风险。
+- 旧行为保留：空文本提示、发送成功追加消息并滚底、文本成功后清空输入框、图片选择压缩后发送、收到目标用户新消息后标记已读并追加列表。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 MobSDK 仓库提示和 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做聊天标题用户资料、文本发送、图片选择压缩发送、清未读、新消息追加、聊天消息头像渲染、会话列表新消息刷新或会话行用户资料渲染人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可以转入设备端冒烟，重点覆盖聊天发送、聊天/会话列表头像渲染、会话列表刷新和动态发布；如继续编码，可把聊天图片选择/压缩结果事件继续收敛。
+- 如果先验收，优先跑会话列表进入聊天、首次历史加载滚底、下拉加载更多、文本发送、图片选择压缩发送、新消息追加。
+
+### 2026-05-18 阶段 8 继续：动态发布上传状态链路
+
+本轮决策：
+
+- 继续阶段 8，把 `PublishFeedActivity` 的图片上传和创建动态从 Activity 内 Rx 订阅推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮不替换图片选择器和压缩引擎；`PictureSelector` 的压缩 callback 仍留在 Activity/选择器边界，上传和创建动态状态先收敛到 ViewModel。
+
+本轮代码变更：
+
+- 新增 `UploadFeedImagesUseCase`：桥接现有 `FeedPublishRepository.uploadImages(...)` Rx 接口。
+- 新增 `CreateFeedUseCase`：桥接现有 `FeedPublishRepository.createFeed(...)` Rx 接口。
+- 新增 `FeedPublishUiState` 和 `FeedPublishOperation`：用 `StateFlow` 表示图片列表、上传中、发布中、请求错误、图片上传数量异常和发布完成事件。
+- `FeedPublishViewModel` 从只持有选图 LiveData 扩展为发布状态机：保留选图列表，发布时先上传图片，校验返回资源数量，再创建动态。
+- `PublishFeedActivity` 不再直接持有 `FeedPublishRepository` 或 `HttpObserver`；改为收集 `FeedPublishViewModel.uiState` 渲染九宫格、loading、错误、上传失败 toast 和发布完成后的 `FeedChangedEvent`/`finish()`。
+- 旧行为保留：内容 140 字校验、空内容提示、位置选择字段写入 `Feed`、选择/删除图片、发布成功后刷新动态列表。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有非增量注解处理器提示。
+- 本轮未启动模拟器，未做动态发布选图、压缩、上传或发布完成人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可以把聊天发送状态也收敛到 `ChatViewModel`，或开始做一轮设备端冒烟，重点覆盖动态发布和聊天这两条刚改过的链路。
+
+### 2026-05-18 阶段 8 继续：聊天详情历史消息状态链路
+
+本轮决策：
+
+- 继续阶段 8，把 `ChatActivity` 历史消息分页从 Activity 内部 `oldMessageId` + Repository callback 推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮不重写文本/图片发送协议、不替换 RongCloud SDK callback；只把历史消息列表状态和分页游标收敛到 ViewModel。
+
+本轮代码变更：
+
+- 新增 `LoadChatHistoryUseCase`：桥接现有 `MessageRepository.getHistoryMessages(...)` callback。
+- 新增 `ChatUiState` 和 `ChatViewModel`：使用 `StateFlow<ChatUiState>` 持有历史消息列表、加载状态、分页最老消息 id、错误码和滚动事件版本号。
+- `ChatActivity` 不再持有 `oldMessageId`，历史消息加载改为调用 `ChatViewModel.loadInitial(...)` / `loadMore(...)`。
+- `ChatActivity` 通过 `lifecycleScope` + `repeatOnLifecycle` 收集 `uiState`，用 `adapter.setDatum(state.messages)` 统一渲染消息列表。
+- 文本发送成功、图片发送成功、收到目标用户新消息后，仍保留原有发送/接收逻辑，但消息追加改为 `ChatViewModel.appendMessage(...)`，避免后续加载更早历史消息时覆盖新追加消息。
+- 首次历史加载后仍滚到底；发送成功和新消息追加后仍平滑滚到底；下拉刷新结束和错误日志也由状态渲染统一处理。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和非增量注解处理器警告。
+- 本轮未启动模拟器，未做聊天详情历史加载、下拉加载更多、文本/图片发送或新消息追加人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可以把聊天清未读和发送状态进一步收敛到 ViewModel，也可以转向动态发布图片压缩/上传状态链路。
+- 如果先验收，优先跑会话列表进入聊天、首次历史加载滚底、下拉加载更多、文本发送、图片选择压缩发送、新消息追加。
+
+### 2026-05-18 阶段 8 继续：聊天会话列表状态链路
+
+本轮决策：
+
+- 继续阶段 8，把聊天会话列表的数据加载和长按清消息后的刷新从 Activity 回调推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮只处理会话列表状态；聊天详情页历史消息分页、文本/图片发送、清未读和新消息追加暂时保持旧实现。
+
+本轮代码变更：
+
+- 新增 `LoadConversationListUseCase`：作为会话列表 UseCase，桥接现有 RongCloud callback 风格的 `ConversationRepository.getConversationList(...)`。
+- 新增 `DeleteConversationMessagesUseCase`：封装长按会话后删除该会话消息的 RongCloud callback，并由 ViewModel 删除后重新加载列表。
+- 新增 `ConversationListUiState` 和 `ConversationListViewModel`：使用 `StateFlow<ConversationListUiState>` 暴露加载中、会话列表、错误码和版本号。
+- `ConversationActivity` 不再直接调用 `ConversationRepository.getConversationList(...)` 或 `deleteMessages(...)`；改为 `ViewModelProvider` 获取 `ConversationListViewModel`，通过 `lifecycleScope` + `repeatOnLifecycle` 收集 `uiState`。
+- 会话列表旧行为保留：点击进入 `ChatActivity`、onResume 刷新、收到 `NewMessageEvent` 后 1 秒节流刷新、长按清消息后刷新列表。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和非增量注解处理器警告。
+- 本轮未启动模拟器，未做会话列表入口、长按清消息或新消息刷新人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可以转向 `ChatActivity` 历史消息加载分页，把 `loadMore()` 收敛到 `ChatViewModel(StateFlow)`；文本/图片发送可留到下一刀。
+- 如果先验收，优先跑会话列表入口、点击进聊天、长按清消息、新消息触发列表刷新。
+
+### 2026-05-18 阶段 8 继续：动态 Feed 列表状态链路
+
+本轮决策：
+
+- 继续阶段 8，不直接替换 Compose UI；先把动态 Feed 列表的数据加载从 Fragment 网络订阅推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 只处理动态列表刷新状态，不扩大到发布动态、图片压缩上传或评论/点赞交互链路。
+
+本轮代码变更：
+
+- 新增 `LoadFeedListUseCase`：作为动态列表 UseCase，内部暂时桥接现有 RxJava `FeedRepository.feeds(userId)`。
+- 新增 `FeedUiState` 和 `FeedViewModel`：使用 `StateFlow<FeedUiState>` 暴露加载中、feed 列表、业务错误和异常错误。
+- `FeedFragment` 不再直接持有/订阅 `FeedRepository`，改为 `ViewModelProvider` 获取 `FeedViewModel`，通过 `viewLifecycleOwner.lifecycleScope` + `repeatOnLifecycle` 收集 `uiState`。
+- 动态列表旧行为保留：发布入口登录校验、发布成功后的 `FeedChangedEvent` 刷新、位置预览、图片大图预览和用户详情跳转继续留在 Fragment/UI 路由层。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Kotlin/Java deprecation、未使用参数和非增量注解处理器警告。
+- 本轮未启动模拟器，未做设备端动态列表滚动或发布链路人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可以把聊天会话列表或聊天详情加载状态收敛到 `StateFlow`，也可以先给 Feed 列表补设备端入口/滚动冒烟。
+- 发布动态的图片压缩上传链路仍是后续阶段 8 可处理对象；不要一次性把发布页、评论页和全局 EventBus 都铺开。
+
+### 2026-05-18 阶段 8 启动：发现页状态链路第一刀
+
+本轮决策：
+
+- 用户明确要求直接开始阶段 8，不再等待阶段 7 深度人工冒烟完成。
+- 阶段 8 第一刀不直接替换 Compose UI，先把发现页首页数据加载推进到 `ViewModel(uiState) -> UseCase -> Repository`，旧 XML/RecyclerView 渲染继续保留。
+
+本轮代码变更：
+
+- 新增 `LoadDiscoveryPageUseCase`：作为发现页首页 sections 的 UseCase，内部暂时桥接现有 RxJava `DiscoveryRepository.homeSections(...)`。
+- 新增 `RefreshSplashAdUseCase`：负责请求启动广告、写入 `PreferenceUtil`、下载广告文件或清理失效广告文件，`DiscoveryFragment` 不再直接操作 `DefaultRepository.splashAd()`、Glide 下载和广告缓存文件。
+- 新增 `DiscoveryUiState` 和 `DiscoveryViewModel`：使用 `StateFlow<DiscoveryUiState>` 暴露加载中、sections、业务错误和异常错误。
+- `DiscoveryFragment` 不再直接持有/订阅 `DiscoveryRepository`；改为 `ViewModelProvider` 获取 `DiscoveryViewModel`，通过 `viewLifecycleOwner.lifecycleScope` + `repeatOnLifecycle` 收集 `uiState`。
+- 发现页旧行为保留：下拉刷新、最小刷新时长、sections 渲染、启动广告预下载、排序/歌单变更后刷新、歌曲点击播放入口都继续保留。
+- 启动广告刷新作为主内容加载成功后的附带任务运行；广告刷新失败不会覆盖发现页主内容状态。
+- 新增 `DownloadingUiState` 和 `DownloadingViewModel`：下载中页通过 `StateFlow<DownloadingUiState>` 暴露下载列表、是否正在下载和版本号。
+- `DownloadingFragment` 不再直接持有 `DownloadRepository`；暂停/继续、全部暂停/继续、删除单项、删除全部都改为调用 `DownloadingViewModel`，Fragment 只负责按钮、toast 和 adapter 渲染。
+- `DownloadingAdapter` 删除按钮不再直接调用 `DownloadRepository.remove(...)`；确认删除后回调 Fragment/ViewModel，再由状态刷新驱动列表变化。
+- 新增 `DownloadedUiState` 和 `DownloadedViewModel`：已下载页通过 `StateFlow<DownloadedUiState>` 暴露已下载歌曲列表。
+- `DownloadedFragment` 不再直接持有 `DownloadRepository`；列表加载改为调用 `DownloadedViewModel.load(orm)`，点击已下载歌曲播放仍保留在 Fragment 作为 UI 路由。
+- `app/build.gradle` 补充 `lifecycle-runtime-ktx` 和 `lifecycle-viewmodel-ktx`，支撑阶段 8 的 `lifecycleScope`、`repeatOnLifecycle` 和 `viewModelScope`。
+
+验证：
+
+- 按用户之前“不做测试”的要求，本轮未运行构建、模拟器或人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时可把发现页剩余调试/本地搜索历史初始化移出 Fragment，或转到动态 Feed 列表建立 `FeedViewModel(StateFlow)`。
+- 不建议马上全量 Compose 替换；先让五条链路的数据状态收敛到 ViewModel，再按页面逐步 Compose 化。
+
+### 2026-05-18 不做测试后的继续编码
+
+本轮决策：
+
+- 用户明确要求不做测试；本轮不启动模拟器、不做人工冒烟，也不跑构建测试。
+- 继续编码时保持原定边界：不扩大到全局基类或非重点业务模块，只处理五条重点链路直接相关的小边界。
+
+本轮代码变更：
+
+- `MainAdapter.java` -> `MainAdapter.kt`：首页主 ViewPager adapter 迁移为 Kotlin，继续通过 `BaseFragmentStatePagerAdapter<Int>` 创建发现、视频、我的、动态、直播五个 tab Fragment。
+- `MainActivity` 侧仍以 `new MainAdapter(getHostActivity(), getSupportFragmentManager())` 调用，Java 构造入口保持兼容。
+- `TabEntity.java` -> `TabEntity.kt`：继续实现 Flyco `CustomTabEntity`，并用 `@JvmField` 保留 `title`、`selectedIcon`、`unSelectedIcon` 字段。
+- `MusicPlayListChangedEvent.java` -> `MusicPlayListChangedEvent.kt`：保留 `position` 的 getter/setter 和 Java `isDeleteAll()`，Kotlin 调用方继续使用 `event.isDeleteAll`。
+- `ScanLocalMusicCompleteEvent.java` -> `ScanLocalMusicCompleteEvent.kt`、`SheetChangedEvent.java` -> `SheetChangedEvent.kt`：空事件壳迁移为 Kotlin，Java `new XxxEvent()` 调用保持可用。
+
+验证：
+
+- 按用户要求，本轮未运行构建、模拟器或人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，仍优先挑五条重点链路直接入口的小边界；不要因为跳过测试就扩大到全局 Activity/Fragment 基类迁移。
+- 如后续恢复验证，再从阶段 7 深度冒烟清单继续。
+
+### 2026-05-18 收尾保存和新会话交接
+
+本轮收尾状态：
+
+- 本地分支：`master`。
+- 远端进度分支：`upstream/codex/emulator-smoke-progress`，继续不要推 `upstream/master`。
+- 代码迁移提交 `f779f8e Migrate remaining focused UI boundaries to Kotlin` 已推送到 `upstream/codex/emulator-smoke-progress`。
+- `.idea/gradle.xml` 的本地 IDE 元数据变更已恢复，保存本文档前工作区是干净的。
+- 本轮补充保存本文档后，会再提交并推送一条文档交接提交到同一个远端进度分支。
+
+本轮已验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+- 模拟器 `emulator-5554` 安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk` 成功。
+- 显式启动 `SplashActivity` 后进入 `MainActivity`，App 进程存活。
+- 入口级快测通过：发现首页可见、Feed tab 可切换、动态发布页可打开、下载管理页可打开、侧边抽屉“我的消息”可进入会话列表。
+- 本轮入口快测期间 `logcat` 未抓到 `AndroidRuntime` 崩溃。
+
+新会话接续建议：
+
+- 先读本文档，再跑 `git status -sb` 和 `git log --oneline --decorate -5` 核对本地/远端状态。
+- 如果继续验收，优先做阶段 7 深度冒烟：聊天文本/图片入口、下载暂停/继续/删除、动态选图压缩上传发布、发现页排序保存和列表滚动、播放上一首/下一首/Widget/桌面歌词。
+- 如果继续编码，先不要扩大共享基类迁移范围；只处理五条重点链路直接阻塞深度冒烟的小问题。
+
+### 2026-05-18 重点链路剩余 Java 边界 Kotlin 迁移
+
+本轮收尾状态：
+
+- 用户明确要求不要再测，继续编码；本轮不做设备端冒烟。
+- 本地分支：`master`。
+- 聊天/会话主目录已无 Java 文件，本轮继续收窄聊天发送和离线推送边界；`component/push` 目录也已完成 Kotlin 化。
+- 本轮继续迁移后，`component/chat`、`component/conversation`、`component/push`、`component/download`、`component/discovery`、`component/feed` 目录均已扫不到 Java 文件。
+- 继续编码后，重点链路直接依赖的通用 ViewPager/RecyclerView adapter 边界也已完成 Kotlin 化。
+
+本轮代码变更：
+
+- `MessageUtil.java` -> `MessageUtil.kt`：保留 `getContent(...)`、`getNickname(...)`、`createPushData(...)` 三个 `@JvmStatic` 静态入口，Java 调用方继续可用。
+- `Push.java` -> `Push.kt`：保留 `Push.PUSH_STYLE_CHAT`、`getStyle()`/`setStyle(...)`、`getMessage()`/`setMessage(...)` 等 Java 兼容入口。
+- `PushMessage.java` -> `PushMessage.kt`：保留 `getUserId()`/`setUserId(...)`、`getContent()`/`setContent(...)`，继续兼容 Gson 反序列化和 RongCloud 推送点击解析。
+- `RongPushReceiver.java` -> `RongPushReceiver.kt`：保留融云小米推送点击入口，解析聊天离线推送后仍跳转 `SplashActivity` 并传递 `Constant.PUSH`/`Constant.ACTION_PUSH`。
+- `PushReceiver.java` -> `PushReceiver.kt`、`PushService.java` -> `PushService.kt`：保留极光 SDK receiver/service 类名和继承关系。
+- `DownloadActivity.java` -> `DownloadActivity.kt`、`DownloadAdapter.java` -> `DownloadAdapter.kt`：保留下载管理双 tab、ViewPager 和指示器联动。
+- `MyDownloadListener.java` -> `MyDownloadListener.kt`、`OnItemClickListener.java` -> `OnItemClickListener.kt`、`DownloadChangedEvent.java` -> `DownloadChangedEvent.kt`：保留下载进度 300ms 刷新节流、主线程回调和 EventBus 刷新事件。
+- `SortChangedEvent.java` -> `SortChangedEvent.kt`、发现页 UI 模型 `BaseSort`/`BannerData`/`ButtonData`/`SheetData`/`SongData`/`FooterData`/`CustomDiscoveryItem`/`IconTitleButtonData` 迁移为 Kotlin。
+- `CustomDiscoveryActivity.java` -> `CustomDiscoveryActivity.kt`、`CustomDiscoveryAdapter.java` -> `CustomDiscoveryAdapter.kt`：保留自定义发现页拖拽排序、恢复默认排序、保存排序并发布 `SortChangedEvent`。
+- `Feed.java` -> `Feed.kt`、`FeedChangedEvent.java` -> `FeedChangedEvent.kt`：保留动态发布/列表接口所需字段和 Java bean getter/setter。
+- `DiscoveryAdapter.kt`：对 Kotlin 化后的 `SheetData`/`SongData` 列表做 `toMutableList()` 适配，保持 BaseQuickAdapter 数据入口兼容。
+- `FeedAdapter.kt`：动态数据缺少 user 时直接跳过当前 item 绑定，删除按钮判断改为安全访问。
+- `OnPageChangeListenerAdapter.java` -> `OnPageChangeListenerAdapter.kt`：保留 Java/Kotlin 匿名子类覆写入口。
+- `BaseFragmentStatePagerAdapter.java` -> `BaseFragmentStatePagerAdapter.kt`：保留 `context` 字段、`getData(...)`、`setDatum(...)`，兼容 Java 子类和 Kotlin 下载/播放器适配器。
+- `BaseRecyclerViewAdapter.java` -> `BaseRecyclerViewAdapter.kt`：保留 `context` 字段、`getInflater()`、`getDatum()`、`setDatum(...)`、`addData(...)`、`removeData(...)`、`ViewHolder.bind(...)` 等旧调用面。
+- `BaseMultiItemEntity.java` -> `BaseMultiItemEntity.kt`：保留多类型列表模型接口。
+- `VideoDetailAdapter.java`：仅补齐 `BaseRecyclerViewAdapter.ViewHolder<Object>` 泛型声明，适配 Kotlin 化后的通用 RecyclerView adapter。
+- 小幅保护：
+  - 文本消息内容为空时 `MessageUtil.getContent(...)` 返回空字符串。
+  - 昵称和 id 为空时 `MessageUtil.getNickname(...)` 返回空字符串，避免通知显示链路空指针。
+  - 推送点击数据为空、JSON 解析失败或聊天推送缺少 userId 时直接记录日志并返回，避免点击通知时崩溃。
+  - 动态列表遇到异常空 user 时不再继续访问头像/昵称字段。
+
+验证：
+
+- `git diff --check` 通过。
+- 首次 `./gradlew :app:assembleDevDebug` 失败，原因是 Kotlin 化后的发现页多类型模型仍按 Java `getItemType()` 实现接口；已改为 `override val itemType`。
+- 再次 `./gradlew :app:assembleDevDebug` 通过，生成 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 尝试做设备快扫时，sandbox 内启动 adb server 失败；提权后 `adb devices` 可运行，但当前无在线设备，因此未执行安装启动冒烟。
+- 迁移通用 adapter 边界后，`git diff --check` 通过。
+- `BaseRecyclerViewAdapter` Kotlin 化后首次构建失败，原因是 `VideoDetailAdapter` 仍使用 raw `ViewHolder` 类型；补齐泛型后再次 `./gradlew :app:assembleDevDebug` 通过。
+- 继续执行快速测试：`git diff --check` 通过，`./gradlew :app:assembleDevDebug` 通过；sandbox 内 `adb devices` 仍因 smartsocket 权限失败，提权后可运行但无在线设备，未执行安装启动冒烟。
+- 用户启动模拟器后执行入口快测：
+  - `emulator-5554` 在线，安装 `app/build/outputs/apk/dev/debug/app-dev-debug.apk` 成功。
+  - 显式启动 `SplashActivity` 后进入 `MainActivity`，App 进程 pid 为 `5449`。
+  - 发现页作为首页入口可见；底部播放器显示 `Yesterday`。
+  - Feed tab 可切换，点击发布浮动按钮成功进入 `PublishFeedActivity`。
+  - Me tab 可切换，点击“下载管理”成功进入 `DownloadActivity`。
+  - 侧边抽屉“我的消息”入口成功进入 `ConversationActivity`。
+  - 非 exported Activity 不能通过 shell 直接 `am start`，已改走真实 UI 路径。
+  - 收尾前台为 `ConversationActivity`，进程仍存活；本轮 `logcat` 未抓到 `AndroidRuntime` 崩溃。
+
+下个会话建议：
+
+- 如果继续编码，建议先不要再扩大共享基类范围；优先检查剩余 Java 是否仍属于五条链路的必要边界，或者转入设备端快速启动/重点入口冒烟。
+- 如果后续允许验证，再单独补聊天发送、下载列表、发现页和动态发布入口冒烟。
+
+### 2026-05-17 聊天链路 Kotlin 迁移收尾和新会话接续
+
+本轮收尾状态：
+
+- 本地分支：`master`。
+- 本轮推送目标仍是远端进度分支：`upstream/codex/emulator-smoke-progress`，不要推 `upstream/master`。
+- 聊天/会话链路主要 UI 目录已完成 Kotlin 化：`component/chat` 和 `component/conversation` 当前不再包含 Java 文件。
+- 本轮没有按用户要求继续做设备端冒烟，只做编译级验证。
+
+本轮代码变更：
+
+- `ChatActivity.java` -> `ChatActivity.kt`：保留历史消息分页、文本发送、图片选择/压缩/发送、清未读、EventBus 新消息追加。
+- `ConversationActivity.java` -> `ConversationActivity.kt`：保留会话列表加载、点击进入聊天、长按删除会话消息、新消息节流刷新。
+- `ConversationAdapter.java` -> `ConversationAdapter.kt`：保留头像、昵称、最后一条消息、时间和未读角标渲染。
+- `ChatAdapter.java` -> `ChatAdapter.kt`：保留文本/图片消息左右布局、头像加载、RongCloud 消息类型分发和图片加载顺序。
+- `NewMessageEvent.java`、`MessageUnreadCountChangedEvent.java`、`MediaMessageExtra.java` 迁移为 Kotlin。
+- 小幅保护：
+  - 图片选择结果为空时不再直接访问首项。
+  - 图片消息 extra 为空、解析失败或宽高异常时，消息图片容器使用默认方形尺寸。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+
+下个会话建议：
+
+- 先读本文档，再跑 `git status -sb` 和 `git log --oneline --decorate -5` 核对本地/远端状态。
+- 如果继续编码，建议迁移 `MessageUtil.java` 到 Kotlin，并用 `@JvmStatic` 保持 `MessageUtil.getContent(...)`、`MessageUtil.createPushData(...)` 等 Java 静态调用兼容。
+- 如果转入验收，优先快速验证会话列表进入聊天、历史消息加载、空消息提示、文本发送和图片入口。
+
+### 2026-05-17 快速冒烟和聊天详情页 Kotlin 迁移
+
+本轮快速冒烟：
+
+- 复用现有 `app/build/outputs/apk/dev/debug/app-dev-debug.apk` 安装到 `emulator-5554`，未重新构建后再测。
+- App 安装启动成功，前台进入 `MainActivity`。
+- 底部播放器可见，显示 `Yesterday`；点击可进入 `MusicPlayerActivity`，显示 `Yesterday / Leona Lewis`。
+- 点击播放后业务日志出现 `MusicListManagerImpl: play online Yesterday ...`；MediaSession 起初仍为 `PAUSED`，随后进入 `PLAYING(3)`，位置推进到约 `72778ms`。结论：播放可推进，但播放触发到状态上报存在明显延迟。
+- Feed tab 可进入，发布浮动按钮可见；点击后成功进入 `PublishFeedActivity`。
+- Me tab 可进入，下载管理入口可见；点击后成功进入 `DownloadActivity`。
+- 快检期间未抓到 `AndroidRuntime` 崩溃，也未看到新的通知限流日志。
+- 收尾时已通过 `KEYCODE_MEDIA_PLAY_PAUSE` 暂停播放，最终 MediaSession 为 `PAUSED(2)`，位置约 `116007ms`。
+
+本轮编码：
+
+- `app/src/main/java/com/ixuea/courses/mymusic/component/chat/activity/ChatActivity.java` 迁移为 `ChatActivity.kt`。
+- 保留旧入口、旧布局和旧适配器：`ConversationActivity`、用户详情页、通知入口仍指向同一个 `ChatActivity` 类名。
+- 保留聊天发送链路现有行为：历史消息分页、文本发送、图片选择/压缩/发送、进入会话清未读、接收新消息后标记已读并追加到列表。
+- 小幅补齐图片选择空结果保护，避免选择器异常返回空列表时直接访问 `result[0]`。
+- `ConversationActivity.java` 迁移为 `ConversationActivity.kt`，继续通过 `ConversationRepository` 拉会话、删除会话消息，并保持 EventBus 新消息节流刷新。
+- `ConversationAdapter.java` 迁移为 `ConversationAdapter.kt`，继续显示头像、昵称、最后一条消息、时间和未读数。
+- `NewMessageEvent.java`、`MessageUnreadCountChangedEvent.java`、`MediaMessageExtra.java` 迁移为 Kotlin；`MediaMessageExtra` 保留无参构造和宽高属性，继续兼容 JSON 反序列化和 `ChatClient` 图片消息 extra 写入。
+- `ChatAdapter.java` 迁移为 `ChatAdapter.kt`，保留消息方向和消息类型分发；图片消息 extra 为空、解析失败或宽高异常时改为默认方形尺寸保护。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+
+后续建议：
+
+- 继续阶段 7，不进入阶段 8 深度重构。
+- 优先用模拟器快速复测 Kotlin 迁移后的聊天详情页：会话列表进入、历史消息加载、空消息提示、文本发送、图片选择入口。
+- 若继续编码，下一刀建议迁移 `MessageUtil.java`，仍保持 Java 静态调用兼容边界。
+
+### 2026-05-17 会话收尾和下次接续
+
+本轮收尾状态：
+
+- 仅文档变更需要提交：`docs/modernization/execution-plan.md`。
+- 当前本地分支：`master`，HEAD 在 `82a2cfc Migrate playback service boundaries to Kotlin` 之后。
+- 远端进度分支：`upstream/codex/emulator-smoke-progress`，不要推 `upstream/master`。
+- 模拟器设备：`emulator-5554`；本轮使用的 adb 路径为 `/Users/a123/Library/Android/sdk/platform-tools/adb`。
+- 测试收尾时播放器已通过 `KEYCODE_MEDIA_PLAY_PAUSE` 暂停，最终 `MediaSession` 为 `PAUSED(2)`，位置约 `199059ms`。
+
+本轮新结论：
+
+- 播放链路时间线复测通过：播放、暂停、seek、通知媒体卡片播放/暂停、后台播放均在当前模拟器上通过。
+- 上一轮“播放未推进”的判断已修正为观察窗口不足；用户也确认退出后自动播放、拖动进度条正常。
+- 通知刷新本轮 logcat 未出现新的 `rate limit exceeded` / `Shedding notify`，但 `dumpsys notification` 的累计 `numRateViolations` 已到 `28`，后续继续观察是否增长。
+- 发现一个待确认体验点：暂停态拖动进度条后会恢复为播放状态，需要后续按产品预期判断是否需要调整。
+
+下个会话建议：
+
+- 先读本文档，再跑 `git status -sb` 和 `git log --oneline --decorate -5` 核对本地状态。
+- 继续阶段 7，不进入阶段 8 深度重构。
+- 播放链路优先补测：多歌曲队列下上一首/下一首、Widget 按钮、桌面歌词开关、歌词进度。
+- 之后继续补齐：聊天发送、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动。
+
+### 2026-05-17 阶段 7 播放链路模拟器复测
+
+环境：
+
+- 设备：Android Emulator `emulator-5554`。
+- APK：`app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 安装命令：`/Users/a123/Library/Android/sdk/platform-tools/adb install -r -g app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 安装结果：成功。
+- 启动说明：`monkey -p com.ixuea.courses.mymusic ...` 会进入 LeakCanary launcher；本轮改用显式启动 `com.ixuea.courses.mymusic/.component.splash.activity.SplashActivity`。
+
+已验证：
+
+- App 可从 `SplashActivity` 进入业务 `MainActivity`。
+- 首页底部小播放器可见，当前歌曲显示 `Yesterday`。
+- 点击底部小播放器可进入 `MusicPlayerActivity`。
+- 播放器页面可显示标题、歌手、封面、进度条、播放/上一首/下一首/播放列表等控件。
+- 播放列表按钮可打开底部弹窗，列表显示 `Yesterday - Leona Lewis`。
+- 播放通知存在，通知 id `100`，包含 previous / Pause / next / lyric 四个 action。
+- 本轮 `logcat -s NotificationService NotificationManager` 未复现新的 `rate limit exceeded` / `Shedding notify` 日志。
+- App 进程在冒烟后仍存活，pid 为 `23617`。
+
+发现的问题：
+
+- 点击播放按钮和发送 `MEDIA_PLAY` 后，只看到 `MusicListManagerImpl: play online Yesterday https://rs.ixuea.com/music/assets/Yesterday.mp3`，但 MediaSession 仍保持 `PAUSED`，位置停在 `26918ms`。
+- 播放器时间文本在等待 3-4 秒后仍停在 `00:26`，未观察到播放进度推进，真实出声播放仍未确认通过。
+- 拖动 seekbar 后滑块位置能变化，但起始时间文本仍显示 `00:26`；暂停态 seek 的 UI 文本同步需要继续检查。
+- 模拟器内 `ping rs.ixuea.com` 未返回，已手动停止；仍需区分是歌曲资源网络不可达、ExoPlayer 长时间 buffering，还是播放桥接没有正确上报错误/状态。
+- `dumpsys notification --noredact` 里 `com.ixuea.courses.mymusic` 聚合统计仍有历史 `numRateViolations=18`，但本轮没有新的 NotificationService 限流日志。
+
+后续建议：
+
+- 优先给 `PlaybackController.onPlaybackStateChanged`、`onIsPlayingChanged`、`onPlayerError` 和 `MusicPlayerManagerImpl.requestAudioFocus` 增加临时/正式日志，复测播放请求后 ExoPlayer 是 buffering、error 还是没有执行。
+- 继续验证同一首歌的资源 URL 在模拟器内是否可达；如果网络不可达，补一个本地音频样本或本地已下载歌曲再测真正播放。
+- 修复或确认暂停态 seek 后时间文本是否需要立即同步。
+
+### 2026-05-17 播放链路补充观察
+
+用户补充：
+
+- 上一轮记录结束后，模拟器中的歌曲自动开始播放。
+- 拖动进度条后进度同步正常。
+
+复查结果：
+
+- 当前播放器页仍显示 `Yesterday / Leona Lewis`。
+- UI 起始时间已从本轮早些时候的 `00:26` 更新到 `01:41`。
+- `dumpsys media_session` 中同一会话位置已更新到 `101816ms`，说明播放进度确实发生过推进。
+- 当前 MediaSession 抓取瞬间仍显示 `PAUSED`，因此还需要复测播放/暂停状态切换的实时上报，但前一节“播放未推进”的判断应修正为“播放启动或状态刷新存在延迟，观察窗口不足”。
+
+后续建议：
+
+- 继续复测播放按钮点击后的完整时间线：点击播放、进入 buffering、进入 playing、进度推进、点击暂停。
+- 如果状态上报仍偶发滞后，再给 `PlaybackController` 和 `MusicPlayerService` 增加状态日志定位。
+
+### 2026-05-17 播放链路完整时间线复测
+
+环境：
+
+- 设备：Android Emulator `emulator-5554`。
+- APK：沿用已安装的 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- App 进程：`com.ixuea.courses.mymusic`，pid `23617`。
+- 起始页面：`MusicPlayerActivity`，当前歌曲 `Yesterday / Leona Lewis`。
+
+已验证：
+
+- 点击播放器播放按钮后，`dumpsys media_session` 在约 1 秒内进入 `PLAYING(3)`，位置为 `115494ms`。
+- 后续采样位置继续推进到 `147969ms`、`184739ms`，播放进度连续增长。
+- 点击播放器暂停按钮后，`MediaSession` 进入 `PAUSED(2)`，位置 `195237ms`；暂停后的 UI 层级显示 `03:15 / 03:54`。
+- 暂停态拖动进度条从约 `03:15` 回退后，`MediaSession` 位置跳到 `92588ms`，随后可继续播放；再次暂停后 UI 显示 `02:07 / 03:54`，`MediaSession` 位置为 `127255ms`。
+- 展开通知栏后，系统媒体卡片显示 `Yesterday / Leona Lewis`，进度描述为 `2 minutes, 7 seconds of 3 minutes, 54 seconds`，并显示 Play、Previous track、Next track 控件。
+- 点击通知媒体卡片 Play 后，`MediaSession` 进入 `PLAYING(3)`，位置 `144799ms`；再次点击同一按钮后进入 `PAUSED(2)`，位置 `159714ms`。
+- 从通知媒体卡片启动播放后按 Home，桌面成为前台，App 播放器 Activity 进入不可见/停止状态；等待约 5 秒后 `MediaSession` 仍为 `PLAYING(3)`，位置推进到 `186343ms`，后台播放通过。
+- 收尾时通过 `KEYCODE_MEDIA_PLAY_PAUSE` 暂停，最终状态为 `PAUSED(2)`，位置 `199059ms`。
+
+日志和通知状态：
+
+- 本轮 `logcat -s NotificationService NotificationManager` 未输出新的 `rate limit exceeded` / `Shedding notify` 日志。
+- `dumpsys notification --noredact` 中音乐通知仍存在，id `100`，category 为 `transport`，包含 previous / Pause / next / lyric 四个 action。
+- `dumpsys notification` 中 `com.ixuea.courses.mymusic` 的累计 `numRateViolations` 当前为 `28`。该计数是系统累计值，不能单独证明全部来自本轮；但较前一节记录的 `18` 有增加，通知刷新限频仍需继续观察。
+- 应用日志未见崩溃；播放过程中存在频繁的 `SQLStatement` 进度持久化日志，这是后续可单独评估的噪音/性能点。
+
+结论：
+
+- 上一轮“播放未推进”的问题已通过时间线复测修正：播放、暂停、seek、通知媒体卡片播放/暂停、后台播放在当前模拟器上通过。
+- 暂停态拖动进度条后会恢复为播放状态；本轮先记录为现象，后续需要结合产品预期决定是否调整。
+- 仍待测：上一首/下一首在多歌曲队列下的行为、Widget 控制、桌面歌词开关和歌词进度。
+
+### 2026-05-17 新会话接续上下文
+
+当前代码状态：
+
+- 当前本地分支：`master`。
+- 不要推 `upstream/master`，本轮进度推送目标是已存在的远端进度分支：`upstream/codex/emulator-smoke-progress`。
+- 本次新增改动：
+  - 清理 Android Studio 本机 IDE 文件，并在 `.gitignore` 忽略 `.idea/deploymentTargetSelector.xml`、`.idea/deviceManager.xml`、`.idea/migrations.xml`。
+  - `MusicListManagerImpl` 从 Java 迁到 Kotlin，保留旧 `MusicListManager` 接口和静态入口。
+  - `MusicPlayerService` 从 Java 迁到 Kotlin，保留 Manifest service 类名、MediaSession、通知、Widget 和桌面歌词控制入口。
+  - 更新本文档的播放列表管理器和播放服务迁移记录。
+- 已验证：
+  - `git diff --check`
+  - `./gradlew :app:assembleDevDebug`
+  - `./gradlew :app:testDevDebugUnitTest`
+- 下次会话建议：
+  - 先看 `git status -sb`、`git log --oneline --decorate -5` 和本文档最新记录。
+  - 优先做设备端播放链路冒烟：播放/暂停、上一首/下一首、seek、通知按钮、Widget 按钮、桌面歌词开关、后台播放和 logcat 通知限流。
+  - 如果继续编码，播放链路剩余 Java 边界主要是接口类和冻结通用工具；更建议转入设备端冒烟或切到聊天发送链路深一层迁移。
+
+### 2026-05-17 播放服务边界 Kotlin 迁移
+
+已处理：
+
+- 将 `MusicPlayerService` 从 Java 迁到 Kotlin。
+- 保留旧入口兼容：
+  - Manifest 中 `.service.MusicPlayerService` 类名不变。
+  - `MusicPlayerService.getMusicPlayerManager(context)` 和 `MusicPlayerService.getListManager(context)` 继续通过 `@JvmStatic` 暴露给 Java/Kotlin 调用方。
+  - 播放通知、Widget、媒体按钮、桌面歌词按钮仍复用原 `Constant.ACTION_*` intent 协议。
+- 保留服务核心行为：
+  - 启动前台占位通知。
+  - 初始化 `MediaSessionCompat` 并处理播放、暂停、上一首、下一首、seek。
+  - 播放/暂停/进度回调继续更新 MediaSession、播放通知和桌面 Widget。
+  - 播放准备后继续加载封面、更新 metadata，并通知 Widget。
+  - 桌面歌词开关和关闭回调继续刷新播放通知。
+- 补齐窄范围防御：
+  - 上一首/下一首为空时不再继续调用播放。
+  - 进度转换到 `Int` 时限制在合法范围内。
+  - metadata 歌手名在 `singer` 为空时回退到 `singerNickname`。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 后续仍需设备端冒烟，重点验证媒体按钮/通知按钮、Widget 按钮、桌面歌词开关、后台播放和通知限流 logcat。
+- 如继续编码，播放链路剩余 Java 边界主要是接口类和冻结通用工具；建议先转入设备端播放冒烟或切到聊天发送链路深一层迁移。
+
+### 2026-05-17 播放列表管理器 Kotlin 迁移
+
+已处理：
+
+- 将 `MusicListManagerImpl` 从 Java 迁到 Kotlin。
+- 保留旧入口兼容：
+  - `MusicListManagerImpl.getInstance(context)` 继续通过 `@JvmStatic` 暴露，并返回 `MusicListManager` 接口。
+  - `MusicListManagerImpl.destroy()` 继续保留给退出登录/销毁实例流程调用。
+  - `getDatum()`、`setDatum(...)`、`play(...)`、`pause()`、`resume()`、`next()`、`previous()`、`delete(...)`、`deleteAll()`、`seekTo(...)` 接口行为继续兼容旧 Java/XML 调用方。
+- 保留播放队列核心行为：
+  - 启动时从 LiteORM 恢复播放列表和最后播放歌曲。
+  - 播放本地路径、已下载文件或在线资源时继续复用原分支。
+  - 播放列表变更继续保存数据库并发送 `MusicPlayListChangedEvent`。
+  - 循环模式变更继续同步 Media3 looping 状态和 `PlaybackRepository` 队列状态。
+- 补齐窄范围防御：
+  - 空播放列表不再默认取第 0 项。
+  - 当前歌曲不在列表时，上一首/下一首回退到列表尾/头并记录日志。
+  - 删除越界位置会跳过。
+  - 随机循环删除当前歌曲时不再选回被删除歌曲。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 后续仍需设备端冒烟，重点验证播放队列切歌、随机/单曲/列表循环、删除当前歌曲后的续播、通知/Widget 控制和歌词进度联动。
+- 如继续编码，可转入 `MusicPlayerService` 边界迁移或先做播放链路完整设备端冒烟。
+
+### 2026-05-17 播放通知刷新收口
+
+已处理：
+
+- `MusicPlayerService` 的播放通知刷新新增状态签名：
+  - 歌曲 id。
+  - 歌曲时长。
+  - 播放/暂停状态。
+  - 桌面歌词显示状态。
+  - 媒体 metadata 版本。
+- 重复签名的通知刷新会直接跳过，避免播放状态重复回调时反复 `startForeground`/`notify`。
+- 普通通知刷新增加 1s 最小间隔；播放/暂停、歌词开关、封面/metadata 变化仍可立即刷新。
+- 播放进度继续只更新 `MediaSession`，不重建播放通知。
+
+验证结果：
+
+- 命令：`./gradlew :app:assembleDevDebug`
+- 结果：通过。
+- 命令：`./gradlew :app:testDevDebugUnitTest`
+- 结果：通过。
+
+保留问题：
+
+- 需要重新安装到模拟器或真机，播放/暂停/切歌/歌词开关时观察 logcat，确认不再出现 `NotificationService` rate limit 和 `NotificationManager` shedding update。
+
+### 2026-05-17 歌词模型和单行歌词 View Kotlin 迁移
+
+已处理：
+
+- 将歌词模型从 Java 迁到 Kotlin：
+  - `Line.kt`
+  - `Lyric.kt`
+- 将 `LyricUtil` 从 Java 迁到 Kotlin，继续通过 `@JvmStatic` 保持 Java 静态调用兼容。
+- 将 `LyricLineView` 从 Java 迁到 Kotlin，XML 全限定类名不变，外部 setter 方法保持兼容。
+- 补齐歌词边界保护：
+  - 空歌词列表返回安全默认值。
+  - 空逐字数组或字数/时长数组长度不一致时不再直接越界。
+  - 当前字时长小于等于 0 时跳过除零计算。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 后续仍需统一构建和设备端验证歌词滚动、逐字高亮、长按选择和分享链路。
+
+### 2026-05-17 歌词列表和桌面歌词 View Kotlin 迁移
+
+已处理：
+
+- 将 `LyricListView` 从 Java 迁到 Kotlin：
+  - 保留 XML 全限定类名和 `setData(...)`、`setProgress(...)`、`setLyricListListener(...)` 外部入口。
+  - 保留 `LyricListListener` 嵌套接口，`MusicPlayerActivity` 继续实现原接口。
+  - 拖拽歌词选中行、3 秒隐藏拖拽 UI、点击 seek 到歌词行逻辑保持兼容。
+- 将 `GlobalLyricView` 从 Java 迁到 Kotlin：
+  - 保留 `OnGlobalLyricDragListener`、`GlobalLyricListener`、`GlobalLyricOtherListener` 三个嵌套接口。
+  - 保留桌面歌词普通/简单样式切换、播放控制、颜色选择、字号调整和拖拽回调。
+- 补齐窄范围防御：
+  - 歌词列表为空时隐藏列表并跳过滚动/逐字更新。
+  - 拖拽落在占位 item 或越界位置时兜底到首尾真实歌词行。
+  - 桌面歌词在解析歌词为空、下一行不存在、监听器尚未设置时不再直接崩溃。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 歌词链路仍需后续统一构建和设备端冒烟，重点验证歌词列表滚动、逐字高亮、桌面歌词拖拽、颜色/字号设置。
+- 如继续编码，可转入播放 Manager/通知/Widget 边界。
+
+### 2026-05-17 桌面歌词管理器 Kotlin 迁移
+
+已处理：
+
+- 将 `GlobalLyricManagerImpl` 从 Java 迁到 Kotlin。
+- 保留旧入口兼容：
+  - `GlobalLyricManagerImpl.getInstance(context)` 继续通过 `@JvmStatic` 暴露给 Java 调用方。
+  - 继续实现 `GlobalLyricManager`、`MusicPlayerListener`、`GlobalLyricView.OnGlobalLyricDragListener`、`GlobalLyricView.GlobalLyricListener`。
+  - `MusicPlayerService` 继续通过 `setGlobalLyricOtherListener(...)` 注入关闭歌词回调。
+- 保留桌面歌词核心行为：
+  - 悬浮窗权限不足时跳转 `SplashActivity`。
+  - 显示/隐藏桌面歌词并同步 Widget 状态。
+  - 锁定/解锁桌面歌词、注册解锁广播、显示/清理解锁通知。
+  - 播放/暂停/上一首/下一首控制和拖拽位置保存。
+- 补齐窄范围防御：
+  - 更新悬浮窗布局前检查 View 是否已添加。
+  - `tryHide()`/`tryShow()` 在 View 尚未创建时不再直接崩溃。
+  - 后续设置关闭歌词回调时，会同步到已创建的 `GlobalLyricView`。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 后续仍需统一构建和设备端冒烟，重点验证桌面歌词权限跳转、显示/隐藏、锁定/解锁、拖拽保存和通知解锁。
+- 如继续编码，可转入播放 Manager/通知/Widget 边界。
+
+### 2026-05-17 音乐 Widget 边界 Kotlin 迁移
+
+已处理：
+
+- 将 `WidgetUtil` 从 Java 迁到 Kotlin：
+  - 保留 `onPlaying(...)`、`onPaused(...)`、`onPrepared(...)`、`onProgress(...)`、`onGlobalLyricShowStatusChanged(...)` 的 `@JvmStatic` 入口。
+  - 抽出 `bindSong(...)`、`bindProgress(...)`、`songTitle(...)`，供 Widget provider 复用。
+  - 歌曲标题、歌手名、进度和时长增加空值/负数兜底。
+- 将 `MusicWidget` 从 Java 迁到 Kotlin：
+  - Manifest 中 `.component.widget.MusicWidget` 类名保持不变。
+  - 保留 Widget 更新时启动 `MusicPlayerService`、绑定播放/上一首/下一首/歌词 PendingIntent、加载当前歌曲封面和进度。
+  - 继续通过 Glide 异步加载封面，失败/清理时兜底 placeholder。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 后续仍需统一构建和设备端冒烟，重点验证桌面 Widget 刷新、按钮控制、封面显示和歌词按钮状态。
+- 如继续编码，可转入播放 Manager 或通知边界。
+
+### 2026-05-17 通知工具 Kotlin 迁移
+
+已处理：
+
+- 将 `NotificationUtil` 从 Java 迁到 Kotlin。
+- 保留旧入口兼容：
+  - `showAlert(...)`
+  - `notify(...)`
+  - `getServiceForeground(...)`
+  - `createMusicNotification(...)`
+  - `showUnlockGlobalLyricNotification(...)`
+  - `clearUnlockGlobalLyricNotification(...)`
+  - `showMessage(...)`
+- 保留通知行为：
+  - 默认通知渠道、聊天消息通知渠道、音乐通知渠道继续按原 id 创建。
+  - 播放通知继续绑定 `MediaSessionCompat`、上一首/播放暂停/下一首/歌词按钮。
+  - 桌面歌词锁定通知继续通过 broadcast 触发解锁。
+  - 聊天消息通知继续先查询未读数和用户信息，再跳转聊天入口。
+- 补齐窄范围防御：
+  - 消息通知的 `targetId` 为空时跳过。
+  - 未读数为空时按 0 处理。
+  - 用户 id 为空时兜底使用会话 `targetId`。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 后续仍需统一构建和设备端冒烟，重点验证播放通知按钮、桌面歌词解锁通知、聊天消息通知和通知限流复验。
+- 如继续编码，可转入播放 Manager 边界。
+
+### 2026-05-17 播放管理器兼容门面 Kotlin 迁移
+
+已处理：
+
+- 将 `MusicPlayerManagerImpl` 从 Java 迁到 Kotlin。
+- 保留旧入口兼容：
+  - `MusicPlayerManagerImpl.getInstance(context)` 继续通过 `@JvmStatic` 暴露，并返回 `MusicPlayerManager` 接口。
+  - 继续实现 `MusicPlayerManager` 和 `AudioManager.OnAudioFocusChangeListener`。
+  - 旧 listener 回调继续保留 `MediaPlayer` 参数位置，Media3 路径仍传 `null`。
+- 保留播放核心行为：
+  - `play(uri, song)` 请求音频焦点后转发到 `PlaybackRepository.play(...)`。
+  - `pause()`、`resume()`、`seekTo(...)`、`setLooping(...)` 继续转发到 Media3 播放仓库。
+  - 播放状态、进度、完成、错误继续桥接回旧 `MusicPlayerListener`。
+  - 歌词准备继续复用 `LyricParser`，必要时从 `DefaultRepository.songDetail(...)` 拉取歌词。
+- 补齐窄范围防御：
+  - 焦点恢复时如果没有当前 `uri` 或歌曲，不再直接进入播放。
+  - 歌词 ready 回调在当前歌曲为空时跳过。
+
+验证结果：
+
+- 按用户要求，本批只编码，未执行 Gradle 构建或测试。
+
+保留问题：
+
+- 后续仍需统一构建和设备端冒烟，重点验证播放/暂停/恢复、音频焦点抢占恢复、歌词加载和 Media3 listener 桥接。
+- 如继续编码，可迁移 `MusicListManagerImpl` 或其他播放服务边界。
 
 ### 2026-05-16 阶段 1 完成
 
@@ -525,7 +1278,7 @@
 下一步编码建议：
 
 - 转入设备端冒烟验收。
-- 如继续编码，可迁移 `LyricListView`/`LyricLineView` 或播放 Manager/通知/Widget 边界。
+- 如继续编码，可迁移 `MusicListManagerImpl` 或其他播放服务边界。
 
 ### 2026-05-17 本次收口交接状态
 
@@ -536,16 +1289,30 @@
   - 歌词选择/分享 Activity。
   - 歌词列表和选择歌词 adapter。
   - LRC/KSC parser 和 `LyricParser` 入口。
-- 歌词模型和自定义 View 仍保留 Java：
-  - `Line.java`
-  - `Lyric.java`
-  - `GlobalLyricView.java`
-  - `LyricLineView.java`
-  - `LyricListView.java`
-- 最近一次验证：
-  - 命令：`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest`
+- 歌词模型、工具类和自定义 View 已迁移：
+  - `Line.kt`
+  - `Lyric.kt`
+  - `LyricUtil.kt`
+  - `LyricLineView.kt`
+  - `LyricListView.kt`
+  - `GlobalLyricView.kt`
+- 歌词管理器已迁移：
+  - `GlobalLyricManagerImpl.kt`
+- 音乐 Widget 边界已迁移：
+  - `WidgetUtil.kt`
+  - `MusicWidget.kt`
+- 通知工具已迁移：
+  - `NotificationUtil.kt`
+- 播放管理器兼容门面已迁移：
+  - `MusicPlayerManagerImpl.kt`
+- 最近一次完整验证：
+  - 命令：`./gradlew :app:assembleDevDebug`
+  - 命令：`./gradlew :app:testDevDebugUnitTest`
   - 结果：通过。
-- 尚未执行设备端人工冒烟。
+- 后续又完成并验证：
+  - `MusicListManagerImpl` Kotlin 迁移。
+  - `MusicPlayerService` Kotlin 迁移。
+- 已执行模拟器第一轮入口冒烟；完整功能冒烟仍未完成。
 
 下一次会话建议：
 
@@ -555,7 +1322,7 @@
   - 歌词/黑胶切换、歌词滚动、长按歌词选择。
   - 歌词文本分享、歌词图片分享、LRC/KSC 歌词解析。
   - 下载按钮、通知控制、Widget 控制。
-- 如果继续编码，建议从 `LyricListView`/`LyricLineView` 或播放 Manager/通知/Widget 边界继续做小切片。
+- 如果继续编码，建议转入聊天发送链路，或继续清理播放链路剩余接口/冻结工具边界。
 - GitHub 发布仍走 `/private/tmp/museflow-public-slim`，不要直接从主工程 `master` 推 `origin/master`，也不要推 `upstream/master`。
 
 ### 2026-05-16 交接上下文
@@ -637,7 +1404,7 @@
 - 播放器底部控制和播放列表 Kotlin 迁移第八批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
 - 播放器页面 Kotlin 迁移第九批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
 - 歌词选择/分享和解析 Kotlin 迁移第十批后，`./gradlew :app:assembleDevDebug :app:testDevDebugUnitTest` 通过。
-- 尚未连接模拟器或真机安装运行。
+- 已连接模拟器 `emulator-5554` 安装运行并完成第一轮入口冒烟。
 
 后续建议：
 
@@ -651,6 +1418,49 @@
   - 动态发布：多图选择、压缩、上传、发布、动态列表刷新。
   - 下载：下载中列表、已下载列表、单项暂停/继续、全部暂停/继续、删除、播放已下载歌曲。
   - 发现/信息流：发现页加载、Banner/歌单/单曲点击、信息流滚动、图片预览。
+
+### 2026-05-17 阶段 7 模拟器冒烟第一轮
+
+环境：
+
+- 设备：Android Emulator `emulator-5554`。
+- APK：`app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 安装命令：`adb install -r app/build/outputs/apk/dev/debug/app-dev-debug.apk`。
+- 安装结果：成功。
+- 启动方式：launcher intent。
+
+已通过的入口级检查：
+
+- App 启动成功，前台进入 `MainActivity`，进程保持运行。
+- 首页底部小播放器初始化成功，能显示当前歌曲 `Yesterday`。
+- 点击底部小播放器可进入 `MusicPlayerActivity`。
+- 播放器页可打开，标题、封面、进度条、播放/上一首/下一首/列表按钮可见。
+- 在播放器页点击播放/下一首/拖动进度条后未出现崩溃。
+- 系统 `media_session` 中能看到 `com.ixuea.courses.mymusic/MusicListManager` 会话。
+- Feed tab 可打开，动态发布按钮可见。
+- 点击动态发布按钮可进入 `PublishFeedActivity`，未出现崩溃。
+- 侧边栏“我的消息”可进入 `ConversationActivity`，未出现崩溃。
+- Me tab 可打开，“下载管理”入口可见。
+- 点击“下载管理”可进入 `DownloadActivity`，`下载完成` 和 `正在下载` tab 可见。
+- 切换到 `正在下载` tab 后仍停留在 `DownloadActivity`，未出现崩溃。
+
+未完成或需要人工确认的检查：
+
+- 在线/本地歌曲是否真实出声播放仍需人工听感确认。
+- 播放器 seek 后 UI 进度是否正确推进仍需人工确认；本轮 UI 层级中进度文本仍显示 `00:10`。
+- 后台通知按钮和 Widget 控制尚未完整操作。
+- 歌词滚动、歌词选择、歌词文本分享、歌词图片分享、LRC/KSC 逐字解析尚未验证。
+- 聊天历史加载、文本发送、图片发送尚未验证。
+- 动态多图选择、压缩、上传、发布成功刷新尚未验证。
+- 下载任务的暂停、继续、删除、播放已下载歌曲尚未验证；当前模拟器列表为空，只验证了页面和 tab 入口。
+- 发现页网络数据加载、Banner/歌单/单曲点击、信息流滚动和图片预览尚未完整验证。
+
+新增风险记录：
+
+- logcat 出现系统通知限流：
+  - `NotificationService: Package enqueue rate is 5.4531145 ... package=com.ixuea.courses.mymusic`
+  - `NotificationManager: Shedding notify (update) ... rate limit (5.0) exceeded`
+- 该风险疑似来自播放通知频繁更新；已在 `MusicPlayerService` 增加通知刷新去重和低频保护，仍需设备端复验。
 
 ### 2026-05-16 Git 远端和发布上下文
 
@@ -668,7 +1478,6 @@ GitHub 发布策略：
 - public slim 当前工作分支：`codex/github-public-slim-ff`，跟踪 `origin/master`。
 - 同步发布时只把 public-safe 的保留链路改动带到 public slim worktree，在那里构建、提交、推 `origin HEAD:master`。
 - `local.properties` 只允许留在临时 worktree 本地，不能进入提交。
-- 从主工程同步 Kotlin 迁移到 public slim 时，要继续保留 slim 裁剪语义：不要覆盖 slim 版 `AppContext.java`；搜索历史、完整广告落地、AMap/Poi 定位和位置预览相关代码不能回流，只保留能编译的 stub/降级入口。
 
 后续推送提醒：
 
@@ -909,6 +1718,58 @@ GitHub 发布策略：
 - 五条选中链路完成核心冒烟。
 - 冻结模块只做启动和跳转级别确认。
 - 人工冒烟记录补充到文档。
+
+## 阶段 8：深度现代化迁移
+
+状态：已按用户要求启动。阶段 7 深度人工冒烟未完成，当前带验证风险推进；第一刀从发现页状态链路开始。
+
+### 迁移原则
+
+- 在当前项目内继续迁移，不新建项目搬代码。
+- 每次只迁一条链路或一个页面，保持 App 随时可编译、可安装、可回退。
+- 旧 Java/XML 入口可以暂时保留，作为新实现的 adapter/facade 或兜底。
+- 新项目仅作为现代配置参考，不作为主工程。
+
+### 主要任务
+
+1. 工程基线升级：
+   - 升级 Gradle、Android Gradle Plugin、Kotlin、compileSdk、Compose BOM 和关键 AndroidX 依赖。
+   - 引入 version catalog，集中管理依赖版本。
+   - 处理 KAPT/KSP/Hilt 的 Kotlin 注解处理路径，避免继续依赖 Java-only 注解处理。
+2. 架构深化：
+   - 把五条选中链路统一推进到 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`。
+   - ViewModel 只暴露不可变 UI state 和一次性 UI event。
+   - Activity/Fragment 逐步退回导航、权限、系统入口承载角色。
+3. 状态和异步模型统一：
+   - 新代码统一使用 Coroutines、Flow、StateFlow、SharedFlow。
+   - 逐步替换选中链路内的 RxJava、EventBus 和全局 mutable state。
+   - 对旧 Java 调用方保留薄 adapter，等入口稳定后再删除。
+4. Compose 页面迁移：
+   - 优先迁移播放器、聊天、动态发布、下载、发现/信息流。
+   - 不做全量 XML 一次性替换。
+   - 长列表使用稳定 key、不可变 item state 和必要的 Paging 3。
+5. 模块化：
+   - 等边界稳定后再拆模块。
+   - 优先拆 `core:network`、`core:data`、`core:design`、`feature:player`、`feature:chat`、`feature:feed`。
+   - 拆模块前先保证包内依赖方向清楚，避免把旧循环依赖搬进新模块。
+6. 测试和验收：
+   - 先补 ViewModel/Repository 单测。
+   - 对五条链路保留设备端冒烟清单。
+   - 每次深度迁移完成后跑 `:app:assembleDevDebug` 和关键单测。
+
+### 验收
+
+- 选中链路 UI state 可从 ViewModel 单向驱动。
+- 选中链路内不再新增 RxJava/EventBus 依赖。
+- Compose 页面覆盖优先级最高的用户路径。
+- 主要业务逻辑从 Activity/Fragment 移出。
+- 项目仍能构建、安装并通过五条链路冒烟。
+
+### 暂停条件
+
+- 依赖升级导致冻结第三方 SDK 无法运行。
+- 单条链路迁移需要连带重写多个冻结模块。
+- 新模块拆分暴露出无法短期解决的循环依赖。
 
 ## 推荐下一步
 
