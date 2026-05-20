@@ -10,7 +10,6 @@ import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.adapter.BaseRecyclerViewAdapter
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener
 import com.ixuea.courses.mymusic.component.download.model.event.DownloadChangedEvent
-import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.ItemDownloadingBinding
 import com.ixuea.courses.mymusic.util.FileUtil
@@ -27,7 +26,11 @@ class DownloadingAdapter(
     private val orm: LiteORMUtil,
     private val fragmentManager: FragmentManager
 ) : BaseRecyclerViewAdapter<DownloadInfo, DownloadingAdapter.ViewHolder>(context) {
-    private val repository = DownloadRepository.getInstance()
+    private var listener: DownloadingAdapterListener? = null
+
+    fun setListener(listener: DownloadingAdapterListener) {
+        this.listener = listener
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemDownloadingBinding.inflate(inflater, parent, false)
@@ -88,8 +91,7 @@ class DownloadingAdapter(
                             return@OnClickListener
                         }
 
-                        repository.remove(data)
-                        removeData(position)
+                        listener?.onDeleteClick(position, data)
                     })
                     .show()
             }
@@ -147,5 +149,9 @@ class DownloadingAdapter(
                 }
             }
         }
+    }
+
+    interface DownloadingAdapterListener {
+        fun onDeleteClick(position: Int, data: DownloadInfo)
     }
 }

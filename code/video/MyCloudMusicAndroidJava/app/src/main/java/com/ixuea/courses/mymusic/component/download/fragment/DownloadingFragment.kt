@@ -1,21 +1,28 @@
 package com.ixuea.courses.mymusic.component.download.fragment
 
 import android.os.Bundle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.download.adapter.DownloadingAdapter
-import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository
+import com.ixuea.courses.mymusic.component.download.ui.DownloadingUiState
+import com.ixuea.courses.mymusic.component.download.ui.DownloadingViewModel
 import com.ixuea.courses.mymusic.databinding.FragmentDownloadingBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.superui.toast.SuperToast
 import com.ixuea.superui.util.SuperRecyclerViewUtil
+import kotlinx.coroutines.launch
 
 /**
  * 下载中界面
  */
 class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() {
     private lateinit var adapter: DownloadingAdapter
-    private lateinit var repository: DownloadRepository
+    private lateinit var viewModel: DownloadingViewModel
+    private var handledDataVersion = 0L
 
     override fun initViews() {
         super.initViews()
@@ -24,10 +31,16 @@ class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() 
 
     override fun initDatum() {
         super.initDatum()
-        repository = DownloadRepository.getInstance()
+        viewModel = ViewModelProvider(this)[DownloadingViewModel::class.java]
 
         adapter = DownloadingAdapter(hostActivity, orm, childFragmentManager)
+        adapter.setListener(object : DownloadingAdapter.DownloadingAdapterListener {
+            override fun onDeleteClick(position: Int, data: DownloadInfo) {
+                viewModel.remove(data)
+            }
+        })
         binding.list.adapter = adapter
+        observeDownloadingState()
 
         loadData()
     }
@@ -36,20 +49,29 @@ class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() 
         super.initListeners()
         adapter.setOnItemClickListener { _, position ->
             val data = adapter.getData(position)
-
-            when (data.status) {
-                DownloadInfo.STATUS_NONE,
-                DownloadInfo.STATUS_PAUSED,
-                DownloadInfo.STATUS_ERROR -> repository.resume(data)
-
-                else -> repository.pause(data)
-            }
-
-            showButtonStatus()
+            viewModel.toggle(data)
         }
 
         binding.download.setOnClickListener { downloadClick() }
         binding.delete.setOnClickListener { deleteClick() }
+    }
+
+    private fun observeDownloadingState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    render(state)
+                }
+            }
+        }
+    }
+
+    private fun render(state: DownloadingUiState) {
+        if (state.dataVersion != handledDataVersion) {
+            handledDataVersion = state.dataVersion
+            adapter.setDatum(state.downloads)
+            showButtonStatus(state.isDownloading)
+        }
     }
 
     private fun deleteClick() {
@@ -58,12 +80,7 @@ class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() 
             return
         }
 
-        adapter.datum.toList().forEach { downloadInfo ->
-            repository.remove(downloadInfo)
-        }
-
-        adapter.clearData()
-        showButtonStatus()
+        viewModel.removeAll(adapter.datum.toList())
     }
 
     private fun downloadClick() {
@@ -72,43 +89,24 @@ class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() 
             return
         }
 
-        if (isDownloading()) {
-            pauseAll()
+        if (viewModel.uiState.value.isDownloading) {
+            viewModel.pauseAll()
         } else {
-            resumeAll()
+            viewModel.resumeAll()
         }
-
-        showButtonStatus()
     }
 
-    private fun showButtonStatus() {
-        if (isDownloading()) {
+    private fun showButtonStatus(isDownloading: Boolean) {
+        if (isDownloading) {
             binding.download.setText(R.string.pause_all)
         } else {
             binding.download.setText(R.string.download_all)
         }
     }
 
-    private fun resumeAll() {
-        repository.resumeAll()
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun pauseAll() {
-        repository.pauseAll()
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun isDownloading(): Boolean {
-        return repository.isDownloading(adapter.datum)
-    }
-
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
-        val downloads = repository.findDownloading()
-        adapter.setDatum(downloads)
-
-        showButtonStatus()
+        viewModel.load()
     }
 
     companion object {

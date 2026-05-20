@@ -1,19 +1,26 @@
 package com.ixuea.courses.mymusic.component.download.fragment
 
 import android.os.Bundle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.component.download.repository.DownloadRepository
+import com.ixuea.courses.mymusic.component.download.ui.DownloadedUiState
+import com.ixuea.courses.mymusic.component.download.ui.DownloadedViewModel
 import com.ixuea.courses.mymusic.component.sheet.adapter.SongAdapter
 import com.ixuea.courses.mymusic.databinding.FragmentDownloadedBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.superui.util.SuperRecyclerViewUtil
+import kotlinx.coroutines.launch
 
 /**
  * 下载完成界面
  */
 class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
     private lateinit var adapter: SongAdapter
-    private lateinit var repository: DownloadRepository
+    private lateinit var viewModel: DownloadedViewModel
+    private var handledDataVersion = 0L
 
     override fun initViews() {
         super.initViews()
@@ -22,10 +29,11 @@ class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
 
     override fun initDatum() {
         super.initDatum()
-        repository = DownloadRepository.getInstance()
+        viewModel = ViewModelProvider(this)[DownloadedViewModel::class.java]
 
         adapter = SongAdapter(R.layout.item_song, 1, childFragmentManager)
         binding.list.adapter = adapter
+        observeDownloadedState()
 
         loadData()
     }
@@ -42,9 +50,26 @@ class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
         }
     }
 
+    private fun observeDownloadedState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    render(state)
+                }
+            }
+        }
+    }
+
+    private fun render(state: DownloadedUiState) {
+        if (state.dataVersion != handledDataVersion) {
+            handledDataVersion = state.dataVersion
+            adapter.setNewInstance(state.songs.toMutableList())
+        }
+    }
+
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
-        adapter.setNewInstance(repository.findDownloadedSongs(orm).toMutableList())
+        viewModel.load(orm)
     }
 
     companion object {

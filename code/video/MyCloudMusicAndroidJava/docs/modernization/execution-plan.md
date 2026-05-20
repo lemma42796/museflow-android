@@ -49,7 +49,7 @@
 - 首页主 ViewPager 边界 `MainAdapter` 已从 Java 迁到 Kotlin，继续保留发现/视频/我的/动态/直播五个 tab 的 Fragment 创建顺序。
 - 首页 tab 模型 `TabEntity` 已从 Java 迁到 Kotlin，继续实现 `CustomTabEntity` 并保留 Java public 字段访问形态。
 - 播放/歌单相关小事件 `MusicPlayListChangedEvent`、`ScanLocalMusicCompleteEvent`、`SheetChangedEvent` 已从 Java 迁到 Kotlin，继续保留 Java 构造和 getter/setter 调用面。
-- 阶段 8 已按用户要求启动；发现页首页数据加载已先推进到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`，启动广告预下载也已下沉到 `RefreshSplashAdUseCase`，下载中/已下载页已引入 `DownloadingViewModel`/`DownloadedViewModel` 承接下载操作和列表状态，动态 Feed 列表也已推进到 `FeedViewModel(StateFlow) -> LoadFeedListUseCase -> FeedRepository`，动态发布上传/创建动态已推进到 `FeedPublishViewModel(StateFlow) -> Publish UseCase -> FeedPublishRepository`，聊天会话列表已推进到 `ConversationListViewModel(StateFlow) -> Conversation UseCase -> ConversationRepository`，新消息后的会话列表延迟刷新和会话行 UI 数据也已收敛到 ViewModel，聊天详情历史消息分页、文本/图片发送状态、清未读、标记已读、页面标题用户资料和消息行头像 UI 数据已推进到 `ChatViewModel(StateFlow) -> Chat UseCase -> MessageRepository`，旧 RecyclerView UI 暂时保留。
+- 阶段 8 已按用户要求启动；发现页首页数据加载已推进到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`，下载中/已下载页已引入 `DownloadingViewModel`/`DownloadedViewModel` 承接下载操作和列表状态，动态 Feed 列表也已推进到 `FeedViewModel(StateFlow) -> LoadFeedListUseCase -> FeedRepository`，动态发布上传/创建动态已推进到 `FeedPublishViewModel(StateFlow) -> Publish UseCase -> FeedPublishRepository`，聊天会话列表已推进到 `ConversationListViewModel(StateFlow) -> Conversation UseCase -> ConversationRepository`，新消息后的会话列表延迟刷新和会话行 UI 数据也已收敛到 ViewModel，聊天详情历史消息分页、文本/图片发送状态、清未读、标记已读、页面标题用户资料和消息行头像 UI 数据已推进到 `ChatViewModel(StateFlow) -> Chat UseCase -> MessageRepository`，旧 RecyclerView UI 暂时保留。
 
 当前尚未完成：
 
@@ -68,6 +68,60 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-20 阶段 8 继续：下载中/已下载状态链路
+
+本轮决策：
+
+- 继续阶段 8 编码，把下载中/已下载页从 Fragment/Adapter 直接操作 `DownloadRepository` 推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮只处理下载列表状态、单项暂停/继续、单项删除、全部暂停/继续、全部删除和已下载歌曲列表，不扩大到下载 SDK、下载服务或播放器下载入口。
+- `DownloadingAdapter` 继续负责下载进度行渲染和下载完成后的行移除/事件通知，但删除操作改为回调 Fragment/ViewModel。
+
+本轮代码变更：
+
+- 新增 `LoadDownloadingUseCase`、`LoadDownloadedSongsUseCase` 和 `DownloadActionsUseCase`：分别承接下载中列表、已下载歌曲列表和暂停/继续/删除操作。
+- 新增 `DownloadingUiState` 和 `DownloadingViewModel`：用 `StateFlow` 暴露下载中列表、是否有任务正在下载和数据版本。
+- 新增 `DownloadedUiState` 和 `DownloadedViewModel`：用 `StateFlow` 暴露已下载歌曲列表和数据版本。
+- `DownloadingFragment` 不再直接持有 `DownloadRepository`；单项点击、单项删除、全部暂停/继续、全部删除都改为调用 `DownloadingViewModel`，Fragment 只负责按钮状态、空列表 toast 和 adapter 渲染。
+- `DownloadedFragment` 不再直接持有 `DownloadRepository`；已下载歌曲列表加载改为调用 `DownloadedViewModel.load(orm)`，点击播放仍保留在 Fragment 作为 UI 路由。
+- `DownloadingAdapter` 删除按钮不再直接调用 `DownloadRepository.remove(...)`；确认删除后通过 `DownloadingAdapterListener` 回调外层状态链路。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做下载中列表、单项暂停/继续、单项删除、全部暂停/继续、全部删除或已下载播放人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以先做一轮五条链路代码事实核对，清理执行文档里早先过快/过旧的状态描述，再决定是否继续向 Compose UI 小步推进。
+- 如先验收，优先跑发现页首页加载、下载管理页列表和按钮操作、动态发布/列表刷新。
+
+### 2026-05-20 阶段 8 继续：发现页首页状态链路
+
+本轮决策：
+
+- 继续阶段 8 编码，把 `DiscoveryFragment` 的首页聚合加载从 Fragment 直接 Rx 订阅推进到 `ViewModel(uiState) -> UseCase -> Repository`。
+- 本轮只处理发现页首页 sections 加载状态，不扩大到自定义排序页、发现页 item 交互、广告点击或启动广告预下载。
+- 当前工作区代码没有实际调用启动广告预下载；本轮按代码事实保留现状，只修正执行文档里早先过快的 `RefreshSplashAdUseCase` 说法。
+
+本轮代码变更：
+
+- 新增 `LoadDiscoveryPageUseCase`：桥接 `DiscoveryRepository.homeSections(sp)` Rx 聚合接口，返回 `DiscoveryPage` 或请求错误。
+- 新增 `DiscoveryUiState` 和 `DiscoveryViewModel`：使用 `StateFlow` 暴露加载中、首页 sections、数据版本和错误版本。
+- `DiscoveryFragment` 不再直接持有 `DiscoveryRepository`、`HttpObserver` 或 AutoDispose 订阅；改为通过 `ViewModelProvider` 获取 `DiscoveryViewModel`，用 `viewLifecycleOwner.lifecycleScope` + `repeatOnLifecycle` 收集状态。
+- 旧行为保留：下拉刷新、最小刷新时长、Banner/歌单/单曲/底部 sections 渲染、排序变更刷新、歌单变更刷新、歌单详情跳转、单曲点击播放和自定义发现入口。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做发现页网络数据、滚动、排序刷新或歌曲点击播放人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以转向下载页代码事实核对，补齐任何仍直接持有 Repository 的状态链路。
+- 如先验收，优先跑发现页首页加载、下拉刷新、排序变更后刷新、歌单点击和单曲点击播放。
 
 ### 2026-05-20 阶段 8 继续：动态 Feed 列表状态链路
 
@@ -93,7 +147,7 @@
 
 下个会话建议：
 
-- 如继续编码，可以转向发现页 `DiscoveryFragment` 首页数据加载，按同样方式收敛到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`。
+- 如继续编码，可以转向发现页或下载页剩余 Fragment 直接 Repository/Rx 边界。
 - 如先验收，优先跑动态列表加载、发布页选图压缩上传、发布完成返回后列表刷新。
 
 ### 2026-05-20 阶段 8 补齐：动态发布上传/创建状态链路

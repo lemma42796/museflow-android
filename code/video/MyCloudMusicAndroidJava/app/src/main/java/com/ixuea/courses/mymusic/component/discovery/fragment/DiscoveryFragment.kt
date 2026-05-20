@@ -3,20 +3,21 @@ package com.ixuea.courses.mymusic.component.discovery.fragment
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import autodispose2.AutoDispose.autoDisposable
-import autodispose2.androidx.lifecycle.AndroidLifecycleScopeProvider
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.ad.model.Ad
-import com.ixuea.courses.mymusic.component.api.HttpObserver
 import com.ixuea.courses.mymusic.component.discovery.activity.CustomDiscoveryActivity
 import com.ixuea.courses.mymusic.component.discovery.adapter.DiscoveryAdapter
-import com.ixuea.courses.mymusic.component.discovery.model.DiscoveryPage
 import com.ixuea.courses.mymusic.component.discovery.model.event.SortChangedEvent
-import com.ixuea.courses.mymusic.component.discovery.repository.DiscoveryRepository
+import com.ixuea.courses.mymusic.component.discovery.ui.DiscoveryUiState
+import com.ixuea.courses.mymusic.component.discovery.ui.DiscoveryViewModel
 import com.ixuea.courses.mymusic.component.sheet.activity.SheetDetailActivity
 import com.ixuea.courses.mymusic.component.sheet.model.Sheet
 import com.ixuea.courses.mymusic.component.sheet.model.event.SheetChangedEvent
@@ -27,8 +28,10 @@ import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity
 import com.ixuea.courses.mymusic.service.MusicPlayerService
 import com.ixuea.superui.util.SuperDelayUtil
 import com.youth.banner.listener.OnBannerListener
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import timber.log.Timber
 
 /**
  * 首页-发现界面
@@ -40,8 +43,10 @@ class DiscoveryFragment :
 
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: DiscoveryAdapter
-    private val discoveryRepository = DiscoveryRepository.getInstance()
+    private lateinit var viewModel: DiscoveryViewModel
     private var startTime: Long = 0
+    private var handledDataVersion = 0L
+    private var handledErrorVersion = 0L
 
     override fun isRegisterEventBus(): Boolean {
         return true
@@ -66,10 +71,12 @@ class DiscoveryFragment :
 
     override fun initDatum() {
         super.initDatum()
+        viewModel = ViewModelProvider(this)[DiscoveryViewModel::class.java]
 
         adapter = DiscoveryAdapter(this, this)
         adapter.setDiscoveryAdapterListener(this)
         binding.list.adapter = adapter
+        observeDiscoveryState()
 
         loadData()
     }
@@ -89,26 +96,38 @@ class DiscoveryFragment :
         startTime = System.currentTimeMillis()
         binding.refresh.isRefreshing = true
 
-        discoveryRepository.homeSections(sp)
-            .to(autoDisposable(AndroidLifecycleScopeProvider.from(this)))
-            .subscribe(object : HttpObserver<DiscoveryPage>(this) {
-                override fun onFailed(data: DiscoveryPage?, e: Throwable?): Boolean {
-                    endRefresh()
-                    return super.onFailed(data, e)
-                }
+        viewModel.load(sp)
+    }
 
-                override fun onSucceeded(data: DiscoveryPage) {
-                    val consumeTime = System.currentTimeMillis() - startTime
-
-                    if (consumeTime < MIN_REFRESH_DURATION_MS) {
-                        SuperDelayUtil.delay(MIN_REFRESH_DURATION_MS - consumeTime) {
-                            show(data.sections)
-                        }
-                    } else {
-                        show(data.sections)
-                    }
+    private fun observeDiscoveryState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    render(state)
                 }
-            })
+            }
+        }
+    }
+
+    private fun render(state: DiscoveryUiState) {
+        if (state.dataVersion != handledDataVersion) {
+            handledDataVersion = state.dataVersion
+            val consumeTime = System.currentTimeMillis() - startTime
+
+            if (consumeTime < MIN_REFRESH_DURATION_MS) {
+                SuperDelayUtil.delay(MIN_REFRESH_DURATION_MS - consumeTime) {
+                    show(state.sections)
+                }
+            } else {
+                show(state.sections)
+            }
+        }
+
+        if (state.errorVersion != handledErrorVersion) {
+            handledErrorVersion = state.errorVersion
+            endRefresh()
+            Timber.e(state.error, "discovery page error")
+        }
     }
 
     private fun show(data: List<BaseMultiItemEntity>) {
