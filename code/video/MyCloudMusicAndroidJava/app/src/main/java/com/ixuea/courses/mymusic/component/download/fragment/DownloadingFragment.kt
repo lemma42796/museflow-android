@@ -8,6 +8,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.download.adapter.DownloadingAdapter
+import com.ixuea.courses.mymusic.component.download.model.event.DownloadChangedEvent
 import com.ixuea.courses.mymusic.component.download.ui.DownloadingUiState
 import com.ixuea.courses.mymusic.component.download.ui.DownloadingViewModel
 import com.ixuea.courses.mymusic.databinding.FragmentDownloadingBinding
@@ -15,6 +16,7 @@ import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.superui.toast.SuperToast
 import com.ixuea.superui.util.SuperRecyclerViewUtil
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
 
 /**
  * 下载中界面
@@ -37,6 +39,11 @@ class DownloadingFragment : BaseViewModelFragment<FragmentDownloadingBinding>() 
         adapter.setListener(object : DownloadingAdapter.DownloadingAdapterListener {
             override fun onDeleteClick(position: Int, data: DownloadInfo) {
                 viewModel.remove(data)
+            }
+
+            override fun onDownloadTerminalState(data: DownloadInfo) {
+                viewModel.load()
+                EventBus.getDefault().post(DownloadChangedEvent())
             }
         })
         binding.list.adapter = adapter

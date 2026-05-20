@@ -43,6 +43,7 @@
 - 聊天链路事件/消息 extra 小模型 `NewMessageEvent`、`MessageUnreadCountChangedEvent`、`MediaMessageExtra` 已从 Java 迁到 Kotlin，Java 调用入口保持兼容。
 - 聊天消息列表 `ChatAdapter` 已从 Java 迁到 Kotlin，继续保留文本/图片消息左右布局、头像加载、图片尺寸适配和 RongCloud 消息类型判断，并补齐图片 extra/宽高缺失时的保护。
 - 聊天消息工具 `MessageUtil`、离线推送小模型 `Push`/`PushMessage` 和推送入口 `RongPushReceiver`/`PushReceiver`/`PushService` 已从 Java 迁到 Kotlin，继续保留 `MessageUtil.getContent(...)`、`MessageUtil.createPushData(...)`、`Push.PUSH_STYLE_CHAT`、Manifest receiver/service 类名等兼容入口。
+- 动态发布页图片选择压缩入口已从 Activity 直连 `ImageCompressionRepository` 收拢到 `CompressFeedImagesUseCase`。
 - 下载链路入口 `DownloadActivity`、分页适配器、下载监听器、点击 listener 和下载事件已从 Java 迁到 Kotlin，下载目录当前不再包含 Java 文件。
 - 发现/信息流相关的自定义排序页、排序 adapter、发现页 UI 数据模型和排序事件已从 Java 迁到 Kotlin；`DiscoveryAdapter` 已适配 Kotlin 模型列表拷贝，发现目录当前不再包含 Java 文件。
 - 动态主模型 `Feed` 和动态刷新事件已从 Java 迁到 Kotlin，动态目录当前不再包含 Java 文件；`FeedAdapter` 已补齐动态缺少 user 时的空值保护。
@@ -68,6 +69,110 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-20 收尾交接：阶段 8 下载与动态发布小补
+
+本次交接结论：
+
+- 当前分支继续使用 `codex/emulator-smoke-progress`。
+- 本轮完成下载模块剩余 Java 边界 Kotlin 化、下载中终态刷新归属收口，以及动态发布图片压缩 Repository 直连清理。
+- 下载目录 `component/download` 当前不再包含 Java 文件。
+- 动态发布页 `PublishFeedActivity` 当前不再直接 import/调用 `ImageCompressionRepository` 或 `ImageCompressor.CompressionCallback`，图片压缩入口已收敛到 `CompressFeedImagesUseCase`。
+- 本轮按用户收尾要求更新本文档、提交并推送；后续恢复默认规则：除非用户明确要求，不要每个小切片都 push。
+
+本轮已验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/download -name '*.java' -print` 无输出。
+- `rg "ImageCompressionRepository|getInstance\\(\\)\\.compressImages|component\\.feed\\.repository" ...` 确认动态发布 Activity 不再直连压缩 Repository。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+
+下个会话建议：
+
+- 第一优先：继续扫描五条链路 UI 层是否仍有直接 Repository/Rx 调用，只把剩余 UI 直连边界收到 UseCase/ViewModel，不先扩大到大规模 Compose 重写。
+- 第二优先：如果代码事实确认 UI 直连基本清完，再挑一个最小、低风险页面做 Compose UI 试点。
+- 验收入口：下载页切换、下载中单项暂停/继续/删除、全部暂停/继续/删除、已下载播放入口，以及动态发布选图压缩/发布流程。
+- 仍未完成：本轮没有启动模拟器，也没有做下载页或动态发布页人工冒烟。
+
+### 2026-05-20 阶段 8 小补：动态发布图片压缩用例边界
+
+本轮决策：
+
+- 继续阶段 8 编码，清理五条链路里 UI 层直接触碰 Repository 的小边界。
+- 本轮只处理动态发布页图片选择压缩入口，不改变 PictureSelector、压缩工具实现、发布上传流程或用户可见交互。
+- 按用户最新要求，本轮只保留本地改动和文档记录，不自动 push。
+
+本轮代码变更：
+
+- 新增 `CompressFeedImagesUseCase`，把 `ImageCompressionRepository.compressImages(...)` 封装到 feed domain 层。
+- `PublishFeedActivity` 的 PictureSelector `CompressFileEngine` 改为调用 `CompressFeedImagesUseCase`，Activity 不再直接 import/调用 `ImageCompressionRepository` 或 `ImageCompressor.CompressionCallback`。
+- 原有压缩完成后把 `originalFilePath/compressedFilePath` 回传给 PictureSelector 的行为保持不变。
+
+验证：
+
+- `rg "ImageCompressionRepository|getInstance\\(\\)\\.compressImages|component\\.feed\\.repository" ...` 确认动态发布 Activity 不再直连压缩 Repository。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做选图压缩/发布人工冒烟。
+
+下个会话建议：
+
+- 继续阶段 8 时，可再扫描五条链路 UI 层直接 Rx/Repository 调用；如果只剩 domain/repository 层调用，再考虑进入最小 Compose UI 试点。
+
+### 2026-05-20 阶段 8 继续：下载模块剩余 Java 边界 Kotlin 化
+
+本轮决策：
+
+- 继续阶段 8 编码，优先把下载模块内剩余 Java 壳层迁到 Kotlin，降低后续状态链路/Compose 推进时的跨语言边界成本。
+- 本轮只迁移下载入口 Activity、分页 adapter、下载监听器、点击 listener 和下载事件小模型，不扩大到下载 SDK、下载服务或设备端人工冒烟。
+- 按用户最新要求，本轮只保留本地改动和文档记录，不自动 push。
+
+本轮代码变更：
+
+- `DownloadActivity` 从 Java 迁到 Kotlin，继续保留旧 XML/ViewPager/TabLayout 入口和两个下载分页顺序。
+- `DownloadAdapter` 从 Java 迁到 Kotlin，继续创建已下载页和下载中页 Fragment。
+- `MyDownloadListener` 从 Java 迁到 Kotlin，保留主线程刷新分发和下载进度 300ms 节流。
+- `OnItemClickListener` 从 Java 迁到 Kotlin `fun interface`，继续兼容旧 RecyclerView adapter 点击回调。
+- `DownloadChangedEvent` 从 Java 迁到 Kotlin 空事件类，继续作为 EventBus 下载状态刷新信号。
+- `component/download` 目录当前不再包含 Java 文件。
+
+验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/download -name '*.java' -print` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked、`FragmentStatePagerAdapter` deprecated 和 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做下载页手工操作冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以先核对五条链路 UI 层还剩哪些直接 Repository/Rx 订阅，再挑一个最小入口继续推进阶段 8。
+- 如先验收，优先跑下载页切换、下载中单项暂停/继续/删除、全部暂停/继续/删除和已下载列表播放入口。
+
+### 2026-05-20 阶段 8 小补：下载中 Adapter 终态回调
+
+本轮决策：
+
+- 继续阶段 8 编码，收窄下载中列表里最后一个 Adapter 主动改列表状态的小边界。
+- 本轮只处理下载任务进入终态后的列表刷新/事件通知归属，不扩大到下载 SDK、下载服务或设备端冒烟。
+- 按用户最新要求，本轮只保留本地改动和文档记录，不自动 push。
+
+本轮代码变更：
+
+- `DownloadingAdapter` 不再在下载完成/移除等终态里直接 `removeData(position)` 或发布 `DownloadChangedEvent`。
+- `DownloadingAdapterListener` 增加 `onDownloadTerminalState(...)`，下载状态终态统一回调外层。
+- `DownloadingFragment` 收到终态回调后调用 `DownloadingViewModel.load()` 重新读取下载中列表；如果回调来自下载管理器通知，再由 Fragment 发布 `DownloadChangedEvent`。
+- `LoadDownloadingUseCase` 对下载中列表做可见状态过滤，避免已完成/已移除等终态数据在 RecyclerView bind 阶段反复触发刷新。
+- 这样下载中列表的删除/终态移除都通过 Fragment/ViewModel 状态链路刷新，Adapter 更接近只负责行渲染和用户操作回调。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过，只有既有 Java deprecation/unchecked 和 BGABadge 非增量注解处理器提示。
+- 本轮未启动模拟器，未做下载完成自动移出下载中列表或已下载页刷新人工冒烟。
+
+下个会话建议：
+
+- 如继续编码，可以先做五条链路代码事实核对，确认 UI 层是否还存在直接 Repository/Rx 订阅，再决定是否开始 Compose UI 小步推进。
+- 如先验收，优先跑下载完成后从“下载中”移除、已下载页出现歌曲、动态发布/列表刷新和发现页首页加载。
 
 ### 2026-05-20 阶段 8 继续：下载中/已下载状态链路
 

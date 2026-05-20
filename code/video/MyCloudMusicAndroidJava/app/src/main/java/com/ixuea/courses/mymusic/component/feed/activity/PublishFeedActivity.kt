@@ -15,15 +15,14 @@ import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.adapter.TextWatcherAdapter
 import com.ixuea.courses.mymusic.component.feed.adapter.ImageAdapter
+import com.ixuea.courses.mymusic.component.feed.domain.CompressFeedImagesUseCase
 import com.ixuea.courses.mymusic.component.feed.model.Feed
 import com.ixuea.courses.mymusic.component.feed.model.event.FeedChangedEvent
-import com.ixuea.courses.mymusic.component.feed.repository.ImageCompressionRepository
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishOperation
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishViewModel
 import com.ixuea.courses.mymusic.config.glide.GlideEngine
 import com.ixuea.courses.mymusic.databinding.ActivityPublishFeedBinding
-import com.ixuea.courses.mymusic.util.ImageCompressor
 import com.ixuea.superui.decoration.GridDividerItemDecoration
 import com.ixuea.superui.toast.SuperToast
 import com.ixuea.superui.util.DensityUtil
@@ -48,6 +47,7 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
      * 动态
      */
     private val feed = Feed()
+    private val compressFeedImages = CompressFeedImagesUseCase()
     private lateinit var adapter: ImageAdapter
     private lateinit var viewModel: FeedPublishViewModel
     private var currentOperation = FeedPublishOperation.NONE
@@ -143,19 +143,11 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
                     source: ArrayList<Uri>,
                     call: OnKeyValueResultCallbackListener
                 ) {
-                    ImageCompressionRepository.getInstance().compressImages(
+                    compressFeedImages(
                         context,
                         source,
-                        object : ImageCompressor.CompressionCallback {
-                            override fun onCompressionComplete(
-                                originalFilePath: String,
-                                compressedFilePath: String
-                            ) {
-                                call.onCallback(originalFilePath, compressedFilePath)
-                            }
-
-                            override fun onCompressionError(e: Exception) {
-                            }
+                        onComplete = { originalFilePath, compressedFilePath ->
+                            call.onCallback(originalFilePath, compressedFilePath)
                         }
                     )
                 }

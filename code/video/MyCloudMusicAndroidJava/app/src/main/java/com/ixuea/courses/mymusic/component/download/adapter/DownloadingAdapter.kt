@@ -9,13 +9,11 @@ import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.adapter.BaseRecyclerViewAdapter
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener
-import com.ixuea.courses.mymusic.component.download.model.event.DownloadChangedEvent
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.ItemDownloadingBinding
 import com.ixuea.courses.mymusic.util.FileUtil
 import com.ixuea.courses.mymusic.util.LiteORMUtil
 import com.ixuea.superui.dialog.SuperDialog
-import org.greenrobot.eventbus.EventBus
 import java.lang.ref.SoftReference
 
 /**
@@ -44,12 +42,6 @@ class DownloadingAdapter(
         val song = orm.querySong(data.id)
         holder.bindBase(song)
         holder.bind(data)
-    }
-
-    private fun publishDownloadStatusChangedEvent(isDownloadManagerNotify: Boolean) {
-        if (isDownloadManagerNotify) {
-            EventBus.getDefault().post(DownloadChangedEvent())
-        }
     }
 
     /**
@@ -140,12 +132,9 @@ class DownloadingAdapter(
                 }
 
                 else -> {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        removeData(position)
+                    if (isDownloadManagerNotify) {
+                        listener?.onDownloadTerminalState(data)
                     }
-
-                    publishDownloadStatusChangedEvent(isDownloadManagerNotify)
                 }
             }
         }
@@ -153,5 +142,6 @@ class DownloadingAdapter(
 
     interface DownloadingAdapterListener {
         fun onDeleteClick(position: Int, data: DownloadInfo)
+        fun onDownloadTerminalState(data: DownloadInfo)
     }
 }
