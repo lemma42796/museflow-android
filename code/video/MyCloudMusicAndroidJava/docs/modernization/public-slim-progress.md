@@ -72,3 +72,28 @@ app/build/outputs/apk/dev/debug/app-dev-debug.apk
 - If continuing later, work in `/private/tmp/museflow-public-slim` unless a new strategy is chosen.
 - The full local project remains available in the main workspace and should not be damaged by public-slim cleanup.
 - Do not push directly from the full workspace to GitHub `master`; sync public-safe changes into this worktree first, then push `origin HEAD:master`.
+
+## 2026-05-20 GitHub README handoff
+
+Latest public presentation state:
+
+- GitHub `origin/master` was updated from the main workspace branch `codex/github-root-readme`.
+- Latest pushed commit before this handoff-doc update: `03c3355 Present README as new project`.
+- Root `README.md` is now Chinese-first and presents MuseFlow Android as a standalone Android music/community app.
+- Root `README.en.md` is the English version. The two files link to each other instead of showing both languages on one page.
+- README wording intentionally avoids describing the repository as a rewrite, modernization, legacy migration, or public-slim cleanup. Keep that public-facing tone unless the user asks to expose project-history context.
+
+Remote safety state:
+
+- `origin` is GitHub: `https://github.com/lemma42796/museflow-android.git`.
+- `upstream` is the original Gitee backup: `git@gitee.com:yyh455/my-cloud-music-android-java.git`.
+- `upstream` push URL is intentionally disabled locally as `DISABLED_GITEE_BACKUP_DO_NOT_PUSH`.
+- Gitee `upstream/master` was confirmed unchanged at `4d6c6759afcf34f2a038c34b69c4395462d45df0`.
+- The accidental Gitee branch `codex/emulator-smoke-progress` was deleted from Gitee and should not be recreated.
+
+Next-session rules:
+
+- Before any push, run `git remote -v`, `git status --short --branch`, and state the exact push target.
+- Push public README/docs presentation changes only to GitHub with `git push origin HEAD:master`.
+- Do not run any write operation against `upstream`; treat it as read-only backup.
+- Ignore the local untracked full-workspace files/modules unless the user explicitly asks to clean or inspect them.
