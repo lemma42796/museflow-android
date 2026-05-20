@@ -36,7 +36,7 @@
 - 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留消息通知、播放通知、桌面歌词解锁通知和前台服务通知的静态调用入口。
 - 播放管理器兼容门面 `MusicPlayerManagerImpl` 已从 Java 迁到 Kotlin，继续通过 Media3 `PlaybackRepository` 承接旧 `MusicPlayerManager` API。
 - 播放列表管理器 `MusicListManagerImpl` 已从 Java 迁到 Kotlin，继续保留旧 `MusicListManager` 接口、静态 `getInstance(Context)` 入口、队列持久化和 `PlaybackRepository.setQueue(...)` 同步。
-- 播放服务边界 `MusicPlayerService` 已从 Java 迁到 Kotlin，继续保留 Manifest service 类名、MediaSession、通知、Widget 和桌面歌词控制入口。
+- 旧播放服务 `MusicPlayerService` 已从 Manifest 和源码中删除；后台播放入口收敛到 Media3 `PlaybackService`，并由 `PlaybackUiBridge` 承接 Widget 刷新、桌面歌词关闭和播放通知按钮。
 - 播放链路已完成一轮更完整的模拟器时间线复测：播放/暂停、seek、通知媒体卡片播放/暂停、后台播放在 MediaSession 和 UI 层面通过；上一轮“播放未推进”的判断已修正。
 - 聊天详情页 `ChatActivity` 已从 Java 迁到 Kotlin，保留旧 XML/RecyclerView、图片选择压缩、文本/图片发送、历史消息分页、EventBus 新消息入口和 Repository 调用边界。
 - 会话列表页 `ConversationActivity` 和 `ConversationAdapter` 已从 Java 迁到 Kotlin，保留会话列表、点击进聊天、长按清消息、未读角标和新消息节流刷新逻辑。
@@ -70,7 +70,7 @@
 - 五条链路仍未完成深度人工冒烟；目前只完成入口级检查。
 - 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
 - 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
-- 播放通知刷新已做去重和低频保护，本轮 logcat 未看到新的通知限流日志，但系统累计 `numRateViolations` 已到 `28`，仍需继续观察是否还有增量。
+- 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；旧通知限流问题需要后续设备端复验是否消失。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -2264,20 +2264,193 @@ GitHub 发布策略：
 - `component` 目录已经清零 Java。
 - 下一刀可以继续清 `model/response`、小 exception、adapter 基类、manager 接口等外围公共 Java；`DefaultRepository`、`Base*Activity/Fragment`、大型 util 先按风险排后处理。
 
+## 阶段 8 继续：外围 adapter 和 util Kotlin 加速收口
+
+用户反馈进度太慢，要求继续重构；本轮按“多组小边界直接迁移、每组构建兜底”的方式推进，不做设备端冒烟，不提交、不 push。
+
+已完成：
+
+- 公共 adapter 基类 `BaseRecyclerViewAdapter`、`BasePagingDataAdapter` 从 Java 迁到 Kotlin，保留 `inflater`、`datum/getDatum()`、`setDatum(...)`、`addData(...)`、`removeData(...)` 和通用 `ViewHolder` 调用面。
+- 低风险静态 util 从 Java 迁到 Kotlin：`ResourceUtil`、`IntentUtil`、`PlayListUtil`、`PackageUtil`、`ServiceUtil`、`TipUtil`、`AESUtil`、`StringUtil`。
+- 第二批外围 util 从 Java 迁到 Kotlin：`DataUtil`、`SwitchDrawableUtil`、`DefaultPreferenceUtil`、`SuperTabUtil`、`JSONUtil`、`SpannableStringBuilderUtil`。
+- 第三批文件/分享/富文本 util 从 Java 迁到 Kotlin：`FileUtil`、`StorageUtil`、`ShareUtil`、`SuperDarkUtil`、`RichUtil`。
+- `BaseRecyclerViewAdapter` 迁移后修正 Kotlin 调用侧对 `adapter.datum` 的兼容，继续通过公开只读属性暴露可变列表，等价保留旧 Java `getDatum()` 调用面。
+- `StorageUtil.getExternalPath(...)` 保留旧 Java platform type 宽松调用，允许标题为 null 时走原 `String.format(...)` 语义。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 `FragmentStatePagerAdapter`/`AsyncTask`/`PreferenceManager` deprecated warning、`ServiceUtil.getRunningServices(...)` deprecated、BGABadge 非增量注解处理器提示。
+- `find app/src/main/java/com/ixuea/courses/mymusic/component -name '*.java' -print | wc -l` 为 `0`。
+- `find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print | wc -l` 已从本轮开始时的 `58` 降到 `37`。
+
+当前剩余 Java 边界：
+
+- 应用/入口：`AppContext`、`MainActivity`、`MusicPlayerService`。
+- 基类层：`Base*Activity`、`Base*Fragment`。
+- 配置/三方边界：`BadgeInit`、`GlideEngine`。
+- manager 层：`MusicPlayerListener`、`UserManager`、`SuperAudioManager`、`MyActivityManager`、`MusicPlayerManagerImpl`、`MusicListManagerImpl`、`GlobalLyricManagerImpl`。
+- repository：`DefaultRepository`。
+- 剩余 util：`Constant`、`ExceptionHandlerUtil`、`ImageCompressor`、`ImageUtil`、`LiteORMUtil`、`LyricUtil`、`MessageUtil`、`NotificationUtil`、`PreferenceUtil`、`SuperDateUtil`、`WidgetUtil`。
+
+下一刀建议：
+
+- 继续清 util 时，优先处理 `ExceptionHandlerUtil`、`PreferenceUtil`、`LyricUtil`、`LiteORMUtil` 这类中等风险边界。
+- `SuperDateUtil` 有 Java 字段和同名方法共存，Kotlin 迁移需要额外设计兼容；不要按普通 object 机械迁。
+- `BadgeInit` 继续保留 Java，因为 BGABadge 旧注解处理器需要 Java 源生成绑定类。
+- `DefaultRepository`、`MusicPlayerService`、manager impl、`Base*Activity/Fragment` 仍属于高风险核心边界，建议等 util 再收窄一轮后处理。
+
+## 阶段 8 继续：MusicPlayerService Kotlin 收口
+
+用户明确要求先清 `MusicPlayerService`；本轮直接迁移服务边界，不做设备端冒烟，不提交、不 push。
+
+已完成：
+
+- `MusicPlayerService.java` -> `MusicPlayerService.kt`，Manifest service 类名和包名保持不变。
+- 保留 Java/Kotlin 调用方依赖的静态入口：`MusicPlayerService.getMusicPlayerManager(context)`、`MusicPlayerService.getListManager(context)`。
+- 保留前台服务启动、MediaSession 回调、播放/暂停/上一首/下一首/seek、MediaButtonReceiver 分发、桌面歌词开关、Widget 更新和播放通知刷新逻辑。
+- 保留启动时已有播放歌曲的封面加载、metadata 更新、播放/暂停状态同步和歌词准备流程。
+- 适配 Kotlin 化后的 `Song` 可空字段，metadata 标题/歌手允许沿用当前 Kotlin 模型的 nullable 值。
+- `GlobalLyricManagerImpl.isShowing()` 在 Kotlin 中按普通 Java 方法调用，避免误当 Kotlin 属性。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；新增提示仅为 `MusicPlayerService.kt` 中旧 `stopForeground(Boolean)` deprecated，属于原有 Android API 使用方式迁移后的 Kotlin warning。
+- `find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print | wc -l` 当前为 `36`。
+
+当前剩余 Java 边界：
+
+- 应用/入口：`AppContext`、`MainActivity`。
+- 基类层：`Base*Activity`、`Base*Fragment`。
+- 配置/三方边界：`BadgeInit`、`GlideEngine`。
+- manager 层：`MusicPlayerListener`、`UserManager`、`SuperAudioManager`、`MyActivityManager`、`MusicPlayerManagerImpl`、`MusicListManagerImpl`、`GlobalLyricManagerImpl`。
+- repository：`DefaultRepository`。
+- 剩余 util：`Constant`、`ExceptionHandlerUtil`、`ImageCompressor`、`ImageUtil`、`LiteORMUtil`、`LyricUtil`、`MessageUtil`、`NotificationUtil`、`PreferenceUtil`、`SuperDateUtil`、`WidgetUtil`。
+
+下一刀建议：
+
+- 如果继续按用户要求清高价值边界，下一刀可处理 `MusicPlayerListener` 或 `GlobalLyricManagerImpl`，但会牵动播放/桌面歌词运行时，需要继续每刀构建兜底。
+- 如果先降低风险，可回到 util：`ExceptionHandlerUtil`、`PreferenceUtil`、`LyricUtil`、`LiteORMUtil`。
+
+## 阶段 8 继续：PlaybackService 承接旧播放入口
+
+用户指出现代 Android 音乐后台播放不应继续依赖普通 legacy Service；本轮开始把旧 `MusicPlayerService` 的外部依赖迁到 Media3 `PlaybackService`，不做设备端冒烟，不提交、不 push。
+
+已完成：
+
+- `PlaybackService` 新增 `@JvmStatic getMusicPlayerManager(context)` 和 `getListManager(context)`，作为旧 manager 兼容入口的新归属。
+- `PlaybackService` 新增旧 action 处理：`ACTION_PLAY`、`ACTION_PREVIOUS`、`ACTION_NEXT`、`ACTION_LYRIC`，Widget/外部 PendingIntent 可直接打到 Media3 service。
+- 页面、Fragment 基类、播放相关 Fragment/Activity、`MusicListManagerImpl`、`GlobalLyricManagerImpl`、`LyricListView`、发现页旧入口等调用方已从 `MusicPlayerService.get*Manager(...)` 改到 `PlaybackService.get*Manager(...)`。
+- `IntentUtil` 的播放服务 PendingIntent 目标改为 `PlaybackService`，同时保留旧方法名 `createMusicPlayerServicePendingIntent(...)` / `createMusicPlayerServiceIntent(...)` 做兼容别名。
+- `MusicWidget` 的上一首/播放/下一首/歌词按钮改为指向 `PlaybackService`；Widget 更新阶段不再主动启动 legacy `MusicPlayerService`。
+- `DiscoveryFragment.onSongMoreClick()` 移除无 action 的 service 启动，避免无意义启动播放服务。
+- `MusicPlayerService` 自身的静态入口改为委托 `PlaybackService`，继续保留旧 API 兼容。
+
+验证：
+
+- `rg "MusicPlayerService\\.get|MusicPlayerService::class|new Intent\\([^\\n]*MusicPlayerService|Intent\\([^\\n]*MusicPlayerService|import com\\.ixuea\\.courses\\.mymusic\\.service\\.MusicPlayerService" app/src/main/java/com/ixuea/courses/mymusic` 无命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+
+当前边界：
+
+- `MusicPlayerService` 仍保留在 Manifest 中，本节之后的下一轮已继续移走 Widget 回调刷新、桌面歌词关闭回调和播放通知按钮 PendingIntent。
+- 还不能直接删除 `MusicPlayerService`：播放通知视觉层仍由 `NotificationUtil.createMusicNotification(..., MediaSessionCompat)` + `MusicPlayerService` 驱动，Media3 `PlaybackService` 还没有接管自定义通知/metadata 展示。
+
+下一刀建议：
+
+- 先把播放通知从 `MusicPlayerService + MediaSessionCompat` 迁到 `PlaybackService`/Media3 通知链路，或者先实现一个 Media3 service 内部的轻量自定义通知 provider。
+- 完成后再从 Manifest 删除 `.service.MusicPlayerService` 和文件本体。
+
+## 阶段 8 继续：播放 UI 副作用脱离 MusicPlayerService
+
+用户要求继续清 `MusicPlayerService`；本轮继续拆旧 service 剩余职责，不做设备端冒烟，不提交、不 push。
+
+已完成：
+
+- 新增 `PlaybackUiBridge`，由 `PlaybackService.getMusicPlayerManager(context)` 启动并监听旧 `MusicPlayerListener`，接管 Widget 的播放/暂停、进度和封面刷新。
+- `MusicPlayerService` 不再刷新 Widget，不再持有桌面歌词关闭回调；销毁时补充移除播放监听器并释放 `MediaSessionCompat`。
+- `GlobalLyricManagerImpl` 自己处理桌面歌词关闭按钮，关闭时直接 `hide()` 并复用现有 Widget 歌词状态刷新。
+- `NotificationUtil.createMusicNotification(...)` 的上一首/播放/下一首/歌词按钮 PendingIntent 已改为指向 `PlaybackService`，不再通过 `MediaButtonReceiver` 反打旧 service。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；仅保留 `MusicPlayerService.kt` 里旧 `stopForeground(Boolean)` deprecated warning。
+
+当前边界：
+
+- `MusicPlayerService` 仍保留在 Manifest 中，剩余主要职责是旧 `MediaSessionCompat` metadata、旧播放通知视觉层和通知前台服务生命周期。
+- 还不能删除 `MusicPlayerService`：`NotificationUtil.createMusicNotification(..., MediaSessionCompat)` 仍需要 compat session token；Media3 `PlaybackService` 尚未接管通知 provider/metadata 展示。
+
+下一刀建议：
+
+- 优先研究并落地 Media3 `MediaSessionService` 通知 provider，把旧 `MediaSessionCompat` 通知视觉层迁走。
+- 通知迁完后删除 Manifest 里的 `.service.MusicPlayerService` 和 `MusicPlayerService.kt`，再清理旧 compat 入口。
+
+## 阶段 8 继续：MusicPlayerService 删除收口
+
+用户继续要求清 `MusicPlayerService`；本轮把旧普通 service 从运行时入口移除，播放后台服务收敛到 Media3 `PlaybackService`。
+
+已完成：
+
+- `PlaybackService` 接入 Media3 `DefaultMediaNotificationProvider`，复用音乐通知 channel、`NOTIFICATION_ID = 100` 和应用小图标。
+- `PlaybackService` 创建 `MediaSession` 时设置通知点击入口、注册 session、自定义歌词 command，并继续处理上一首/播放/下一首/歌词 action。
+- `MusicPlayerManagerImpl.playNow()` 和 `resumeNow()` 在播放/恢复前启动 `PlaybackService`，让 Media3 service 真正承接后台播放和通知生命周期。
+- `LegacyMusicSessionPlayer` 显式暴露播放/暂停、上一首、下一首命令，保证 Media3 默认通知能显示核心控制按钮。
+- `PlaybackController` 写入 Media3 `MediaMetadata.artworkUri`，给默认通知提供封面来源。
+- `AndroidManifest.xml` 删除 `.service.MusicPlayerService`；`MusicPlayerService.kt` 文件删除。
+- `NotificationUtil.createMusicNotification(..., MediaSessionCompat)` 和 `IntentUtil.createMusicPlayerService*` 兼容别名已删除，源码不再依赖旧 compat 通知入口。
+
+验证：
+
+- `rg -n "MusicPlayerService|service\\.MusicPlayerService|MediaSessionCompat|createMusicNotification" app/src/main app/src/main/java/com/ixuea/courses/mymusic` 无源码/Manifest 命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+
+当前边界：
+
+- 代码层面 `MusicPlayerService` 和旧 compat 通知入口已清掉。
+- 还没做设备端冒烟；Media3 默认通知的封面加载、歌词自定义按钮显示和后台播放保活仍需真机/模拟器观察。
+
+下一刀建议：
+
+- 快速做一次播放链路设备端冒烟：播放、暂停、上一首、下一首、通知点击、歌词按钮、后台保活。
+- 冒烟无问题后，继续清剩余 Java util/manager impl；如冒烟发现通知按钮或保活问题，优先回到 `PlaybackService`/`LegacyMusicSessionPlayer` 调整。
+
 ## 最新交接
 
 当前分支：`codex/emulator-smoke-progress`。
 
-当前策略：用户已明确要求继续编码、不做设备端冒烟；下一会话从文档和 git 状态恢复即可。
+当前策略：用户要求本轮更新交接、提交并 push；下一会话从本文档和 Git 历史恢复即可。
+
+当前最新切片：
+
+- 已按用户要求优先清 `MusicPlayerService`。
+- 旧 `.service.MusicPlayerService` 已从 Manifest 删除，源码文件已删除。
+- 播放后台入口已收敛到 Media3 `PlaybackService`；播放/恢复前由 `MusicPlayerManagerImpl` 启动 `PlaybackService`。
+- Media3 默认通知 provider 已接入 `PlaybackService`，旧 `MediaSessionCompat` 通知入口和 `NotificationUtil.createMusicNotification(...)` 已删除。
+- Widget 刷新由 `PlaybackUiBridge` 承接；桌面歌词关闭由 `GlobalLyricManagerImpl` 自己处理。
+
+当前验证：
+
+- `rg -n "MusicPlayerService|service\\.MusicPlayerService|MediaSessionCompat|createMusicNotification" app/src/main app/src/main/java/com/ixuea/courses/mymusic` 无源码/Manifest 命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+- `.idea` 无脏改动。
 
 恢复步骤：
 
-- 先看 `git status --short` 和本节内容，确认当前迁移面。
-- 如继续编码，优先处理 `component/music` 本地音乐扫描链路，或 `component/lyric/view` 三个 Java 自定义 View。
+- 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
+- 如继续验证，优先做一次设备端播放/通知冒烟：播放、暂停、上一首、下一首、通知点击、歌词按钮、后台保活。
+- 如继续纯编码，可转回剩余 util/manager impl Java 清理。暂缓 `DefaultRepository`、`Base*Activity/Fragment`。
 - 每个切片保持 `./gradlew :app:assembleDevDebug` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
+
+当前剩余 Java 数：`36`。
 
 剩余 Java 清单以当前仓库为准，可用：
 
 ```bash
-find app/src/main/java/com/ixuea/courses/mymusic/component -maxdepth 4 -name '*.java' -print | sort
+find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print | sort
 ```

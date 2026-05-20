@@ -13,6 +13,7 @@ import com.ixuea.courses.mymusic.manager.SuperAudioManager;
 import com.ixuea.courses.mymusic.model.response.DetailResponse;
 import com.ixuea.courses.mymusic.playback.PlaybackController;
 import com.ixuea.courses.mymusic.playback.PlaybackRepository;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.courses.mymusic.repository.DefaultRepository;
 import com.ixuea.courses.mymusic.util.ListUtil;
 
@@ -141,6 +142,7 @@ public class MusicPlayerManagerImpl implements MusicPlayerManager, AudioManager.
         isPrepare = true;
 
         //Media3 prepare是异步路径，不再在调用线程同步阻塞网络媒体
+        PlaybackService.start(context);
         playbackRepository.play(uri, data);
         prepareLyric(data);
     }
@@ -250,6 +252,7 @@ public class MusicPlayerManagerImpl implements MusicPlayerManager, AudioManager.
 
     private void resumeNow() {
         //如果没有播放就播放
+        PlaybackService.start(context);
         playbackRepository.resume();
     }
 

@@ -11,7 +11,7 @@ import com.ixuea.courses.mymusic.component.lyric.adapter.LyricAdapter
 import com.ixuea.courses.mymusic.component.lyric.model.Line
 import com.ixuea.courses.mymusic.component.lyric.model.Lyric
 import com.ixuea.courses.mymusic.databinding.LyricListViewBinding
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.LyricUtil
 import com.ixuea.courses.mymusic.util.SuperDateUtil
@@ -55,7 +55,7 @@ class LyricListView @JvmOverloads constructor(
             cancelLyricTask()
             showScrollLyricView()
             scrollSelectedLyricLine?.let { line ->
-                MusicPlayerService.getListManager(context).seekTo(line.startTime.toInt())
+                PlaybackService.getListManager(context).seekTo(line.startTime.toInt())
             }
         }
 

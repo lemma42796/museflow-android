@@ -92,11 +92,6 @@
             android:exported="false" />
 
         <service
-            android:name=".service.MusicPlayerService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-        <service
             android:name=".playback.PlaybackService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback">

@@ -11,6 +11,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.ixuea.courses.mymusic.component.song.model.Song
+import com.ixuea.courses.mymusic.util.ResourceUtil
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
@@ -221,6 +222,7 @@ class PlaybackController private constructor(context: Context) {
         val mediaMetadata = MediaMetadata.Builder()
             .setTitle(song.title)
             .setArtist(song.singer?.nickname ?: song.singerNickname)
+            .setArtworkUri(Uri.parse(ResourceUtil.resourceUri(song.icon)))
             .build()
 
         return MediaItem.Builder()

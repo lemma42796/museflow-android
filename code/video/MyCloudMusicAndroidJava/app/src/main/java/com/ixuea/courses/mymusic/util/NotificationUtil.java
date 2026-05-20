@@ -8,15 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.media.session.MediaButtonReceiver;
 
 import com.ixuea.courses.mymusic.AppContext;
 import com.ixuea.courses.mymusic.MainActivity;
@@ -33,7 +27,7 @@ import io.rong.imlib.model.Conversation;
 public class NotificationUtil {
     private static final String CHANNEL_ID_DEFAULT = "CHANNEL_ID_DEFAULT";
     private static final String CHANNEL_ID_MESSAGE = "CHANNEL_ID_MESSAGE";
-    private static final String CHANNEL_ID_MUSIC = "CHANNEL_ID_MUSIC";
+    public static final String CHANNEL_ID_MUSIC = "CHANNEL_ID_MUSIC";
     private static NotificationManager notificationManager;
 
     /**
@@ -158,74 +152,6 @@ public class NotificationUtil {
                 .build();
 
         //返回
-        return notification;
-    }
-
-    /**
-     * 创建媒体通知
-     *
-     * @param isPlaying
-     * @return
-     */
-    public static Notification createMusicNotification(Context context, boolean isPlaying, boolean isShowLyric, MediaSessionCompat mediaSession) {
-        MediaControllerCompat controller = mediaSession.getController();
-        MediaMetadataCompat mediaMetadata = controller.getMetadata();
-        if (mediaMetadata == null) {
-            return null;
-        }
-
-        //获取管理器
-        getNotificationManager();
-
-        //创建通知渠道
-        createNotificationChannel(CHANNEL_ID_MUSIC, context.getString(R.string.channel_music),NotificationManager.IMPORTANCE_LOW);
-
-        //媒体描述对象
-        MediaDescriptionCompat description = mediaMetadata.getDescription();
-
-        //创建通知
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_MUSIC);
-
-        builder
-                //标题
-                .setContentTitle(description.getTitle())
-
-                //文本
-                .setContentText(description.getSubtitle())
-
-                //子文本
-                .setSubText(description.getDescription())
-
-                //大图标
-                .setLargeIcon(description.getIconBitmap())
-
-                //点击通知后操作
-                .setContentIntent(IntentUtil.createMainActivityPendingIntent(context, Constant.ACTION_MUSIC_PLAYER_PAGE))
-
-                // 公开可见性
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-                // 小图标
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setColor(ContextCompat.getColor(context, R.color.primary))
-
-                //添加按钮
-                .addAction(new NotificationCompat.Action(android.R.drawable.ic_media_previous, "previous", MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)))
-                .addAction(new NotificationCompat.Action(isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_PLAY_PAUSE)))
-                .addAction(new NotificationCompat.Action(android.R.drawable.ic_media_next, "next", MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)))
-                .addAction(new NotificationCompat.Action(isShowLyric ? R.drawable.ic_lyric : R.drawable.ic_lyric_selected, "lyric", IntentUtil.createMainActivityPendingIntent(context, Constant.ACTION_LYRIC)))
-
-                //设置样式
-                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                        //设置媒体会话信息，设置后，例如：拖拽进度条就自动回调onSeekTo方法
-                        .setMediaSession(mediaSession.getSessionToken())
-
-                        //紧凑试图，显示那些按钮
-                        .setShowActionsInCompactView(1)
-                );
-
-        Notification notification = builder.build();
-
         return notification;
     }
 

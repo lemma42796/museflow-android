@@ -11,7 +11,7 @@ import com.ixuea.courses.mymusic.manager.MusicPlayerListener;
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager;
 import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent;
 import com.ixuea.courses.mymusic.playback.PlaybackRepository;
-import com.ixuea.courses.mymusic.service.MusicPlayerService;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.courses.mymusic.util.Constant;
 import com.ixuea.courses.mymusic.util.DataUtil;
 import com.ixuea.courses.mymusic.util.LiteORMUtil;
@@ -53,7 +53,7 @@ public class MusicListManagerImpl implements MusicListManager, MusicPlayerListen
         this.context = context.getApplicationContext();
 
         //初始化音乐播放管理器
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(this.context);
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(this.context);
         playbackRepository = PlaybackRepository.getInstance(this.context);
 
         musicPlayerManager.addMusicPlayerListener(this);

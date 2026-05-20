@@ -9,7 +9,7 @@ import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.ActivitySimplePlayerBinding
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.PlayListUtil
 import com.ixuea.courses.mymusic.util.SuperDateUtil
 
@@ -33,7 +33,7 @@ class SimplePlayerActivity :
 
     override fun initDatum() {
         super.initDatum()
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(applicationContext)
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
 
         adapter = SimplePlayerAdapter(android.R.layout.simple_list_item_1)
         binding.list.adapter = adapter

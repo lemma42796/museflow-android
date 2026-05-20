@@ -7,7 +7,7 @@ import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity;
 import com.ixuea.courses.mymusic.component.player.activity.MusicPlayerActivity;
 import com.ixuea.courses.mymusic.manager.MusicListManager;
 import com.ixuea.courses.mymusic.manager.impl.GlobalLyricManagerImpl;
-import com.ixuea.courses.mymusic.service.MusicPlayerService;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.courses.mymusic.util.LiteORMUtil;
 import com.ixuea.courses.mymusic.util.PreferenceUtil;
 import com.ixuea.courses.mymusic.util.ServiceUtil;
@@ -162,7 +162,7 @@ public class BaseLogicActivity extends BaseCommonActivity {
      * @return
      */
     protected MusicListManager getMusicListManager() {
-        return MusicPlayerService.getListManager(getApplicationContext());
+        return PlaybackService.getListManager(getApplicationContext());
     }
 
     @Override

@@ -12,11 +12,10 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.IntentUtil
 import com.ixuea.courses.mymusic.util.ResourceUtil
-import com.ixuea.courses.mymusic.util.ServiceUtil
 
 /**
  * 音乐桌面微件
@@ -31,8 +30,7 @@ class MusicWidget : AppWidgetProvider() {
     ) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
 
-        ServiceUtil.startService(context.applicationContext, MusicPlayerService::class.java)
-        val musicListManager = MusicPlayerService.getListManager(context.applicationContext)
+        val musicListManager = PlaybackService.getListManager(context.applicationContext)
         val data = musicListManager.data
 
         appWidgetIds.forEach { appWidgetId ->
@@ -41,19 +39,19 @@ class MusicWidget : AppWidgetProvider() {
                 context,
                 Constant.ACTION_MUSIC_PLAYER_PAGE,
             )
-            val previousPendingIntent = IntentUtil.createMusicPlayerServicePendingIntent(
+            val previousPendingIntent = IntentUtil.createPlaybackServicePendingIntent(
                 context,
                 Constant.ACTION_PREVIOUS,
             )
-            val playPendingIntent = IntentUtil.createMusicPlayerServicePendingIntent(
+            val playPendingIntent = IntentUtil.createPlaybackServicePendingIntent(
                 context,
                 Constant.ACTION_PLAY,
             )
-            val nextPendingIntent = IntentUtil.createMusicPlayerServicePendingIntent(
+            val nextPendingIntent = IntentUtil.createPlaybackServicePendingIntent(
                 context,
                 Constant.ACTION_NEXT,
             )
-            val lyricPendingIntent = IntentUtil.createMusicPlayerServicePendingIntent(
+            val lyricPendingIntent = IntentUtil.createPlaybackServicePendingIntent(
                 context,
                 Constant.ACTION_LYRIC,
             )

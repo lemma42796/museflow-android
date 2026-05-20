@@ -6,7 +6,7 @@ import com.ixuea.courses.mymusic.R;
 import com.ixuea.courses.mymusic.activity.BaseLogicActivity;
 import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity;
 import com.ixuea.courses.mymusic.manager.MusicListManager;
-import com.ixuea.courses.mymusic.service.MusicPlayerService;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.courses.mymusic.util.LiteORMUtil;
 import com.ixuea.courses.mymusic.util.PreferenceUtil;
 import com.ixuea.courses.mymusic.view.PlaceholderView;
@@ -70,7 +70,7 @@ public abstract class BaseLogicFragment extends BaseCommonFragment {
      * @return
      */
     protected MusicListManager getMusicListManager() {
-        return MusicPlayerService.getListManager(getHostActivity().getApplicationContext());
+        return PlaybackService.getListManager(getHostActivity().getApplicationContext());
     }
 
     @Override

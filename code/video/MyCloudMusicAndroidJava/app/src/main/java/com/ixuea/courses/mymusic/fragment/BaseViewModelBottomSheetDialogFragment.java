@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 
 import com.ixuea.courses.mymusic.manager.MusicListManager;
-import com.ixuea.courses.mymusic.service.MusicPlayerService;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.superui.reflect.ReflectUtil;
 
 
@@ -45,6 +45,6 @@ public class BaseViewModelBottomSheetDialogFragment<VB extends ViewBinding> exte
      * @return
      */
     protected MusicListManager getMusicListManager() {
-        return MusicPlayerService.getListManager(getActivity().getApplicationContext());
+        return PlaybackService.getListManager(getActivity().getApplicationContext());
     }
 }

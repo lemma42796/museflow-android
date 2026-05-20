@@ -27,7 +27,7 @@ import com.ixuea.courses.mymusic.databinding.ActivityMusicPlayerBinding
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.FileUtil
 import com.ixuea.courses.mymusic.util.PlayListUtil
 import com.ixuea.courses.mymusic.util.ResourceUtil
@@ -156,7 +156,7 @@ class MusicPlayerActivity :
 
     override fun initDatum() {
         super.initDatum()
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(applicationContext)
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
         downloadActionsUseCase = DownloadActionsUseCase()
 
         binding.record.initAdapter(hostActivity)

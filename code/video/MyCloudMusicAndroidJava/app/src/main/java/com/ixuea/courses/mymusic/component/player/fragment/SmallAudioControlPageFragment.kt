@@ -12,7 +12,7 @@ import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
@@ -76,7 +76,7 @@ class SmallAudioControlPageFragment :
 
     override fun initDatum() {
         super.initDatum()
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(
             AppContext.getInstance().applicationContext
         )
 

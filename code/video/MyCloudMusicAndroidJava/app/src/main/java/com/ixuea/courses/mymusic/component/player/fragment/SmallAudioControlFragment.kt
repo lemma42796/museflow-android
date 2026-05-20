@@ -7,7 +7,7 @@ import com.ixuea.courses.mymusic.databinding.FragmentAudioControlBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
-import com.ixuea.courses.mymusic.service.MusicPlayerService
+import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.ImageUtil
 import com.ixuea.courses.mymusic.util.LyricUtil
@@ -34,7 +34,7 @@ class SmallAudioControlFragment :
         ImageUtil.show(hostActivity, binding.icon, data.icon)
         binding.title.text = data.title
 
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(
             hostActivity.applicationContext
         )
     }

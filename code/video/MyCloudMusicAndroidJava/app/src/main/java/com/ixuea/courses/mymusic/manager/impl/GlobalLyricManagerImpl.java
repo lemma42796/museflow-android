@@ -19,7 +19,7 @@ import com.ixuea.courses.mymusic.manager.GlobalLyricManager;
 import com.ixuea.courses.mymusic.manager.MusicListManager;
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener;
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager;
-import com.ixuea.courses.mymusic.service.MusicPlayerService;
+import com.ixuea.courses.mymusic.playback.PlaybackService;
 import com.ixuea.courses.mymusic.util.Constant;
 import com.ixuea.courses.mymusic.util.NotificationUtil;
 import com.ixuea.courses.mymusic.util.PreferenceUtil;
@@ -55,7 +55,6 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
      */
     private GlobalLyricView globalLyricView;
     private BroadcastReceiver unlockGlobalLyricBroadcastReceiver;
-    private GlobalLyricView.GlobalLyricOtherListener globalLyricOtherListener;
 
     public GlobalLyricManagerImpl(Context context) {
         this.context = context.getApplicationContext();
@@ -64,7 +63,7 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
         sp = PreferenceUtil.getInstance(this.context);
 
         //初始化音乐播放管理器
-        musicPlayerManager = MusicPlayerService.getMusicPlayerManager(this.context);
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(this.context);
 
         //添加播放监听器
         musicPlayerManager.addMusicPlayerListener(this);
@@ -299,7 +298,12 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
             //设置歌词view监听器
             globalLyricView.setGlobalLyricListener(this);
 
-            globalLyricView.setGlobalLyricOtherListener(globalLyricOtherListener);
+            globalLyricView.setGlobalLyricOtherListener(new GlobalLyricView.GlobalLyricOtherListener() {
+                @Override
+                public void closeLyric() {
+                    hide();
+                }
+            });
         }
 
         if (globalLyricView.getParent() == null) {
@@ -348,7 +352,7 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
      * @return
      */
     protected MusicListManager getMusicListManager() {
-        return MusicPlayerService.getListManager(context);
+        return PlaybackService.getListManager(context);
     }
 
     //region 播放管理器回调
@@ -415,10 +419,6 @@ public class GlobalLyricManagerImpl implements GlobalLyricManager, MusicPlayerLi
      */
     private void updateView() {
         windowManager.updateViewLayout(globalLyricView, layoutParams);
-    }
-
-    public void setGlobalLyricOtherListener(GlobalLyricView.GlobalLyricOtherListener globalLyricOtherListener) {
-        this.globalLyricOtherListener = globalLyricOtherListener;
     }
 
     @Override

@@ -2,14 +2,28 @@ package com.ixuea.courses.mymusic.playback
 
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.annotation.OptIn
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.manager.MusicListManager
 import timber.log.Timber
 
+@OptIn(UnstableApi::class)
 class LegacyMusicSessionPlayer(
     player: Player,
     private val musicListManager: MusicListManager
 ) : ForwardingPlayer(player) {
+    override fun getAvailableCommands(): Player.Commands {
+        return super.getAvailableCommands()
+            .buildUpon()
+            .add(Player.COMMAND_PLAY_PAUSE)
+            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+            .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+            .add(Player.COMMAND_SEEK_TO_NEXT)
+            .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+            .build()
+    }
+
     override fun play() {
         if (musicListManager.data == null && musicListManager.datum.isEmpty()) {
             return

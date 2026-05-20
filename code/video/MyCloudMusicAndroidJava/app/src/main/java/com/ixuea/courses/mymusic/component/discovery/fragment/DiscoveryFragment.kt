@@ -1,6 +1,5 @@
 package com.ixuea.courses.mymusic.component.discovery.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.Lifecycle
@@ -25,7 +24,6 @@ import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.FragmentDiscoveryBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity
-import com.ixuea.courses.mymusic.service.MusicPlayerService
 import com.ixuea.superui.util.SuperDelayUtil
 import com.youth.banner.listener.OnBannerListener
 import kotlinx.coroutines.launch
@@ -153,8 +151,6 @@ class DiscoveryFragment :
 
     override fun onSongMoreClick() {
         Log.d(TAG, "onSongMoreClick")
-        val intent = Intent(hostActivity, MusicPlayerService::class.java)
-        hostActivity.startService(intent)
     }
 
     override fun onSongClick(data: Song) {
