@@ -56,6 +56,8 @@
 - 歌单详情页 `SheetDetailActivity` 已从 Java 迁到 Kotlin，详情加载、收藏和取消收藏已推进到 `SheetDetailViewModel(StateFlow) -> Sheet UseCase -> SheetRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
 - 评论页 `CommentActivity` 已从 Java 迁到 Kotlin，评论分页加载、创建评论、点赞和取消点赞已推进到 `CommentViewModel(StateFlow) -> Comment UseCase -> CommentRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
 - 评论列表 `CommentAdapter`、评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
+- 本地音乐扫描链路 `LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicAsyncTask`、`ScanLocalMusicCompleteEvent` 已从 Java 迁到 Kotlin，`component/music` 目录当前不再包含 Java 文件。
+- 动态发布相关位置占位入口、登录占位入口、用户占位入口、桌面 `MusicWidget` 和 Rx `ObserverAdapter` 已从 Java 迁到 Kotlin，旧静态启动入口、Manifest 类名和 Widget PendingIntent 行为保持兼容。
 
 当前尚未完成：
 
@@ -2176,13 +2178,34 @@ GitHub 发布策略：
 
 当前剩余 Java 边界：
 
-- 网络/基础观察层：`component/api/*`、`component/observer/ObserverAdapter.java`。
-- 旧页面/系统入口：`location`、`login/activity/LoginHomeActivity.java`、`music` 本地音乐扫描链路、`user/activity/*`、`widget/MusicWidget.java`。
+- 网络层：`component/api/*`。
 - 歌词自定义 View：`GlobalLyricView.java`、`LyricLineView.java`、`LyricListView.java`。
 
 建议下一刀：
 
-- 优先拆 `music` 本地扫描链路或歌词自定义 View；两者都仍是 Java，但 `Song/User/Lyric` 中心模型已经先完成 Kotlin 化。
+- 优先拆歌词自定义 View，或先把 `component/api` 网络层作为稳定边界继续保留，避免影响所有接口调用。
+
+## 阶段 8 继续：本地音乐和外围入口 Kotlin 收口
+
+用户要求加速完成编码；本轮继续按“小模块直接落地、构建兜底”的方式推进，不做设备端冒烟。
+
+已完成：
+
+- `component/music` 本地音乐扫描链路从 Java 迁到 Kotlin：`LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicAsyncTask`、`ScanLocalMusicCompleteEvent`。
+- 保留本地歌曲列表编辑/删除、排序弹窗、扫描动画、媒体库查询、LiteORM 保存、本地扫描完成 EventBus 通知和跳转播放器行为。
+- `component/location/activity`、`component/login/activity/LoginHomeActivity`、`component/user/activity` 和 `component/widget/MusicWidget` 从 Java 迁到 Kotlin，继续保留 public slim 占位页立即 `finish()` 的行为、用户页静态启动入口和桌面 Widget 控制 PendingIntent。
+- `component/observer/ObserverAdapter` 从 Java 迁到 Kotlin，保留 Rx `Observer` 空实现。
+
+验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component/music app/src/main/java/com/ixuea/courses/mymusic/component/location app/src/main/java/com/ixuea/courses/mymusic/component/login/activity app/src/main/java/com/ixuea/courses/mymusic/component/user/activity app/src/main/java/com/ixuea/courses/mymusic/component/widget app/src/main/java/com/ixuea/courses/mymusic/component/observer -type f -name '*.java' -print` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有/保留的 deprecated API、AsyncTask 迁移后的 Kotlin deprecated warning、BGABadge 非增量注解处理提示。
+
+当前剩余 Java 边界：
+
+- `component/api/*` 网络层仍是 Java，当前先作为稳定边界保留。
+- 歌词自定义 View `GlobalLyricView.java`、`LyricLineView.java`、`LyricListView.java` 仍是 Java，下一刀可继续拆。
 
 ## 最新交接
 
