@@ -83,6 +83,51 @@
 
 ## 最新执行记录
 
+### 2026-05-20 音乐功能快速 smoke
+
+本轮验证：
+
+- 设备：Android Emulator `emulator-5554`。
+- APK：`app/build/outputs/apk/dev/debug/app-dev-debug.apk`，使用 `devDebug` smoke 入口进入发现页。
+- 发现页滚动到 `推荐单曲` 后，点击 `Yesterday / Leona Lewis`。
+- 点歌后前台成功进入 `com.ixuea.courses.mymusic/.component.player.activity.MusicPlayerActivity`，App 进程存活。
+- `dumpsys media_session` 显示 `androidx.media3.session.id.MyCloudMusicPlayback`，metadata 为 `Yesterday`，queue size 为 `1`。
+- 播放状态进入 `PLAYING(3)`，进度从约 `45ms` 推进到约 `12s`，后续采样从约 `71.9s` 推进到约 `90.1s`，确认不是只打开页面，而是实际播放在推进。
+- 点击播放器中间播放/暂停按钮后，MediaSession 进入 `PAUSED(2)`，位置约 `62.8s`；再次点击后恢复 `PLAYING(3)`。
+- 按 Home 后前台回到 Launcher，MediaSession 仍保持 `PLAYING(3)`，位置约 `126.2s`，后台播放通过。
+- `dumpsys notification --noredact` 显示音乐通知 id `100` 存在，category 为 `transport`，标题 `Yesterday`，文本 `Leona Lewis`，包含 previous / Pause / next / lyric 四个 action。
+- `logcat -b crash -d` 无输出，本轮未发现 App crash buffer 记录。
+
+收尾：
+
+- 已通过 `KEYCODE_MEDIA_PLAY_PAUSE` 暂停后台播放，最终 MediaSession 为 `PAUSED(2)`，位置约 `148.9s`。
+
+### 2026-05-20 快速模拟器 smoke：public slim APK 启动边界
+
+本轮验证：
+
+- 设备：Android Emulator `emulator-5554`，`sys.boot_completed=1`。
+- APK：复用现有 `app/build/outputs/apk/dev/debug/app-dev-debug.apk`，本轮未重新构建。
+- 首次 `adb install -r` 因模拟器内旧包签名不一致失败：`INSTALL_FAILED_UPDATE_INCOMPATIBLE`；已卸载旧 `com.ixuea.courses.mymusic` 后重新安装成功，模拟器内该 App 本地数据已被清空。
+- 显式启动 `com.ixuea.courses.mymusic/.MainActivity` 成功，冷启动 `Status: ok`，`TotalTime: 1000ms`。
+- 前台窗口停留在 `com.ixuea.courses.mymusic/.MainActivity`，App 进程存活，pid 为 `8417`。
+- UI 层级显示 `MuseFlow Android public slim build`，说明当前分支/产物的 launcher 是 public slim 占位壳，不是完整业务主界面。
+- `logcat -b crash -d` 无输出；本轮未发现 App crash buffer 记录。
+
+边界结论：
+
+- 本轮只能证明当前 public slim APK 可安装、可启动并停留在占位 `MainActivity`，不能覆盖发现、下载、聊天、播放等真实业务链路。
+- 尝试通过 `run-as com.ixuea.courses.mymusic am start ...DownloadActivity` 启动非 exported 保留 Activity 仍失败，错误为 `SecurityException: package=com.android.shell does not belong to uid=10218`。后续若要做深层入口 smoke，需要恢复可导航的完整主界面、增加仅 debug 的测试入口，或使用 instrumentation/应用内导航来启动非 exported 页面。
+
+解决方案：
+
+- 已新增 `app/src/devDebug` 专用 smoke 入口，不改 `main` manifest，也不把业务 Activity 改成 exported。
+- 新增 `SmokeLauncherActivity`，可通过 `adb shell am start -W -n com.ixuea.courses.mymusic/.debug.SmokeLauncherActivity` 打开，仅进入 `devDebug` APK。
+- 新增 `SmokeFragmentHostActivity`，用于承载发现页和动态页这种原本依赖主界面 tab 的 Fragment。
+- `./gradlew :app:assembleDevDebug` 通过，重新安装 APK 后 `SmokeLauncherActivity` 冷启动成功，前台窗口为 `.debug.SmokeLauncherActivity`。
+- 从 smoke 入口点击 `DownloadActivity` 后，前台窗口成功进入 `.component.download.activity.DownloadActivity`，App 进程存活，crash buffer 无输出。
+- 从 smoke 入口点击 `Discovery fragment` 后，前台窗口成功进入 `.debug.SmokeFragmentHostActivity`，UI 层级显示发现页内容，例如 `每日推荐`、`推荐歌单`、`私人FM`，App 进程存活，crash buffer 无输出。
+
 ### 2026-05-20 阶段 8 继续：公共边界和工具类 Kotlin 收口
 
 本轮决策：

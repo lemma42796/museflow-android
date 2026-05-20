@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".debug.SmokeFragmentHostActivity"
+            android:exported="false"
+            android:label="Smoke Host"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+
+        <activity
+            android:name=".debug.SmokeLauncherActivity"
+            android:exported="true"
+            android:label="Smoke Launcher"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+    </application>
+</manifest>
