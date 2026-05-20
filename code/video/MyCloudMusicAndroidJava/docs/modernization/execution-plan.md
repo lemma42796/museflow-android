@@ -58,6 +58,12 @@
 - 评论列表 `CommentAdapter`、评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
 - 本地音乐扫描链路 `LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicAsyncTask`、`ScanLocalMusicCompleteEvent` 已从 Java 迁到 Kotlin，`component/music` 目录当前不再包含 Java 文件。
 - 动态发布相关位置占位入口、登录占位入口、用户占位入口、桌面 `MusicWidget` 和 Rx `ObserverAdapter` 已从 Java 迁到 Kotlin，旧静态启动入口、Manifest 类名和 Widget PendingIntent 行为保持兼容。
+- 网络层 `DefaultService`、`HttpObserver`、`NetworkModule`、`NetworkSecurityInterceptor` 已从 Java 迁到 Kotlin，继续保留 Retrofit/Rx/OkHttp/Hilt 调用面。
+- 歌词自定义 View `LyricLineView`、`LyricListView`、`GlobalLyricView` 已从 Java 迁到 Kotlin，播放器歌词列表和桌面歌词监听接口继续保持兼容；`component` 目录当前不再包含 Java 文件。
+- 公共模型 `Base`/`BaseId`/`Common`/`Resource`、response 包 `BaseResponse`/`DetailResponse`/`ListResponse`/`Meta`、response exception 和 `BaseMultiItemEntity` 已从 Java 迁到 Kotlin，继续保留旧 getter/setter/bean 调用面。
+- 播放列表/歌词 manager 接口 `GlobalLyricManager`、`MusicListManager`、`MusicPlayerManager` 和播放列表事件已从 Java 迁到 Kotlin；`MusicPlayerListener` 暂留 Java 以保留默认方法对 Java 实现类的兼容性。
+- 公共 adapter/view/config 边界 `TextWatcherAdapter`、`OnPageChangeListenerAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已从 Java 迁到 Kotlin；`BadgeInit` 暂留 Java，因为 `BGABadgeView-Android` 旧注解处理器需要 Java 源生成 `BGABadgeImageView/TextView`。
+- 小型工具类 `TextUtil`、`Base64Util`、`SaltUtil`、`SHAUtil`、`ListUtil`、`SizeUtil`、`ScreenUtil`、`SuperTextUtil` 已从 Java 迁到 Kotlin，并通过 `@JvmStatic`/`fun interface` 保持 Java 静态调用和 lambda 调用兼容。
 
 当前尚未完成：
 
@@ -76,6 +82,34 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-20 阶段 8 继续：公共边界和工具类 Kotlin 收口
+
+本轮决策：
+
+- 用户要求继续编码，并明确不要每次改完就 push；编码阶段只保留本地代码和文档改动，交接阶段在用户明确要求后再提交并 push。
+- 在 `component` 目录清零 Java 后，继续清理外围公共边界，优先选择模型、response、exception、manager 接口、adapter/view/config 和小型 util。
+- 不迁移 `BadgeInit` 和 `MusicPlayerListener`：前者受旧 Java annotation processor 约束，后者含默认方法且 Java 实现类较多，先保留以降低风险。
+
+本轮代码变更：
+
+- `component/api` 网络层、歌词自定义 View 和 `component` 目录剩余 Java 已完成 Kotlin 化。
+- 公共 model/response/exception、`BaseMultiItemEntity` 和播放列表/歌词 manager 接口已迁到 Kotlin，并适配调用点的可空字段和 `MusicListManager.datum` 非空列表语义。
+- `TextWatcherAdapter`、`OnPageChangeListenerAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已迁到 Kotlin。
+- `TextUtil`、`Base64Util`、`SaltUtil`、`SHAUtil`、`ListUtil`、`SizeUtil`、`ScreenUtil`、`SuperTextUtil` 已迁到 Kotlin，保留 Java 静态工具调用和 Java lambda 调用兼容。
+- `BadgeInit` 曾尝试迁到 Kotlin，但编译证实 `BGABadgeView-Android:compiler:1.2.0` 只从 Java annotation processor 生成绑定类，因此恢复为 Java 并作为已知保留边界。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 deprecated API、`FragmentStatePagerAdapter` deprecated、AsyncTask deprecated 和 BGABadge 非增量注解处理器提示。
+- `rg --files -g '*.java' app/src/main/java/com/ixuea/courses/mymusic/component` 无输出，`component` 目录当前不再包含 Java。
+- 本轮未做设备端冒烟；交接阶段按用户明确要求提交并 push 到 `codex/emulator-smoke-progress`。
+
+下个会话建议：
+
+- 继续清 Java 时，优先选择剩余中等风险的 util 或 adapter：`BaseRecyclerViewAdapter`、`BasePagingDataAdapter`、`PlayListUtil`、`ResourceUtil`、`IntentUtil` 等。
+- 暂缓 `Base*Activity/Fragment`、`DefaultRepository`、manager impl、`MusicPlayerService` 和 `MainActivity`，这些会牵动更大运行时边界。
 
 ### 2026-05-20 阶段 8 继续：评论模块剩余 Java 清理
 
@@ -2204,8 +2238,31 @@ GitHub 发布策略：
 
 当前剩余 Java 边界：
 
-- `component/api/*` 网络层仍是 Java，当前先作为稳定边界保留。
-- 歌词自定义 View `GlobalLyricView.java`、`LyricLineView.java`、`LyricListView.java` 仍是 Java，下一刀可继续拆。
+- `component` 目录当前不再包含 Java 文件。
+- 工程外围仍有 Java 基类、manager、repository、util、model/response 等公共边界，下一刀可继续按“先小公共类、再高风险核心”的顺序推进。
+
+## 阶段 8 继续：component 剩余 Java 清零
+
+用户要求继续编码；本轮只做本地代码推进，不提交、不 push。
+
+已完成：
+
+- `component/api` 网络层从 Java 迁到 Kotlin：`DefaultService`、`HttpObserver`、`NetworkModule`、`NetworkSecurityInterceptor`。
+- 保留 Retrofit 注解接口、Rx `HttpObserver` 构造器、Hilt `@Module/@Provides` 静态 Java 调用面、OkHttp 签名/加密/解密拦截行为。
+- `NetworkSecurityInterceptor` 迁移时把请求方式判断收敛为 Kotlin 值比较，并保留 request/response body 读取逻辑。
+- 歌词自定义 View 从 Java 迁到 Kotlin：`LyricLineView`、`LyricListView`、`GlobalLyricView`。
+- `LyricLineView` 增加逐字歌词数组、时长和索引的边界保护；`LyricListView` 增加拖拽选中行的边界保护；`GlobalLyricView` 增加监听器/歌词空值保护。
+
+验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic/component -type f -name '*.java' | sort` 无输出。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 Java deprecated/unchecked 和 BGABadge 非增量注解处理提示。
+
+当前剩余 Java 边界：
+
+- `component` 目录已经清零 Java。
+- 下一刀可以继续清 `model/response`、小 exception、adapter 基类、manager 接口等外围公共 Java；`DefaultRepository`、`Base*Activity/Fragment`、大型 util 先按风险排后处理。
 
 ## 最新交接
 

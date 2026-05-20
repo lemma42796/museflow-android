@@ -44,7 +44,9 @@ class SongAdapter @JvmOverloads constructor(
             SuperDialog.newInstance(manager)
                 .setTitleRes(R.string.confirm_delete)
                 .setOnClickListener {
-                    val downloadInfo = downloadActionsUseCase.getDownloadById(data.id)
+                    val downloadInfo = data.id?.let { songId ->
+                        downloadActionsUseCase.getDownloadById(songId)
+                    }
                     if (downloadInfo != null) {
                         downloadActionsUseCase.remove(downloadInfo)
                     } else {
@@ -61,7 +63,7 @@ class SongAdapter @JvmOverloads constructor(
     }
 
     private fun bindDownloadStatus(holder: BaseViewHolder, data: Song) {
-        val downloadInfo = downloadActionsUseCase.getDownloadById(data.id)
+        val downloadInfo = data.id?.let { songId -> downloadActionsUseCase.getDownloadById(songId) }
         holder.setGone(
             R.id.download,
             downloadInfo == null || downloadInfo.status != DownloadInfo.STATUS_COMPLETED,

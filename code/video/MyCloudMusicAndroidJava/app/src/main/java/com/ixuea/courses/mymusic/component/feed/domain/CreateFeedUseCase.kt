@@ -19,7 +19,7 @@ class CreateFeedUseCase(
                     if (response.isSucceeded()) {
                         continuation.resume(Result.Success)
                     } else {
-                        continuation.resume(Result.Error(response.getMessage(), null))
+                        continuation.resume(Result.Error(response.message, null))
                     }
                 },
                 { error ->

@@ -95,8 +95,14 @@ class CommentViewModel(
         }
 
         viewModelScope.launch {
+            val commentId = comment.id
+            if (commentId.isNullOrBlank()) {
+                publishError(null, null, isLikeUpdating = false)
+                return@launch
+            }
+
             if (comment.isLiked) {
-                when (val result = cancelCommentLike(comment.id)) {
+                when (val result = cancelCommentLike(commentId)) {
                     is CancelCommentLikeUseCase.Result.Success -> {
                         comment.likeId = null
                         comment.likesCount = (comment.likesCount - 1).coerceAtLeast(0)
@@ -110,7 +116,7 @@ class CommentViewModel(
                     )
                 }
             } else {
-                when (val result = likeComment(comment.id)) {
+                when (val result = likeComment(commentId)) {
                     is LikeCommentUseCase.Result.Success -> {
                         comment.likeId = result.likeId
                         comment.likesCount = comment.likesCount + 1

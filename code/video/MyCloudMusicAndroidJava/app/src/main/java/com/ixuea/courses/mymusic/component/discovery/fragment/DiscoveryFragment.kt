@@ -160,7 +160,7 @@ class DiscoveryFragment :
     override fun onSongClick(data: Song) {
         Log.d(TAG, "onSongClick: ${data.title}")
 
-        musicListManager.setDatum(listOf(data))
+        musicListManager.datum = listOf(data)
         musicListManager.play(data)
 
         (hostActivity as BaseLogicActivity).startMusicPlayerActivity()

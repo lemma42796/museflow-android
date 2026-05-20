@@ -99,7 +99,7 @@ class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
 
     private fun play(position: Int) {
         val data = adapter.getItem(position)
-        musicListManager.setDatum(adapter.data)
+        musicListManager.datum = adapter.data
         musicListManager.play(data)
         startMusicPlayerActivity()
     }

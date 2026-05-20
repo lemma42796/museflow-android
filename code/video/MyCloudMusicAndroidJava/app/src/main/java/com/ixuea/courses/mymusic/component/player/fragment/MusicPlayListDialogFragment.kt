@@ -59,7 +59,7 @@ class MusicPlayListDialogFragment :
         }
 
         adapter.setOnItemClickListener { _, _, position ->
-            val songs = musicListManager.datum ?: return@setOnItemClickListener
+            val songs = musicListManager.datum
             if (position !in songs.indices) {
                 return@setOnItemClickListener
             }
@@ -104,7 +104,7 @@ class MusicPlayListDialogFragment :
     }
 
     private fun removeItem(position: Int) {
-        val songs = musicListManager.datum ?: return
+        val songs = musicListManager.datum
         if (position !in songs.indices) {
             adapter.notifyDataSetChanged()
             return
@@ -123,7 +123,7 @@ class MusicPlayListDialogFragment :
     }
 
     private fun showCount() {
-        val count = musicListManager.datum?.size ?: 0
+        val count = musicListManager.datum.size
         binding.count.text = "($count)"
     }
 

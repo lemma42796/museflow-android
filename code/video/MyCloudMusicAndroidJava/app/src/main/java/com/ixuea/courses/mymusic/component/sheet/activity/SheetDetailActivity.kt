@@ -112,7 +112,7 @@ class SheetDetailActivity :
         }
 
         val song = adapter.getItem(position)
-        musicListManager.setDatum(adapter.data)
+        musicListManager.datum = adapter.data
         musicListManager.play(song)
         startMusicPlayerActivity()
     }

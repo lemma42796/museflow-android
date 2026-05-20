@@ -87,7 +87,7 @@ class FeedAdapter(layoutResId: Int) : BaseQuickAdapter<Feed, BaseViewHolder>(lay
 
         val adapter = ImageAdapter(R.layout.item_image)
         adapter.setOnItemClickListener { _, _, position ->
-            val results = medias.map { it.uri }
+            val results = medias.map { it.uri.orEmpty() }
             listener?.onImageClick(listView, results, position)
         }
         listView.adapter = adapter

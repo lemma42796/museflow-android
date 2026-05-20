@@ -17,10 +17,10 @@ class LoadFeedListUseCase(
                     }
 
                     if (response.isSucceeded()) {
-                        val feeds = response.getData()?.getData().orEmpty()
+                        val feeds = response.data?.data.orEmpty()
                         continuation.resume(Result.Success(feeds))
                     } else {
-                        continuation.resume(Result.Error(response.getMessage(), null))
+                        continuation.resume(Result.Error(response.message, null))
                     }
                 },
                 { error ->

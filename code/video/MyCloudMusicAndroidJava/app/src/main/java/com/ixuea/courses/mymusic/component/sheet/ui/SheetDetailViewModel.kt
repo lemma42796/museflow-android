@@ -63,13 +63,19 @@ class SheetDetailViewModel(
         }
 
         viewModelScope.launch {
+            val sheetId = sheet.id
+            if (sheetId.isNullOrBlank()) {
+                publishError(null, null)
+                return@launch
+            }
+
             if (sheet.isCollect) {
-                when (val result = deleteSheetCollect(sheet.id)) {
+                when (val result = deleteSheetCollect(sheetId)) {
                     is DeleteSheetCollectUseCase.Result.Success -> publishCollectDeleted(sheet)
                     is DeleteSheetCollectUseCase.Result.Error -> publishError(result.message, result.error)
                 }
             } else {
-                when (val result = collectSheet(sheet.id)) {
+                when (val result = collectSheet(sheetId)) {
                     is CollectSheetUseCase.Result.Success -> publishCollected(sheet)
                     is CollectSheetUseCase.Result.Error -> publishError(result.message, result.error)
                 }

@@ -18,10 +18,10 @@ class UploadFeedImagesUseCase(
                     }
 
                     if (response.isSucceeded()) {
-                        val resources = response.getData()?.getData().orEmpty()
+                        val resources = response.data?.data.orEmpty()
                         continuation.resume(Result.Success(resources))
                     } else {
-                        continuation.resume(Result.Error(response.getMessage(), null))
+                        continuation.resume(Result.Error(response.message, null))
                     }
                 },
                 { error ->

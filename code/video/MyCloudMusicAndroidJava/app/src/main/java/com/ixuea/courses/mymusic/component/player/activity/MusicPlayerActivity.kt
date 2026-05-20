@@ -100,7 +100,7 @@ class MusicPlayerActivity :
     }
 
     private fun currentRecordSong(): Song? {
-        val songs = musicListManager.datum.orEmpty()
+        val songs = musicListManager.datum
         val currentItem = binding.record.binding.list.currentItem
         return songs.getOrNull(currentItem)
     }
@@ -144,7 +144,7 @@ class MusicPlayerActivity :
             }
         }
 
-        if (musicListManager.datum.orEmpty().isEmpty()) {
+        if (musicListManager.datum.isEmpty()) {
             finish()
         }
     }
@@ -227,7 +227,7 @@ class MusicPlayerActivity :
     }
 
     private fun resolveAdjacentSong(isPrevious: Boolean): Song? {
-        val songs = musicListManager.datum.orEmpty()
+        val songs = musicListManager.datum
         if (songs.isEmpty()) {
             return null
         }
@@ -340,7 +340,7 @@ class MusicPlayerActivity :
      * 选中当前音乐
      */
     private fun scrollPosition() {
-        val index = musicListManager.datum.orEmpty().indexOf(currentSong())
+        val index = musicListManager.datum.indexOf(currentSong())
         binding.record.scrollPosition(index)
     }
 
@@ -436,7 +436,7 @@ class MusicPlayerActivity :
         toolbar.subtitle = data.singer?.nickname.orEmpty()
         loadBackground(data)
 
-        downloadInfo = downloadActionsUseCase.getDownloadById(data.id)
+        downloadInfo = data.id?.let { songId -> downloadActionsUseCase.getDownloadById(songId) }
         if (downloadInfo != null) {
             setDownloadCallback()
         }
@@ -474,7 +474,7 @@ class MusicPlayerActivity :
     }
 
     private fun currentSong(): Song? {
-        return musicListManager.data ?: musicListManager.datum.orEmpty().firstOrNull()
+        return musicListManager.data ?: musicListManager.datum.firstOrNull()
     }
 
     override fun onLyricReady(data: Song) {

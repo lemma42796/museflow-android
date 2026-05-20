@@ -42,7 +42,7 @@ class SimplePlayerActivity :
     }
 
     private fun refreshPlaylist() {
-        adapter.setNewInstance(musicListManager.datum.orEmpty().toMutableList())
+        adapter.setNewInstance(musicListManager.datum.toMutableList())
     }
 
     /**
@@ -50,7 +50,7 @@ class SimplePlayerActivity :
      */
     private fun scrollPosition() {
         binding.list.post {
-            val songs = musicListManager.datum.orEmpty()
+            val songs = musicListManager.datum
             val data = musicListManager.data
             val index = songs.indexOf(data)
 
@@ -101,7 +101,7 @@ class SimplePlayerActivity :
     }
 
     private fun resolveAdjacentSong(isPrevious: Boolean): Song? {
-        val songs = musicListManager.datum.orEmpty()
+        val songs = musicListManager.datum
         if (songs.isEmpty()) {
             return null
         }

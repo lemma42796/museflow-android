@@ -44,7 +44,7 @@ class SmallAudioControlPageFragment :
          * 因为要调用scrollPosition方法滚动到当前音乐，用onPageScrollStateChanged不会有这问题
          */
         override fun onPageSelected(position: Int) {
-            val songs = musicListManager.datum ?: return
+            val songs = musicListManager.datum
             if (position !in songs.indices) {
                 return
             }
@@ -60,7 +60,7 @@ class SmallAudioControlPageFragment :
                 return
             }
 
-            val songs = musicListManager.datum ?: return
+            val songs = musicListManager.datum
             val currentItem = binding.list.currentItem
             if (currentItem !in songs.indices) {
                 return
@@ -124,7 +124,7 @@ class SmallAudioControlPageFragment :
         val songs = musicListManager.datum
         adapter.setDatum(songs)
 
-        if (!songs.isNullOrEmpty()) {
+        if (songs.isNotEmpty()) {
             binding.container.visibility = View.VISIBLE
 
             val data = musicListManager.data ?: songs[0]
@@ -182,7 +182,7 @@ class SmallAudioControlPageFragment :
      * 滚动到当前音乐位置
      */
     private fun scrollPosition(data: Song) {
-        val songs = musicListManager.datum ?: return
+        val songs = musicListManager.datum
         val index = songs.indexOf(data)
         if (index != -1) {
             binding.list.setCurrentItem(index, false)

@@ -43,7 +43,7 @@ class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
         adapter.setOnItemClickListener { _, _, position ->
             val data = adapter.getItem(position)
 
-            musicListManager.setDatum(adapter.data)
+            musicListManager.datum = adapter.data
             musicListManager.play(data)
 
             startMusicPlayerActivity()
