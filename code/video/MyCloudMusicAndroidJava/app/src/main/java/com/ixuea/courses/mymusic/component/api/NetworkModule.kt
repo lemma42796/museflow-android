@@ -49,7 +49,7 @@ object NetworkModule {
 
             if (sp.isLogin) {
                 request = request.newBuilder()
-                    .addHeader("Authorization", sp.session)
+                    .addHeader("Authorization", sp.session.orEmpty())
                     .build()
             }
 

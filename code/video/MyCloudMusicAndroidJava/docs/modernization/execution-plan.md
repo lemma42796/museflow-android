@@ -64,6 +64,9 @@
 - 播放列表/歌词 manager 接口 `GlobalLyricManager`、`MusicListManager`、`MusicPlayerManager` 和播放列表事件已从 Java 迁到 Kotlin；`MusicPlayerListener` 暂留 Java 以保留默认方法对 Java 实现类的兼容性。
 - 公共 adapter/view/config 边界 `TextWatcherAdapter`、`OnPageChangeListenerAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已从 Java 迁到 Kotlin；`BadgeInit` 暂留 Java，因为 `BGABadgeView-Android` 旧注解处理器需要 Java 源生成 `BGABadgeImageView/TextView`。
 - 小型工具类 `TextUtil`、`Base64Util`、`SaltUtil`、`SHAUtil`、`ListUtil`、`SizeUtil`、`ScreenUtil`、`SuperTextUtil` 已从 Java 迁到 Kotlin，并通过 `@JvmStatic`/`fun interface` 保持 Java 静态调用和 lambda 调用兼容。
+- 工具类 `MessageUtil`、`LyricUtil`、`WidgetUtil`、`ExceptionHandlerUtil`、`LiteORMUtil`、`SuperDateUtil`、`ImageUtil`、`ImageCompressor` 已从 Java 迁到 Kotlin，保留旧静态调用面、LiteORM 单例入口、Widget 更新入口、图片压缩回调接口和 Glide 图片加载入口。
+- 公共常量/偏好/轻量 manager 和 public slim 入口 `Constant`、`PreferenceUtil`、`MyActivityManager`、`SuperAudioManager`、`UserManager`、`GlideEngine`、`MainActivity` 已从 Java 迁到 Kotlin，保留 Java 静态常量、`getInstance(...)` 单例入口、PictureSelector `ImageEngine` 工厂入口和 Manifest Activity 类名。
+- 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留 `CHANNEL_ID_MUSIC`、简单通知、前台 service 通知、桌面歌词解锁通知和聊天消息通知入口。
 
 当前尚未完成：
 
@@ -82,6 +85,119 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-21 阶段 8 继续：桌面歌词 manager impl Kotlin 收口
+
+本轮决策：
+
+- 在播放 manager impl 收口后，继续处理剩余清单里最后一个中等风险 manager 实现：`GlobalLyricManagerImpl`。
+- 本轮仍不触碰大边界：`DefaultRepository`、`Base*Activity/Fragment`、`AppContext`、`BadgeInit` 和 `MusicPlayerListener`。
+- 保留旧桌面歌词能力的兼容入口，优先让播放服务、基础 Activity 和 Widget 仍通过 `GlobalLyricManagerImpl.getInstance(Context)` 调用。
+
+本轮代码变更：
+
+- `GlobalLyricManagerImpl` 从 Java 迁到 Kotlin，保留 `getInstance(Context)` 静态入口、`GlobalLyricManager` 接口、`MusicPlayerListener` 回调、悬浮窗布局参数、拖拽保存位置、锁定/解锁广播和歌词按钮回调。
+- 桌面歌词显示/隐藏仍同步 `WidgetUtil.onGlobalLyricShowStatusChanged(...)`，解锁通知仍走 `NotificationUtil.showUnlockGlobalLyricNotification(...)` / `clearUnlockGlobalLyricNotification(...)`。
+- Kotlin 化后补齐 nullable view 保护：无桌面歌词 View 时不再直接更新布局或设置播放状态。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；仅新增/保留既有 `TYPE_SYSTEM_ALERT` deprecated、BGABadge 非增量注解处理器和 Java deprecated/unchecked 提示。
+- `rg --files app/src/main/java/com/ixuea/courses/mymusic | rg '\.java$' | wc -l` 显示主包剩余 Java 数为 `17`。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做悬浮窗权限、桌面歌词显示/锁定/解锁、通知按钮或 Widget 联动人工冒烟。
+- 剩余 Java 里 `BadgeInit` 和 `MusicPlayerListener` 是有意保留边界；`AppContext`、`DefaultRepository` 和 `Base*Activity/Fragment` 需要单独切片评估。
+
+### 2026-05-21 阶段 8 继续：播放 manager impl Kotlin 收口
+
+本轮决策：
+
+- 用户要求继续编码；在常量、偏好和通知工具收口后，继续处理播放链路剩余 manager impl。
+- 本轮只迁移旧 `MusicPlayerManager`/`MusicListManager` 的兼容实现，不扩大到 `DefaultRepository`、`Base*Activity/Fragment` 或 `AppContext`。
+- 继续保留 Java 接口/调用方兼容面，优先让旧 UI、Widget、歌词和播放队列仍通过原 manager API 工作。
+
+本轮代码变更：
+
+- `MusicPlayerManagerImpl` 从 Java 迁到 Kotlin，保留 `getInstance(Context)` 静态入口、`MusicPlayerManager` 接口实现、音频焦点回调、监听器分发和旧 `play/pause/resume/seekTo` API。
+- `MusicPlayerManagerImpl` 继续通过 `PlaybackService`/`PlaybackRepository` 承接 Media3 播放桥接，歌词准备完成后仍同步 `PlaybackRepository.updateLyric(...)` 并通知旧 listener。
+- `MusicListManagerImpl` 从 Java 迁到 Kotlin，保留 `MusicListManager` 接口、`getInstance(Context)`/`destroy()` 静态入口、播放列表持久化、循环模式、上一首/下一首、删除歌曲和进度保存逻辑。
+- 播放列表变更继续同步 `PlaybackRepository.setQueue(...)`，删除当前播放歌曲时补齐 Kotlin 空安全判断，避免 nullable `currentSong` 破坏原 Java 语义。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 deprecated API、BGABadge 非增量注解处理器和 Java unchecked/deprecated 提示。
+- `rg --files app/src/main/java/com/ixuea/courses/mymusic | rg '\.java$' | wc -l` 显示主包剩余 Java 数为 `18`。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做播放队列、上一首/下一首、删除当前歌曲、音频焦点或歌词 listener 人工冒烟。
+- `MusicPlayerListener` 仍暂留 Java，用于保留默认方法对 Java 实现类的兼容性。
+- 下一刀继续纯编码时，可评估剩余 manager/工具小边界；`DefaultRepository`、`Base*Activity/Fragment` 和 `AppContext` 仍建议单独切片处理。
+
+### 2026-05-21 阶段 8 继续：常量、偏好和轻量 manager Kotlin 收口
+
+本轮决策：
+
+- 用户要求继续编码；在上一轮 util 收口基础上继续清剩余 Java。
+- 继续避开高风险大边界：`DefaultRepository`、`Base*Activity/Fragment` 和带 `@HiltAndroidApp` 的 `AppContext` 暂缓。
+- `BadgeInit` 仍保留 Java，因为旧 BGABadge annotation processor 依赖 Java 源生成绑定类。
+
+本轮代码变更：
+
+- `Constant` 从 Java 迁到 Kotlin `object`，保留 Java `Constant.X` 静态访问面；`MEDIA_AUDIO_SELECTION` 保留 `@JvmField` 字段访问。
+- `MyActivityManager`、`SuperAudioManager`、`UserManager` 从 Java 迁到 Kotlin，保留 `getInstance(...)` 单例入口；`UserManager.UserListener` 改为 Kotlin `fun interface` 保持 lambda 调用。
+- `PreferenceUtil` 从 Java 迁到 Kotlin 属性封装，继续生成 `getUserId()`、`setUserId(...)`、`isLogin()`、`getSession()` 等 Java 调用面；Kotlin 调用继续使用 `sp.userId`、`sp.isLogin`、`sp.localMusicSortIndex` 等属性。
+- `GlideEngine` 从 Java 迁到 Kotlin，保留 `GlideEngine.createGlideEngine()` PictureSelector 图片加载入口。
+- public slim `MainActivity` 从 Java 迁到 Kotlin，保持 Manifest 类名和占位启动界面。
+- `NetworkModule` 在添加 `Authorization` header 时对 nullable session 使用 `orEmpty()`，补齐 Java 平台类型迁移后暴露出的空值边界。
+- `NotificationUtil` 从 Java 迁到 Kotlin，保留 `CHANNEL_ID_MUSIC`、`notify(...)`、`getServiceForeground(...)`、桌面歌词解锁通知和聊天消息通知入口；Java 兼容参数保留并 suppress 未使用提示。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 `AsyncTask`/`FragmentStatePagerAdapter`/`PreferenceManager` deprecated、BGABadge 非增量注解处理器和 Java unchecked/deprecated 提示。
+
+当前边界：
+
+- 当前剩余 Java 数从 `28` 降到 `20`。
+- 本轮未启动模拟器/真机，未做登录偏好、IM 用户缓存、音频焦点、PictureSelector 图片加载或通知链路人工冒烟。
+
+下一刀建议：
+
+- 继续纯编码时，可评估 manager impl；仍暂缓 `DefaultRepository` 和 `Base*Activity/Fragment`。
+- `AppContext` 带 `@HiltAndroidApp`，迁 Kotlin 前要单独评估是否会重新牵出 KAPT/Hilt 注解处理问题。
+
+### 2026-05-20 阶段 8 继续：util Kotlin 收口
+
+本轮决策：
+
+- 用户要求继续编码；本轮继续按小切片清 Java，不碰 `DefaultRepository`、`Base*Activity/Fragment` 等大基类。
+- 优先选择 util/边界类，保留 Java 静态调用面和旧入口行为，设备端冒烟仍不主动扩展。
+
+本轮代码变更：
+
+- `MessageUtil`、`LyricUtil`、`WidgetUtil` 从 Java 迁到 Kotlin `object`，通过 `@JvmStatic` 保留 Java 静态入口；歌词工具补齐空歌词/逐字歌词数组缺失兜底，Widget 标题对歌手名为空做兜底。
+- `ExceptionHandlerUtil`、`LiteORMUtil`、`SuperDateUtil` 从 Java 迁到 Kotlin，保留网络错误分发、LiteORM `getInstance(Context)`/`destroy()` 单例入口、本地音乐查询和时间格式化调用面。
+- `ImageUtil`、`ImageCompressor` 从 Java 迁到 Kotlin，保留 Glide 图片加载入口、图片尺寸读取入口、异步压缩入口和 `CompressionCallback` 回调接口；图片尺寸读取失败时返回 `0,0`，避免后续索引空结果。
+- 迁移过程中按 Kotlin 严格类型补齐旧 Java 平台类型宽松度：`createdAt` 可空格式化、LiteORM 可变列表返回、nullable song id 查询/删除。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示主要是既有 `AsyncTask`/`onBackPressed` deprecated、BGABadge 非增量注解处理器和 Java unchecked/deprecated 提示。
+
+当前边界：
+
+- 当前剩余 Java 数从 `36` 降到 `28`。
+- 本轮未启动模拟器/真机，未做图片压缩、Widget、歌词逐字或本地音乐数据库人工冒烟。
+
+下一刀建议：
+
+- 继续纯编码时，优先评估 `Constant`、`PreferenceUtil` 或 manager impl 中风险较小的文件；仍暂缓 `DefaultRepository` 和大基类。
 
 ### 2026-05-20 音乐功能快速 smoke
 
@@ -2468,31 +2584,30 @@ GitHub 发布策略：
 
 当前分支：`codex/emulator-smoke-progress`。
 
-当前策略：用户要求本轮更新交接、提交并 push；下一会话从本文档和 Git 历史恢复即可。
+当前策略：用户要求更新交接、提交并 push；下一会话从本文档、Git 历史和 `git status --short` 恢复即可。
 
 当前最新切片：
 
-- 已按用户要求优先清 `MusicPlayerService`。
-- 旧 `.service.MusicPlayerService` 已从 Manifest 删除，源码文件已删除。
-- 播放后台入口已收敛到 Media3 `PlaybackService`；播放/恢复前由 `MusicPlayerManagerImpl` 启动 `PlaybackService`。
-- Media3 默认通知 provider 已接入 `PlaybackService`，旧 `MediaSessionCompat` 通知入口和 `NotificationUtil.createMusicNotification(...)` 已删除。
-- Widget 刷新由 `PlaybackUiBridge` 承接；桌面歌词关闭由 `GlobalLyricManagerImpl` 自己处理。
+- 已继续清理公共 Java 边界。
+- `Constant`、`PreferenceUtil`、`MyActivityManager`、`SuperAudioManager`、`UserManager`、`GlideEngine`、`MainActivity`、`NotificationUtil`、`MusicPlayerManagerImpl`、`MusicListManagerImpl`、`GlobalLyricManagerImpl` 已迁到 Kotlin。
+- 保留旧静态常量访问、偏好 getter/setter、manager `getInstance(...)`、PictureSelector `ImageEngine` 工厂入口、通知工具静态入口、Manifest Activity 类名、播放 manager 兼容 API、播放队列同步逻辑和桌面歌词悬浮窗控制入口。
+- `NetworkModule` 已补齐 nullable session 的 header 兜底。
 
 当前验证：
 
-- `rg -n "MusicPlayerService|service\\.MusicPlayerService|MediaSessionCompat|createMusicNotification" app/src/main app/src/main/java/com/ixuea/courses/mymusic` 无源码/Manifest 命中。
 - `git diff --check` 通过。
 - `./gradlew :app:assembleDevDebug` 通过。
-- `.idea` 无脏改动。
+- 未做设备端冒烟。
 
 恢复步骤：
 
 - 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
-- 如继续验证，优先做一次设备端播放/通知冒烟：播放、暂停、上一首、下一首、通知点击、歌词按钮、后台保活。
-- 如继续纯编码，可转回剩余 util/manager impl Java 清理。暂缓 `DefaultRepository`、`Base*Activity/Fragment`。
+- 如继续纯编码，剩余主包 Java 已进入大边界区：`DefaultRepository`、`Base*Activity/Fragment`、`AppContext` 需要单独评估；`BadgeInit` 和 `MusicPlayerListener` 暂留 Java。
+- `AppContext` 带 `@HiltAndroidApp`，迁 Kotlin 前要先评估 Hilt/KAPT 风险。
+- 如继续验证，优先做偏好读写、PictureSelector 图片加载、通知/桌面歌词解锁、IM 用户缓存、播放队列/上一首/下一首/删除当前歌曲/音频焦点，以及图片压缩/动态发布、Widget 刷新、歌词逐字、本地音乐数据库读写的快速设备端冒烟。
 - 每个切片保持 `./gradlew :app:assembleDevDebug` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
 
-当前剩余 Java 数：`36`。
+当前剩余 Java 数：`17`。
 
 剩余 Java 清单以当前仓库为准，可用：
 
