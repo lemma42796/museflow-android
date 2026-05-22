@@ -6,6 +6,7 @@ import android.app.Application;
 
 import com.ixuea.android.downloader.DownloadService;
 import com.ixuea.android.downloader.callback.DownloadManager;
+import com.ixuea.courses.mymusic.component.chat.repository.ChatClient;
 import com.ixuea.courses.mymusic.component.login.model.Session;
 import com.ixuea.courses.mymusic.config.Config;
 import com.ixuea.courses.mymusic.manager.impl.MusicListManagerImpl;
@@ -91,6 +92,7 @@ public class AppContext extends Application {
             @Override
             public void onReceivedMessage(Message message, ReceivedProfile profile) {
                 Timber.d("chat onReceived %s", message);
+                ChatClient.INSTANCE.onMessageReceived(message);
             }
         });
     }

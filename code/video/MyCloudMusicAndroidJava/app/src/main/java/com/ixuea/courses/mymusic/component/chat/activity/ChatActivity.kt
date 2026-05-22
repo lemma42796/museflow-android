@@ -9,11 +9,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.component.chat.adapter.ChatAdapter
-import com.ixuea.courses.mymusic.component.chat.model.event.MessageUnreadCountChangedEvent
 import com.ixuea.courses.mymusic.component.chat.ui.ChatSendOperation
 import com.ixuea.courses.mymusic.component.chat.ui.ChatUiState
 import com.ixuea.courses.mymusic.component.chat.ui.ChatViewModel
-import com.ixuea.courses.mymusic.component.conversation.model.event.NewMessageEvent
 import com.ixuea.courses.mymusic.config.glide.GlideEngine
 import com.ixuea.courses.mymusic.databinding.ActivityChatBinding
 import com.ixuea.courses.mymusic.util.Constant
@@ -30,9 +28,6 @@ import java.io.File
 import java.util.ArrayList
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 import top.zibin.luban.Luban
 import top.zibin.luban.OnNewCompressListener
@@ -48,15 +43,10 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
     private var handledDataVersion = 0L
     private var handledErrorVersion = 0L
     private var handledSendErrorVersion = 0L
-    private var handledUnreadClearedVersion = 0L
     private var handledUnreadClearErrorVersion = 0L
     private var handledScrollToBottomVersion = 0L
     private var handledSmoothScrollBottomVersion = 0L
     private var handledClearInputVersion = 0L
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
 
     override fun initViews() {
         super.initViews()
@@ -69,6 +59,7 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
 
         targetId = extraId().orEmpty()
         viewModel = ViewModelProvider(this)[ChatViewModel::class.java]
+        viewModel.observeIncomingMessages(targetId)
 
         adapter = ChatAdapter(hostActivity)
         binding.list.adapter = adapter
@@ -136,17 +127,17 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
     }
 
     private fun sendImageMessage(path: String) {
-        viewModel.sendImage(hostActivity.applicationContext, targetId, path, sp.userId)
+        viewModel.sendImage(targetId, path, sp.userId)
     }
 
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
 
-        viewModel.loadInitial(hostActivity.applicationContext, targetId, Constant.DEFAULT_MESSAGE_COUNT)
+        viewModel.loadInitial(targetId, Constant.DEFAULT_MESSAGE_COUNT)
     }
 
     private fun loadMore() {
-        viewModel.loadMore(hostActivity.applicationContext, targetId, Constant.DEFAULT_MESSAGE_COUNT)
+        viewModel.loadMore(targetId, Constant.DEFAULT_MESSAGE_COUNT)
     }
 
     private fun observeChatState() {
@@ -197,11 +188,6 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
             clearInput()
         }
 
-        if (state.unreadClearedVersion != handledUnreadClearedVersion) {
-            handledUnreadClearedVersion = state.unreadClearedVersion
-            EventBus.getDefault().post(MessageUnreadCountChangedEvent())
-        }
-
         if (state.unreadClearErrorVersion != handledUnreadClearErrorVersion) {
             handledUnreadClearErrorVersion = state.unreadClearErrorVersion
             Timber.w("chat clear unread error %s", state.unreadClearErrorCode)
@@ -232,7 +218,7 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
             return
         }
 
-        viewModel.sendText(hostActivity.applicationContext, targetId, content, sp.userId)
+        viewModel.sendText(targetId, content, sp.userId)
     }
 
     private fun clearInput() {
@@ -263,15 +249,5 @@ class ChatActivity : BaseTitleActivity<ActivityChatBinding>() {
         binding.list.post {
             binding.list.smoothScrollToPosition(adapter.itemCount - 1)
         }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onNewMessageEvent(event: NewMessageEvent) {
-        val message = event.data
-        if (message.senderUserId != targetId) {
-            return
-        }
-
-        viewModel.appendIncomingMessage(hostActivity.applicationContext, message)
     }
 }

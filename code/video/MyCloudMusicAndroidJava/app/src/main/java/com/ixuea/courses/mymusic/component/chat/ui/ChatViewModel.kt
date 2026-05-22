@@ -1,17 +1,18 @@
 package com.ixuea.courses.mymusic.component.chat.ui
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ixuea.courses.mymusic.component.chat.domain.ClearConversationUnreadUseCase
 import com.ixuea.courses.mymusic.component.chat.domain.LoadChatHistoryUseCase
-import com.ixuea.courses.mymusic.component.chat.domain.LoadChatUserUseCase
 import com.ixuea.courses.mymusic.component.chat.domain.MarkMessageReadUseCase
+import com.ixuea.courses.mymusic.component.chat.domain.ObserveIncomingMessagesUseCase
 import com.ixuea.courses.mymusic.component.chat.domain.SendImageMessageUseCase
 import com.ixuea.courses.mymusic.component.chat.domain.SendTextMessageUseCase
+import com.ixuea.courses.mymusic.component.user.domain.LoadUserDetailUseCase
 import com.ixuea.courses.mymusic.component.user.model.User
 import io.rong.imlib.RongIMClient
 import io.rong.imlib.model.Message
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -24,7 +25,9 @@ class ChatViewModel(
     private val clearConversationUnread: ClearConversationUnreadUseCase =
         ClearConversationUnreadUseCase(),
     private val markMessageRead: MarkMessageReadUseCase = MarkMessageReadUseCase(),
-    private val loadChatUser: LoadChatUserUseCase = LoadChatUserUseCase(),
+    private val loadUserDetail: LoadUserDetailUseCase = LoadUserDetailUseCase(),
+    private val observeIncomingMessagesUseCase: ObserveIncomingMessagesUseCase =
+        ObserveIncomingMessagesUseCase(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState
@@ -33,30 +36,44 @@ class ChatViewModel(
     private var targetUserId = ""
     private val senderIcons = mutableMapOf<String, String>()
     private val resolvingUserIds = mutableSetOf<String>()
+    private var incomingMessagesJob: Job? = null
 
-    fun loadInitial(context: Context, targetId: String, count: Int) {
-        loadTargetUser(context, targetId)
+    fun loadInitial(targetId: String, count: Int) {
+        loadTargetUser(targetId)
         if (_uiState.value.messages.isEmpty()) {
-            loadMore(context, targetId, count)
+            loadMore(targetId, count)
         }
     }
 
-    private fun loadTargetUser(context: Context, userId: String) {
+    fun observeIncomingMessages(targetId: String) {
+        if (incomingMessagesJob?.isActive == true) {
+            return
+        }
+
+        incomingMessagesJob = viewModelScope.launch {
+            observeIncomingMessagesUseCase().collect { message ->
+                if (message.senderUserId == targetId) {
+                    appendIncomingMessage(message)
+                }
+            }
+        }
+    }
+
+    private fun loadTargetUser(userId: String) {
         if (userId.isBlank() || (targetUserId == userId && _uiState.value.targetTitle.isNotBlank())) {
             return
         }
 
         targetUserId = userId
         viewModelScope.launch {
-            runCatching {
-                loadChatUser(context.applicationContext, userId)
-            }.onSuccess { user ->
-                publishTargetUser(userId, user)
+            when (val result = loadUserDetail(userId)) {
+                is LoadUserDetailUseCase.Result.Success -> publishTargetUser(userId, result.user)
+                is LoadUserDetailUseCase.Result.Error -> Unit
             }
         }
     }
 
-    fun loadMore(context: Context, targetId: String, count: Int) {
+    fun loadMore(targetId: String, count: Int) {
         if (_uiState.value.isLoadingHistory) {
             return
         }
@@ -72,7 +89,6 @@ class ChatViewModel(
         viewModelScope.launch {
             when (val result = loadChatHistory(targetId, oldestMessageId, count)) {
                 is LoadChatHistoryUseCase.Result.Success -> publishHistory(
-                    context = context.applicationContext,
                     messages = result.messages,
                     shouldScrollToBottom = isInitialLoad,
                 )
@@ -82,27 +98,22 @@ class ChatViewModel(
         }
     }
 
-    fun appendMessage(context: Context, message: Message) {
-        publishMessage(context.applicationContext, message, shouldClearInput = false)
+    fun appendMessage(message: Message) {
+        publishMessage(message, shouldClearInput = false)
     }
 
-    fun appendIncomingMessage(context: Context, message: Message) {
+    fun appendIncomingMessage(message: Message) {
         runCatching {
             markMessageRead(message)
         }
-        appendMessage(context, message)
+        appendMessage(message)
     }
 
     fun clearUnread(targetId: String) {
         viewModelScope.launch {
             try {
                 when (val result = clearConversationUnread(targetId)) {
-                    is ClearConversationUnreadUseCase.Result.Success -> {
-                        _uiState.update {
-                            it.copy(unreadClearedVersion = it.unreadClearedVersion + 1)
-                        }
-                    }
-
+                    is ClearConversationUnreadUseCase.Result.Success -> Unit
                     is ClearConversationUnreadUseCase.Result.Error -> {
                         publishUnreadClearError(result.errorCode)
                     }
@@ -113,7 +124,7 @@ class ChatViewModel(
         }
     }
 
-    fun sendText(context: Context, targetId: String, content: String, senderUserId: String) {
+    fun sendText(targetId: String, content: String, senderUserId: String) {
         if (_uiState.value.sendOperation != ChatSendOperation.NONE) {
             return
         }
@@ -131,7 +142,6 @@ class ChatViewModel(
             try {
                 when (val result = sendTextMessage(targetId, content, senderUserId)) {
                     is SendTextMessageUseCase.Result.Success -> publishMessage(
-                        context = context.applicationContext,
                         message = result.message,
                         shouldClearInput = true,
                     )
@@ -147,7 +157,7 @@ class ChatViewModel(
         }
     }
 
-    fun sendImage(context: Context, targetId: String, path: String, senderUserId: String) {
+    fun sendImage(targetId: String, path: String, senderUserId: String) {
         if (_uiState.value.sendOperation != ChatSendOperation.NONE) {
             return
         }
@@ -175,7 +185,6 @@ class ChatViewModel(
                     )
                 ) {
                     is SendImageMessageUseCase.Result.Success -> publishMessage(
-                        context = context.applicationContext,
                         message = result.message,
                         shouldClearInput = false,
                     )
@@ -192,7 +201,6 @@ class ChatViewModel(
     }
 
     private fun publishHistory(
-        context: Context,
         messages: List<Message>,
         shouldScrollToBottom: Boolean,
     ) {
@@ -218,7 +226,7 @@ class ChatViewModel(
             )
         }
         messages.forEach { message ->
-            resolveUser(context, message.senderUserId)
+            resolveUser(message.senderUserId)
         }
     }
 
@@ -251,7 +259,7 @@ class ChatViewModel(
         publishUser(userId, user)
     }
 
-    private fun publishMessage(context: Context, message: Message, shouldClearInput: Boolean) {
+    private fun publishMessage(message: Message, shouldClearInput: Boolean) {
         _uiState.update {
             it.copy(
                 sendOperation = ChatSendOperation.NONE,
@@ -266,10 +274,10 @@ class ChatViewModel(
                 },
             )
         }
-        resolveUser(context, message.senderUserId)
+        resolveUser(message.senderUserId)
     }
 
-    private fun resolveUser(context: Context, userId: String?) {
+    private fun resolveUser(userId: String?) {
         if (
             userId.isNullOrBlank() ||
             senderIcons.containsKey(userId) ||
@@ -279,12 +287,9 @@ class ChatViewModel(
         }
 
         viewModelScope.launch {
-            runCatching {
-                loadChatUser(context.applicationContext, userId)
-            }.onSuccess { user ->
-                publishUser(userId, user)
-            }.onFailure {
-                resolvingUserIds.remove(userId)
+            when (val result = loadUserDetail(userId)) {
+                is LoadUserDetailUseCase.Result.Success -> publishUser(userId, result.user)
+                is LoadUserDetailUseCase.Result.Error -> resolvingUserIds.remove(userId)
             }
         }
     }

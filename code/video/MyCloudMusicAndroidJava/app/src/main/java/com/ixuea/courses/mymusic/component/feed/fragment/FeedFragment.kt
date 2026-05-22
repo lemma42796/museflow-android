@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.feed.activity.PublishFeedActivity
 import com.ixuea.courses.mymusic.component.feed.adapter.FeedAdapter
-import com.ixuea.courses.mymusic.component.feed.model.event.FeedChangedEvent
 import com.ixuea.courses.mymusic.component.feed.ui.FeedUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedViewModel
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
@@ -43,6 +42,7 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
         super.initDatum()
         userId = arguments?.getString(Constant.USER_ID) ?: arguments?.getString(Constant.ID)
         viewModel = ViewModelProvider(this)[FeedViewModel::class.java]
+        viewModel.observeChanges(userId)
 
         adapter = FeedAdapter(R.layout.item_feed)
         binding.list.adapter = adapter
@@ -116,12 +116,6 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun userDetailEvent(event: UserDetailEvent) {
         UserDetailActivity.startWithId(hostActivity, event.data)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun feedChangedEvent(event: FeedChangedEvent) {
-        loadData()
     }
 
     companion object {

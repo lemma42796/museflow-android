@@ -1,37 +1,35 @@
 package com.ixuea.courses.mymusic.manager
 
 import android.content.Context
-import com.ixuea.courses.mymusic.component.api.HttpObserver
 import com.ixuea.courses.mymusic.component.user.model.User
-import com.ixuea.courses.mymusic.model.response.DetailResponse
-import com.ixuea.courses.mymusic.repository.DefaultRepository
+import com.ixuea.courses.mymusic.component.user.repository.UserRepository
 
 /**
  * 用户管理器。
  */
-class UserManager(context: Context) {
-    private val context: Context = context.applicationContext
-    private val userCaches: MutableMap<String, User> = HashMap()
+class UserManager @Suppress("UNUSED_PARAMETER") constructor(context: Context) {
+    private val repository = UserRepository.getInstance()
 
     /**
      * 获取用户。
      */
     fun getUser(userId: String, userListener: UserListener) {
-        val cachedUser = userCaches[userId]
+        val cachedUser = repository.cachedUser(userId)
         if (cachedUser != null) {
             userListener.onGetUserSuccess(cachedUser)
             return
         }
 
-        DefaultRepository.getInstance()
-            .userDetail(userId)
-            .subscribe(object : HttpObserver<DetailResponse<User>>() {
-                override fun onSucceeded(data: DetailResponse<User>) {
-                    val user = data.data ?: return
+        repository.userDetail(userId)
+            .subscribe(
+                { response ->
+                    val user = response.data ?: return@subscribe
                     userListener.onGetUserSuccess(user)
-                    userCaches[userId] = user
-                }
-            })
+                },
+                {
+                    // Legacy callback API has no error channel.
+                },
+            )
     }
 
     fun interface UserListener {

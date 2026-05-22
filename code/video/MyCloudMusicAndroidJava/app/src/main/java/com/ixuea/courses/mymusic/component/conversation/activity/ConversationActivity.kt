@@ -11,14 +11,10 @@ import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.component.chat.activity.ChatActivity
 import com.ixuea.courses.mymusic.component.conversation.adapter.ConversationAdapter
-import com.ixuea.courses.mymusic.component.conversation.model.event.NewMessageEvent
 import com.ixuea.courses.mymusic.component.conversation.ui.ConversationListUiState
 import com.ixuea.courses.mymusic.component.conversation.ui.ConversationListViewModel
 import com.ixuea.courses.mymusic.databinding.ActivityConversationBinding
 import kotlinx.coroutines.launch
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 
 /**
@@ -33,6 +29,7 @@ class ConversationActivity : BaseTitleActivity<ActivityConversationBinding>() {
     override fun initDatum() {
         super.initDatum()
         viewModel = ViewModelProvider(this)[ConversationListViewModel::class.java]
+        viewModel.observeConversationChanges()
 
         adapter = ConversationAdapter(R.layout.item_conversation)
         binding.list.adapter = adapter
@@ -53,7 +50,7 @@ class ConversationActivity : BaseTitleActivity<ActivityConversationBinding>() {
                 position: Int
             ): Boolean {
                 val data = this@ConversationActivity.adapter.getItem(position)
-                viewModel.deleteMessages(hostActivity.applicationContext, data.conversation)
+                viewModel.deleteMessages(data.conversation)
                 return true
             }
         })
@@ -62,17 +59,11 @@ class ConversationActivity : BaseTitleActivity<ActivityConversationBinding>() {
     override fun onResume() {
         super.onResume()
         loadData()
-        EventBus.getDefault().register(this)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        EventBus.getDefault().unregister(this)
     }
 
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
-        viewModel.load(hostActivity.applicationContext)
+        viewModel.load()
     }
 
     private fun observeConversationState() {
@@ -95,11 +86,5 @@ class ConversationActivity : BaseTitleActivity<ActivityConversationBinding>() {
             handledDataVersion = state.dataVersion
             adapter.setNewInstance(state.conversations.toMutableList())
         }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onNewMessageEvent(event: NewMessageEvent) {
-        Timber.d("onNewMessageEvent %s", event.data.messageId)
-        viewModel.refreshAfterNewMessage(hostActivity.applicationContext)
     }
 }

@@ -20,7 +20,6 @@ data class ChatUiState(
     val sendError: Throwable? = null,
     val sendErrorVersion: Long = 0,
     val clearInputVersion: Long = 0,
-    val unreadClearedVersion: Long = 0,
     val unreadClearErrorCode: RongIMClient.ErrorCode? = null,
     val unreadClearErrorVersion: Long = 0,
 )

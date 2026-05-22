@@ -17,7 +17,6 @@ import com.ixuea.courses.mymusic.adapter.TextWatcherAdapter
 import com.ixuea.courses.mymusic.component.feed.adapter.ImageAdapter
 import com.ixuea.courses.mymusic.component.feed.domain.CompressFeedImagesUseCase
 import com.ixuea.courses.mymusic.component.feed.model.Feed
-import com.ixuea.courses.mymusic.component.feed.model.event.FeedChangedEvent
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishOperation
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedPublishViewModel
@@ -35,7 +34,6 @@ import com.luck.picture.lib.entity.LocalMedia
 import com.luck.picture.lib.interfaces.OnKeyValueResultCallbackListener
 import com.luck.picture.lib.interfaces.OnResultCallbackListener
 import kotlinx.coroutines.launch
-import org.greenrobot.eventbus.EventBus
 import timber.log.Timber
 import java.util.ArrayList
 
@@ -196,7 +194,6 @@ class PublishFeedActivity : BaseTitleActivity<ActivityPublishFeedBinding>() {
 
         if (state.publishCompleteVersion != handledPublishCompleteVersion) {
             handledPublishCompleteVersion = state.publishCompleteVersion
-            EventBus.getDefault().post(FeedChangedEvent())
             finish()
         }
     }

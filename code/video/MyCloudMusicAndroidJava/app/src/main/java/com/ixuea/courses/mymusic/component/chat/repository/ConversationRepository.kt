@@ -2,10 +2,13 @@ package com.ixuea.courses.mymusic.component.chat.repository
 
 import io.rong.imlib.RongIMClient
 import io.rong.imlib.model.Conversation
+import kotlinx.coroutines.flow.SharedFlow
 
 class ConversationRepository(
     private val chatClient: ChatClient = ChatClient.INSTANCE,
 ) {
+    val unreadChanged: SharedFlow<Unit> = chatClient.unreadChanged
+
     fun getConversationList(callback: ChatClient.Callback<List<Conversation>>) {
         chatClient.getConversationList(callback)
     }

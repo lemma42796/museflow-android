@@ -41,8 +41,13 @@ class ChatClient private constructor() {
         replay = 0,
         extraBufferCapacity = 64,
     )
+    private val unreadChanges = MutableSharedFlow<Unit>(
+        replay = 0,
+        extraBufferCapacity = 16,
+    )
 
     val messages: SharedFlow<Message> = incomingMessages.asSharedFlow()
+    val unreadChanged: SharedFlow<Unit> = unreadChanges.asSharedFlow()
 
     fun onMessageReceived(message: Message) {
         incomingMessages.tryEmit(message)
@@ -70,6 +75,9 @@ class ChatClient private constructor() {
             targetId,
             object : RongIMClient.ResultCallback<Boolean>() {
                 override fun onSuccess(result: Boolean?) {
+                    if (result == true) {
+                        unreadChanges.tryEmit(Unit)
+                    }
                     callback.onSuccess(result == true)
                 }
 

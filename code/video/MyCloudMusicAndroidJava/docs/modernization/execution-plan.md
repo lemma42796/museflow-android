@@ -21,8 +21,8 @@
 - 已在模拟器 `emulator-5554` 完成阶段 7 第一轮入口冒烟，App 可安装启动，播放器、聊天、动态发布、下载页等核心入口可打开。
 - 发现页、下载、动态发布/动态列表的新增 Repository/ViewModel 已从 Java 迁到 Kotlin，Java 调用方兼容接口保持不变。
 - 下载中/已下载 Fragment 和下载中 Adapter 已从 Java 迁到 Kotlin，下载 Repository 边界继续保持稳定。
-- 动态列表 `FeedFragment` 已从 Java 迁到 Kotlin，发布入口、图片预览、位置预览和 EventBus 刷新入口保持兼容。
-- 动态发布页 `PublishFeedActivity` 和图片适配器 `ImageAdapter` 已从 Java 迁到 Kotlin，选图、压缩、上传、位置选择和发布通知流程保持兼容。
+- 动态列表 `FeedFragment` 已从 Java 迁到 Kotlin，发布入口、图片预览和位置预览保持兼容；发布成功刷新入口已迁到 `FeedEvents.changed(SharedFlow)`。
+- 动态发布页 `PublishFeedActivity` 和图片适配器 `ImageAdapter` 已从 Java 迁到 Kotlin，选图、压缩、上传和位置选择流程保持兼容；发布成功通知已由 `FeedPublishViewModel` 发出 Flow 事件。
 - 动态主适配器 `FeedAdapter` 已从 Java 迁到 Kotlin，动态卡片、九宫格图片、点赞和评论渲染保持兼容。
 - 发现页 `DiscoveryFragment` 和 `DiscoveryAdapter` 已从 Java 迁到 Kotlin，首页聚合刷新、Banner、推荐歌单/单曲和自定义入口保持兼容。
 - 发现页剩余小 adapter `SheetAdapter`、`DiscoverySongAdapter` 已从 Java 迁到 Kotlin，歌单/单曲 item 渲染保持兼容。
@@ -38,9 +38,9 @@
 - 播放列表管理器 `MusicListManagerImpl` 已从 Java 迁到 Kotlin，继续保留旧 `MusicListManager` 接口、静态 `getInstance(Context)` 入口、队列持久化和 `PlaybackRepository.setQueue(...)` 同步。
 - 旧播放服务 `MusicPlayerService` 已从 Manifest 和源码中删除；后台播放入口收敛到 Media3 `PlaybackService`，并由 `PlaybackUiBridge` 承接 Widget 刷新、桌面歌词关闭和播放通知按钮。
 - 播放链路已完成一轮更完整的模拟器时间线复测：播放/暂停、seek、通知媒体卡片播放/暂停、后台播放在 MediaSession 和 UI 层面通过；上一轮“播放未推进”的判断已修正。
-- 聊天详情页 `ChatActivity` 已从 Java 迁到 Kotlin，保留旧 XML/RecyclerView、图片选择压缩、文本/图片发送、历史消息分页、EventBus 新消息入口和 Repository 调用边界。
+- 聊天详情页 `ChatActivity` 已从 Java 迁到 Kotlin，保留旧 XML/RecyclerView、图片选择压缩、文本/图片发送、历史消息分页和 Repository 调用边界；新消息入口已迁到 `ChatClient.messages(SharedFlow)`。
 - 会话列表页 `ConversationActivity` 和 `ConversationAdapter` 已从 Java 迁到 Kotlin，保留会话列表、点击进聊天、长按清消息、未读角标和新消息节流刷新逻辑。
-- 聊天链路事件/消息 extra 小模型 `NewMessageEvent`、`MessageUnreadCountChangedEvent`、`MediaMessageExtra` 已从 Java 迁到 Kotlin，Java 调用入口保持兼容。
+- 聊天消息 extra 小模型 `MediaMessageExtra` 已从 Java 迁到 Kotlin；旧 `NewMessageEvent` 和 `MessageUnreadCountChangedEvent` 已在后续 Flow 收口中删除。
 - 聊天消息列表 `ChatAdapter` 已从 Java 迁到 Kotlin，继续保留文本/图片消息左右布局、头像加载、图片尺寸适配和 RongCloud 消息类型判断，并补齐图片 extra/宽高缺失时的保护。
 - 聊天消息工具 `MessageUtil`、离线推送小模型 `Push`/`PushMessage` 和推送入口 `RongPushReceiver`/`PushReceiver`/`PushService` 已从 Java 迁到 Kotlin，继续保留 `MessageUtil.getContent(...)`、`MessageUtil.createPushData(...)`、`Push.PUSH_STYLE_CHAT`、Manifest receiver/service 类名等兼容入口。
 - 动态发布页图片选择压缩入口已从 Activity 直连 `ImageCompressionRepository` 收拢到 `CompressFeedImagesUseCase`。
@@ -49,7 +49,7 @@
 - 动态主模型 `Feed` 和动态刷新事件已从 Java 迁到 Kotlin，动态目录当前不再包含 Java 文件；`FeedAdapter` 已补齐动态缺少 user 时的空值保护。
 - 首页主 ViewPager 边界 `MainAdapter` 已从 Java 迁到 Kotlin，继续保留发现/视频/我的/动态/直播五个 tab 的 Fragment 创建顺序。
 - 首页 tab 模型 `TabEntity` 已从 Java 迁到 Kotlin，继续实现 `CustomTabEntity` 并保留 Java public 字段访问形态。
-- 播放/歌单相关小事件 `MusicPlayListChangedEvent`、`ScanLocalMusicCompleteEvent`、`SheetChangedEvent` 已从 Java 迁到 Kotlin，继续保留 Java 构造和 getter/setter 调用面。
+- 播放/歌单相关小事件 `MusicPlayListChangedEvent`、`ScanLocalMusicCompleteEvent`、`SheetChangedEvent` 已从 Java 迁到 Kotlin，继续保留 Java 构造和 getter/setter 调用面；旧 `FeedChangedEvent` 已在动态 Flow 收口中删除。
 - 阶段 8 已按用户要求启动；发现页首页数据加载已推进到 `DiscoveryViewModel(StateFlow) -> LoadDiscoveryPageUseCase -> DiscoveryRepository`，下载中/已下载页已引入 `DownloadingViewModel`/`DownloadedViewModel` 承接下载操作和列表状态，动态 Feed 列表也已推进到 `FeedViewModel(StateFlow) -> LoadFeedListUseCase -> FeedRepository`，动态发布上传/创建动态已推进到 `FeedPublishViewModel(StateFlow) -> Publish UseCase -> FeedPublishRepository`，聊天会话列表已推进到 `ConversationListViewModel(StateFlow) -> Conversation UseCase -> ConversationRepository`，新消息后的会话列表延迟刷新和会话行 UI 数据也已收敛到 ViewModel，聊天详情历史消息分页、文本/图片发送状态、清未读、标记已读、页面标题用户资料和消息行头像 UI 数据已推进到 `ChatViewModel(StateFlow) -> Chat UseCase -> MessageRepository`，旧 RecyclerView UI 暂时保留。
 - 播放器主页面下载按钮的下载状态查询、创建下载和继续下载入口已从 `MusicPlayerActivity` 直连 `DownloadRepository` 收敛到 `DownloadActionsUseCase`。
 - 歌曲列表通用适配器 `SongAdapter` 已从 Java 迁到 Kotlin，本地/已下载歌曲删除和下载完成状态查询已从直连 `DownloadRepository` 收敛到 `DownloadActionsUseCase`。
@@ -63,6 +63,15 @@
 - 公共模型 `Base`/`BaseId`/`Common`/`Resource`、response 包 `BaseResponse`/`DetailResponse`/`ListResponse`/`Meta`、response exception 和 `BaseMultiItemEntity` 已从 Java 迁到 Kotlin，继续保留旧 getter/setter/bean 调用面。
 - 播放列表/歌词 manager 接口 `GlobalLyricManager`、`MusicListManager`、`MusicPlayerManager` 和播放列表事件已从 Java 迁到 Kotlin；`MusicPlayerListener` 暂留 Java 以保留默认方法对 Java 实现类的兼容性。
 - 公共 adapter/view/config 边界 `TextWatcherAdapter`、`OnPageChangeListenerAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已从 Java 迁到 Kotlin；`BadgeInit` 暂留 Java，因为 `BGABadgeView-Android` 旧注解处理器需要 Java 源生成 `BGABadgeImageView/TextView`。
+- Activity/Fragment 基类族 `Base*Activity`、`Base*Fragment`、`Base*DialogFragment` 已从 Java 迁到 Kotlin，保留 `binding`、`hostActivity`、`sp`、`placeholderView`、`musicListManager`、`loadData(...)` 等旧调用面。
+- 默认网络仓库 `DefaultRepository` 已从 Java 迁到 Kotlin，保留 `getInstance()`、Rx `Observable` 返回值、旧重载方法和 `subscribeOn/observeOn` 调度行为。
+- 播放链路歌词详情补全已从 `MusicPlayerManagerImpl` 直连 `DefaultRepository` 收敛到 `LoadSongDetailUseCase -> SongRepository -> DefaultRepository`。
+- 播放链路歌词详情补全的 Rx 订阅已继续从 `MusicPlayerManagerImpl` 下沉到 `LoadSongDetailUseCase`；manager 现在用 coroutine job 编排远程歌词补全，并在切歌时取消旧请求。
+- 聊天/会话用户资料补齐已从两个 feature-local user use case 和 `UserManager` callback 收敛到共用 `LoadUserDetailUseCase -> UserRepository -> DefaultRepository`；`ChatViewModel`/`ConversationListViewModel` 不再为了用户资料依赖 Android `Context`。
+- 聊天新消息分发已开始从 EventBus 迁到 `ChatClient.messages(SharedFlow)`；`ChatActivity` 和 `ConversationActivity` 不再订阅 `NewMessageEvent`，由各自 ViewModel 收集新消息 Flow 后追加消息或刷新会话列表。
+- 聊天清未读后的会话列表刷新已从 `MessageUnreadCountChangedEvent` EventBus 空转事件迁到 `ChatClient.unreadChanged(SharedFlow)`；旧 `MessageUnreadCountChangedEvent` 已删除。
+- 聊天新消息分发已彻底移除旧 `NewMessageEvent` EventBus 发布；`AppContext` 收到 RongCloud 消息后只写入 `ChatClient.messages(SharedFlow)`。
+- 动态发布成功后的动态列表刷新已从 `FeedChangedEvent` EventBus 迁到 `FeedEvents.changed(SharedFlow)`；`FeedFragment` 仍只保留用户详情点击的 `UserDetailEvent` 订阅。
 - 小型工具类 `TextUtil`、`Base64Util`、`SaltUtil`、`SHAUtil`、`ListUtil`、`SizeUtil`、`ScreenUtil`、`SuperTextUtil` 已从 Java 迁到 Kotlin，并通过 `@JvmStatic`/`fun interface` 保持 Java 静态调用和 lambda 调用兼容。
 - 工具类 `MessageUtil`、`LyricUtil`、`WidgetUtil`、`ExceptionHandlerUtil`、`LiteORMUtil`、`SuperDateUtil`、`ImageUtil`、`ImageCompressor` 已从 Java 迁到 Kotlin，保留旧静态调用面、LiteORM 单例入口、Widget 更新入口、图片压缩回调接口和 Glide 图片加载入口。
 - 公共常量/偏好/轻量 manager 和 public slim 入口 `Constant`、`PreferenceUtil`、`MyActivityManager`、`SuperAudioManager`、`UserManager`、`GlideEngine`、`MainActivity` 已从 Java 迁到 Kotlin，保留 Java 静态常量、`getInstance(...)` 单例入口、PictureSelector `ImageEngine` 工厂入口和 Manifest Activity 类名。
@@ -85,6 +94,272 @@
 - 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
 
 ## 最新执行记录
+
+### 2026-05-22 交接：Phase 8 Kotlin/Flow 收口批次准备推送
+
+本次交接状态：
+
+- 当前分支为 `codex/emulator-smoke-progress`，目标推送远端为 GitHub `origin`；Gitee `upstream` 仍是备份/只读，不应 push。
+- 本批本地改动已覆盖多组阶段 8 收口：Activity/Fragment 基类族 Kotlin 化、`DefaultRepository` Kotlin 化、播放歌词详情 use case 边界、聊天/会话用户资料共用 use case、聊天新消息/清未读 Flow 化、动态发布刷新 Flow 化。
+- 主包剩余 Java 仍为 `AppContext.java`、`BadgeInit.java`、`MusicPlayerListener.java`；`BadgeInit` 和 `MusicPlayerListener` 继续是有意保留边界，`AppContext` 只做了小范围消息桥接调整，未迁 Kotlin。
+- 聊天链路旧 `NewMessageEvent`、`MessageUnreadCountChangedEvent` 已删除；动态发布刷新旧 `FeedChangedEvent` 已删除。
+
+本次验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器、Java deprecated/unchecked 和 Hilt 生成代码 deprecated 提示。
+
+当前边界：
+
+- 本批未启动模拟器/真机，未做在线收消息、清未读角标刷新、动态发布后列表刷新、播放歌词补全、Activity/Fragment 生命周期或基类行为人工冒烟。
+- 动态链路仍保留 `UserDetailEvent` EventBus 用户跳转入口；其他仍可继续收口的页面级事件包括 `DownloadChangedEvent`、`SortChangedEvent`、播放页相关事件和本地音乐扫描事件。
+- 下一次继续编码时，优先在“仍有真实订阅者”的 EventBus/Rx 边界里选切片；若转验证，则优先覆盖聊天收消息/清未读、动态发布刷新、下载列表刷新和播放歌词补全。
+
+### 2026-05-21 阶段 8 继续：动态发布刷新迁到 Flow
+
+本轮决策：
+
+- 用户继续要求编码；聊天链路 EventBus 收口后，转向动态链路里仍有真实发布/订阅关系的 `FeedChangedEvent`。
+- 本轮只迁发布成功后的动态列表刷新，不碰点赞、评论、图片预览、用户详情跳转或位置选择。
+- `FeedFragment` 仍保留 `UserDetailEvent` 的 EventBus 订阅，因为动态正文/评论里的用户点击跳转还没迁。
+
+本轮代码变更：
+
+- 新增 `FeedEvents`，用 `changed: SharedFlow<Unit>` 承接动态列表刷新通知。
+- 新增 `NotifyFeedChangedUseCase` 和 `ObserveFeedChangesUseCase`，分别作为发布端通知和列表端观察入口。
+- `FeedPublishViewModel` 在创建动态成功后调用 `NotifyFeedChangedUseCase`，发布成功通知不再由 `PublishFeedActivity` 发 EventBus。
+- `FeedViewModel` 新增 `observeChanges(userId)`，收集动态变更 Flow 后复用既有 `load(userId)` 刷新。
+- `FeedFragment` 删除 `FeedChangedEvent` import 和 `@Subscribe feedChangedEvent(...)`，初始化时启动 `viewModel.observeChanges(userId)`。
+- `PublishFeedActivity` 删除 `FeedChangedEvent`/`EventBus` import 和 `EventBus.post(...)`；发布完成后只负责 `finish()`。
+- 删除旧 `FeedChangedEvent.kt`。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做动态发布成功后列表自动刷新人工冒烟。
+- `FeedFragment` 仍通过 EventBus 接收 `UserDetailEvent`，用于动态正文/评论中的用户点击跳转。
+- 后续继续清 EventBus 时，动态链路可以评估 `UserDetailEvent` 是否改为 adapter listener/callback；其他链路可转向 `DownloadChangedEvent` 或 `SortChangedEvent`。
+
+### 2026-05-21 阶段 8 继续：移除聊天新消息 EventBus 兼容尾巴
+
+本轮决策：
+
+- 用户继续要求编码；上一刀后 `NewMessageEvent` 只剩 `AppContext` 发布，代码里已无真实订阅者。
+- 本轮直接删除聊天新消息 EventBus 兼容尾巴，让 RongCloud 新消息只进入 `ChatClient.messages(SharedFlow)`。
+- 不迁 `AppContext` 到 Kotlin，不改 RongCloud 初始化、连接、通知或聊天 UI 行为。
+
+本轮代码变更：
+
+- `AppContext.onReceivedMessage(...)` 删除 `EventBus.post(new NewMessageEvent(message))`，只保留 `ChatClient.INSTANCE.onMessageReceived(message)`。
+- 删除 `NewMessageEvent.kt`。
+- `AppContext` 移除 `NewMessageEvent` 和 `EventBus` import。
+- 文档修正：聊天详情页的新消息入口现在是 `ChatClient.messages(SharedFlow)`；旧 `NewMessageEvent` 和 `MessageUnreadCountChangedEvent` 都已删除。
+
+本轮验证：
+
+- `rg "NewMessageEvent|MessageUnreadCountChangedEvent" app/src/main/java/com/ixuea/courses/mymusic` 无命中。
+- `git diff --check` 通过。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做在线收消息、会话列表刷新或聊天页追加消息人工冒烟。
+- 聊天链路的新消息/清未读刷新已经从 EventBus 订阅端和发布端收口到 Flow；后续继续清 EventBus 时，应转向动态/下载/发现/播放等仍有真实订阅的页面级事件。
+
+### 2026-05-21 阶段 8 继续：聊天清未读刷新迁到 Flow
+
+本轮决策：
+
+- 用户继续要求重构；延续上一刀聊天新消息 `SharedFlow` 化，本轮处理聊天页清未读成功后仍残留的 `MessageUnreadCountChangedEvent` EventBus 通知。
+- 代码事实显示 `MessageUnreadCountChangedEvent` 只有 `ChatActivity` 发布，当前已没有订阅者；本轮直接删除这个空转事件，并补上真正会被会话列表观察到的 Flow 通知。
+- 不改变 RongCloud 清未读调用、会话列表加载方式或用户可见 UI。
+
+本轮代码变更：
+
+- `ChatClient` 新增 `unreadChanged: SharedFlow<Unit>`，在 `clearUnread(...)` 成功后发出未读状态变化通知。
+- `ConversationRepository` 暴露 `unreadChanged`，新增 `ObserveUnreadChangesUseCase` 作为会话链路观察入口。
+- `ConversationListViewModel.observeConversationChanges()` 同时观察新消息 Flow 和清未读 Flow，二者都复用既有 1 秒节流刷新。
+- `ChatViewModel.clearUnread(...)` 成功后不再推进 `unreadClearedVersion`；成功通知由 repository/client 层 Flow 承接，失败仍保留 `unreadClearErrorVersion` 给页面日志。
+- `ChatActivity` 删除 `MessageUnreadCountChangedEvent` import、`EventBus.post(...)` 和 `handledUnreadClearedVersion`。
+- 删除旧 `MessageUnreadCountChangedEvent.kt`。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器和 Java deprecated/unchecked 提示。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做聊天页进入后清未读、会话列表角标消失或跨页面刷新人工冒烟。
+- `NewMessageEvent` 已在后一刀确认无订阅者后删除。
+- 后续如果继续清 EventBus，可先盘点 `FeedChangedEvent`、`DownloadChangedEvent`、`SortChangedEvent` 等仍有真实订阅的页面级刷新事件，再逐个迁到 feature-local Flow。
+
+### 2026-05-21 阶段 8 继续：聊天新消息 EventBus 订阅迁到 SharedFlow
+
+本轮决策：
+
+- 用户继续要求重构；本轮优先处理聊天链路里已经具备 `SharedFlow` 基础、但 Activity 仍通过 `NewMessageEvent` 订阅新消息的旧分发边界。
+- 不迁 `AppContext` 到 Kotlin，不改 RongCloud SDK 初始化/连接方式；只在现有 Java `AppContext` 的接收回调里补齐 Flow 桥接。
+- 暂时保留 `NewMessageEvent` 的 EventBus 发布，给未梳理完的遗留入口兜底；聊天详情和会话列表先从订阅端脱离 EventBus。
+
+本轮代码变更：
+
+- 新增 `ObserveIncomingMessagesUseCase`，把 `MessageRepository.messages` 暴露为聊天链路的用例入口。
+- `AppContext.onReceivedMessage(...)` 收到 RongCloud 消息后调用 `ChatClient.INSTANCE.onMessageReceived(message)`，让消息进入 `ChatClient.messages(SharedFlow)`；同时继续 `EventBus.post(NewMessageEvent(message))`。
+- `ChatViewModel` 新增 `observeIncomingMessages(targetId)`，收集新消息 Flow，只处理当前聊天对象消息，并复用既有 `appendIncomingMessage(...)` 标记已读和追加列表。
+- `ConversationListViewModel` 新增 `observeIncomingMessages()`，收集新消息 Flow 后复用既有 1 秒节流刷新逻辑。
+- `ChatActivity` 删除 `isRegisterEventBus()` 和 `@Subscribe onNewMessageEvent(...)`，初始化时只启动 ViewModel 的新消息观察。
+- `ConversationActivity` 删除手动 `EventBus.register/unregister` 和 `@Subscribe onNewMessageEvent(...)`，初始化时只启动 ViewModel 的新消息观察。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器、deprecated/unchecked Java 提示和 Hilt 生成代码 deprecated 提示。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做在线收消息、会话列表实时刷新、聊天页追加消息或未读数刷新人工冒烟。
+- `MessageUnreadCountChangedEvent` 在后一刀已迁到 `ChatClient.unreadChanged(SharedFlow)` 并删除旧事件类。
+- `NewMessageEvent` 已在后一刀确认无订阅者后删除。
+
+### 2026-05-21 阶段 8 继续：播放歌词详情 Rx 订阅下沉
+
+本轮决策：
+
+- 用户要求继续重构；主包 Java 已只剩 `AppContext`、`BadgeInit`、`MusicPlayerListener` 三个不适合硬清零的边界。
+- 本轮继续做阶段 8 深层边界收口：处理播放 manager 内仍残留的 `HttpObserver`/Rx 订阅，而不是扩大到 Compose 或强迁 `AppContext`。
+- 保留旧播放、歌词 parser、Media3 `PlaybackRepository` 和 `MusicPlayerManager` 对外 API，不改变用户可见播放行为。
+
+本轮代码变更：
+
+- `LoadSongDetailUseCase` 从简单转发 `Observable<DetailResponse<Song>>` 改成 suspend 用例，内部桥接 `SongRepository.songDetail(id)` 并返回 `Result.Success/Error`。
+- `MusicPlayerManagerImpl.prepareLyric(...)` 不再 import/调用 `HttpObserver`、`DetailResponse` 或 `subscribe(...)`。
+- `MusicPlayerManagerImpl` 新增播放 manager 级 coroutine scope 和 `lyricLoadJob`，远程歌词详情补全通过 `loadRemoteLyric(...)` 执行。
+- 每次 `prepareLyric(...)` 会取消上一轮歌词详情补全；如果异步结果回来时已经切到新歌，则不再把旧歌歌词 ready 事件串到当前播放状态。
+- 远程歌词详情失败时，当前歌曲仍会触发 `onLyricReady()`，避免播放链路一直等歌词补全回调。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做在线歌曲歌词补全、切歌并发、桌面歌词或播放页歌词 UI 人工冒烟。
+- `SongRepository` 仍然封装 Rx/Retrofit；本轮只是把 Rx 订阅从 manager 下沉到 use case 层。
+- 下一刀继续重构时，优先找五条重点链路里 UI/manager 层仍残留的 EventBus/Rx 编排点；不建议为了数量清零强迁 `AppContext`、`BadgeInit` 或 `MusicPlayerListener`。
+
+### 2026-05-21 阶段 8 继续：聊天/会话用户资料 UseCase 共用边界收口
+
+本轮决策：
+
+- 用户要求继续编码并“大步一点”；本轮不再只清单个文件，而是处理聊天详情、会话列表和旧通知用户查询之间重复的用户资料边界。
+- 保留旧 XML/RecyclerView、RongCloud callback、消息发送/分页/清未读行为，不改 UI 交互和 IM SDK 接入方式。
+- `UserManager` 仍保留给通知等旧 callback 调用面，但不再作为聊天/会话 ViewModel 的主数据入口。
+
+本轮代码变更：
+
+- 新增 `UserRepository`，封装 `DefaultRepository.userDetail(userId)`，并用内存缓存复用已拉取的用户资料。
+- 新增 `LoadUserDetailUseCase`，统一提供 suspend 入口，先读缓存，再桥接 Rx 用户详情请求。
+- 删除 `LoadChatUserUseCase` 和 `LoadConversationUserUseCase`，避免聊天详情和会话列表各自维护一套用户资料查询包装。
+- `ChatViewModel` 改为通过 `LoadUserDetailUseCase` 补齐页面标题用户资料和消息行头像；`loadInitial/loadMore/sendText/sendImage/appendIncomingMessage` 不再需要 Android `Context` 参数。
+- `ConversationListViewModel` 改为通过 `LoadUserDetailUseCase` 补齐会话行昵称/头像；`load/refreshAfterNewMessage/deleteMessages` 不再需要 Android `Context` 参数。
+- `ChatActivity`、`ConversationActivity` 同步收窄调用面，只向 ViewModel 传业务 id、消息数、文本/图片路径等业务参数。
+- `UserManager` 改为复用 `UserRepository` 缓存和请求入口，继续保留旧 `getInstance(context).getUser(...)` callback API 给 `NotificationUtil` 等遗留调用。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做聊天标题用户资料、消息头像、会话行用户资料或通知用户查询人工冒烟。
+- `UserRepository` 当前是内存缓存；未引入数据库持久化，也未改变登录用户资料缓存策略。
+- 主包剩余 Java 仍为 `AppContext.java`、`BadgeInit.java`、`MusicPlayerListener.java`；继续不建议为清零 Java 强迁 `AppContext` 或 `BadgeInit`。
+
+### 2026-05-21 阶段 8 继续：播放歌词详情 UseCase 边界收口
+
+本轮决策：
+
+- 用户继续要求编码；剩余 Java 中 `AppContext` 暂不硬迁，避免触发 `@HiltAndroidApp` + KAPT 风险。
+- 转入阶段 8 深层边界收口：优先处理播放链路里仍直接依赖 `DefaultRepository` 的歌词详情补全。
+- 本轮只移动调用边界，不改播放核心、歌词 parser、Rx 调度或用户可见行为。
+
+本轮代码变更：
+
+- 新增 `SongRepository`，封装 `DefaultRepository.songDetail(id)`。
+- 新增 `LoadSongDetailUseCase`，作为播放链路拉取歌曲详情/歌词的用例入口。
+- `MusicPlayerManagerImpl.prepareLyric(...)` 改为通过 `LoadSongDetailUseCase` 拉取歌曲详情，manager 不再直接 import/调用 `DefaultRepository`。
+- 保留上一轮补齐的歌曲 id 为空保护：没有 id 时直接触发 `onLyricReady()`，不发起无效网络请求。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做播放页歌词补全的网络冒烟。
+- 主包剩余 Java 仍为 `AppContext.java`、`BadgeInit.java`、`MusicPlayerListener.java`。
+- 下一刀继续编码时，建议继续找五条重点链路中的直连仓库/EventBus/Rx 小边界，不建议为清零 Java 强行迁 `AppContext`。
+
+### 2026-05-21 阶段 8 继续：DefaultRepository Kotlin 收口
+
+本轮决策：
+
+- 用户要求继续编码；在 Activity/Fragment 基类收口后，继续处理剩余 Java 中风险最低的 `DefaultRepository`。
+- 本轮仍不迁 `AppContext`、`BadgeInit` 和 `MusicPlayerListener`：`AppContext` 带 `@HiltAndroidApp`，当前工程仍只配置 Java annotationProcessor；`BadgeInit` 受 BGABadge 旧注解处理器约束；`MusicPlayerListener` 保留 Java default method 兼容性。
+- 保留 Rx/Retrofit 仓库调用形态，不顺手改协程、不改业务 repository/use-case 层。
+
+本轮代码变更：
+
+- `DefaultRepository` 从 Java 迁到 Kotlin，继续暴露 `DefaultRepository.getInstance()`。
+- 保留 `ads/bannerAd/splashAd/sheets/sheetDetail/songs/songDetail/login/userDetail/friends/fans/updateUser/follow/deleteFollow/register/collect/deleteCollect/comments/commentLike/cancelCommentLike/createComment/feeds/createFeed/uploadFile/uploadFiles` 等旧方法。
+- 抽出私有 `Observable<T>.applySchedulers()`，保持原来的 `subscribeOn(Schedulers.io())` 和 `observeOn(AndroidSchedulers.mainThread())`。
+- `MusicPlayerManagerImpl.prepareLyric(...)` 增加歌曲 id 为空时直接触发 `onLyricReady()` 的保护，避免 Kotlin 化后 `songDetail(String)` 暴露出的 nullable id 编译失败。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器和 Java deprecated/unchecked 提示。
+- `rg --files app/src/main/java/com/ixuea/courses/mymusic | rg '\.java$'` 显示主包剩余 Java 为 `AppContext.java`、`BadgeInit.java`、`MusicPlayerListener.java`。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做网络请求、歌词补全、发现/歌单/评论/动态等接口人工冒烟。
+- 主包剩余 Java 数为 `3`；下一刀如果继续编码，只剩 `AppContext` 是可评估迁移对象，但会牵动 Hilt/KAPT 风险；`BadgeInit` 和 `MusicPlayerListener` 继续默认保留。
+
+### 2026-05-21 阶段 8 继续：Activity/Fragment 基类 Kotlin 收口
+
+本轮决策：
+
+- 继续按用户要求推进编码；在 manager/util 收口后，处理剩余 Java 里收益最高且可构建兜底的基类族。
+- 本轮仍不迁 `BadgeInit`、`MusicPlayerListener`、`AppContext` 和 `DefaultRepository`：前两个是有意保留边界，后两个需要单独评估 Hilt/仓库 API 风险。
+- 先迁 Fragment 基类，再迁 Activity 基类；每步用 `:app:assembleDevDebug` 暴露 Kotlin 可见性和空值边界。
+
+本轮代码变更：
+
+- `BaseFragment`、`BaseCommonFragment`、`BaseLogicFragment`、`BaseDialogFragment`、`BaseBottomSheetDialogFragment`、`BaseViewModelFragment`、`BaseViewModelDialogFragment`、`BaseViewModelBottomSheetDialogFragment` 从 Java 迁到 Kotlin。
+- `BaseActivity`、`BaseCommonActivity`、`BaseLogicActivity`、`BaseViewModelActivity`、`BaseTitleActivity` 从 Java 迁到 Kotlin。
+- 保留旧业务页面依赖的 `binding`、`hostActivity`、`sp`、`placeholderView`、`musicListManager`、`orm`、`loadData(...)`、`loginAfter(...)`、`showLoading()/hideLoading()`、`extraId()/extraData()` 等调用面。
+- `extraData()` 在 Kotlin 基类中保持非空返回语义，避免播放器 Fragment 的 `Song` 入参被 Kotlin 推断为 nullable。
+- `hostActivity` 暴露为只读属性，规避 Kotlin IR 对匿名内部类访问 protected 基类属性时的 synthetic accessor 崩溃。
+
+本轮验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 deprecated API、BGABadge 非增量注解处理器和 Java unchecked/deprecated 提示。
+- `rg --files app/src/main/java/com/ixuea/courses/mymusic | rg '\.java$' | wc -l` 显示主包剩余 Java 数为 `4`。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做 Activity/Fragment 生命周期、弹窗、加载框、占位页或 EventBus 人工冒烟。
+- 剩余 Java 清单为 `AppContext.java`、`DefaultRepository.java`、`BadgeInit.java`、`MusicPlayerListener.java`。
+- 下一刀如果继续编码，建议单独评估 `AppContext` 的 `@HiltAndroidApp`/KAPT 风险，或拆解 `DefaultRepository` 的遗留 Rx API；`BadgeInit` 和 `MusicPlayerListener` 继续默认保留。
 
 ### 2026-05-21 阶段 8 继续：桌面歌词 manager impl Kotlin 收口
 

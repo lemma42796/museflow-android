@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.feed.domain.CreateFeedUseCase
+import com.ixuea.courses.mymusic.component.feed.domain.NotifyFeedChangedUseCase
 import com.ixuea.courses.mymusic.component.feed.domain.UploadFeedImagesUseCase
 import com.ixuea.courses.mymusic.component.feed.model.Feed
 import com.ixuea.courses.mymusic.model.Resource
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 class FeedPublishViewModel(
     private val uploadFeedImages: UploadFeedImagesUseCase = UploadFeedImagesUseCase(),
     private val createFeed: CreateFeedUseCase = CreateFeedUseCase(),
+    private val notifyFeedChanged: NotifyFeedChangedUseCase = NotifyFeedChangedUseCase(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FeedPublishUiState())
     private val selectedImages = mutableListOf<LocalMedia>()
@@ -90,6 +92,7 @@ class FeedPublishViewModel(
         feed.medias = resources
         when (val result = createFeed(feed)) {
             is CreateFeedUseCase.Result.Success -> {
+                notifyFeedChanged()
                 _uiState.update {
                     it.copy(
                         operation = FeedPublishOperation.NONE,

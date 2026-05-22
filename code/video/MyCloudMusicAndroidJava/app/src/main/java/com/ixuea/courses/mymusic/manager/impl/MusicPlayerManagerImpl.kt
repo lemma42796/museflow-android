@@ -3,18 +3,21 @@ package com.ixuea.courses.mymusic.manager.impl
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
-import com.ixuea.courses.mymusic.component.api.HttpObserver
 import com.ixuea.courses.mymusic.component.lyric.parser.LyricParser
+import com.ixuea.courses.mymusic.component.song.domain.LoadSongDetailUseCase
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.manager.SuperAudioManager
-import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.playback.PlaybackController
 import com.ixuea.courses.mymusic.playback.PlaybackRepository
 import com.ixuea.courses.mymusic.playback.PlaybackService
-import com.ixuea.courses.mymusic.repository.DefaultRepository
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 import timber.log.Timber
 
@@ -26,6 +29,9 @@ class MusicPlayerManagerImpl private constructor(context: Context) : MusicPlayer
     private val context: Context = context.applicationContext
     private val playbackRepository: PlaybackRepository = PlaybackRepository.getInstance(this.context)
     private val superAudioManager: SuperAudioManager = SuperAudioManager.getInstance(this.context)
+    private val loadSongDetail = LoadSongDetailUseCase()
+    private val managerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var lyricLoadJob: Job? = null
     private var uri: String? = null
     private var data: Song? = null
     private val focusLock = Any()
@@ -110,6 +116,8 @@ class MusicPlayerManagerImpl private constructor(context: Context) : MusicPlayer
     override fun prepareLyric(data: Song?) {
         this.data = data
         val currentData = data ?: return
+        lyricLoadJob?.cancel()
+        lyricLoadJob = null
 
         when {
             currentData.parsedLyric != null -> onLyricReady()
@@ -118,26 +126,36 @@ class MusicPlayerManagerImpl private constructor(context: Context) : MusicPlayer
                 onLyricReady()
             }
             currentData.isLocal -> onLyricReady()
+            currentData.id.isNullOrBlank() -> onLyricReady()
             else -> {
-                DefaultRepository.getInstance()
-                    .songDetail(currentData.id)
-                    .subscribe(
-                        object : HttpObserver<DetailResponse<Song>>() {
-                            override fun onSucceeded(data: DetailResponse<Song>) {
-                                val songDetail = data.data
-                                if (songDetail != null) {
-                                    currentData.style = songDetail.style
-                                    currentData.lyric = songDetail.lyric
+                loadRemoteLyric(currentData)
+            }
+        }
+    }
 
-                                    if (StringUtils.isNotBlank(currentData.lyric)) {
-                                        parseLyric()
-                                    }
-                                }
+    private fun loadRemoteLyric(currentData: Song) {
+        val songId = currentData.id.orEmpty()
+        lyricLoadJob = managerScope.launch {
+            when (val result = loadSongDetail(songId)) {
+                is LoadSongDetailUseCase.Result.Success -> {
+                    if (data !== currentData) {
+                        return@launch
+                    }
 
-                                onLyricReady()
-                            }
-                        }
-                    )
+                    currentData.style = result.song.style
+                    currentData.lyric = result.song.lyric
+
+                    if (StringUtils.isNotBlank(currentData.lyric)) {
+                        parseLyric()
+                    }
+                    onLyricReady()
+                }
+
+                is LoadSongDetailUseCase.Result.Error -> {
+                    if (data === currentData) {
+                        onLyricReady()
+                    }
+                }
             }
         }
     }

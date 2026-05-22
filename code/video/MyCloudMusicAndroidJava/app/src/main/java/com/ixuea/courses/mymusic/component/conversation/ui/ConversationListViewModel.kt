@@ -1,11 +1,12 @@
 package com.ixuea.courses.mymusic.component.conversation.ui
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ixuea.courses.mymusic.component.conversation.domain.DeleteConversationMessagesUseCase
-import com.ixuea.courses.mymusic.component.conversation.domain.LoadConversationUserUseCase
 import com.ixuea.courses.mymusic.component.conversation.domain.LoadConversationListUseCase
+import com.ixuea.courses.mymusic.component.chat.domain.ObserveIncomingMessagesUseCase
+import com.ixuea.courses.mymusic.component.chat.domain.ObserveUnreadChangesUseCase
+import com.ixuea.courses.mymusic.component.user.domain.LoadUserDetailUseCase
 import com.ixuea.courses.mymusic.component.user.model.User
 import com.ixuea.courses.mymusic.util.MessageUtil
 import com.ixuea.courses.mymusic.util.StringUtil
@@ -23,14 +24,19 @@ class ConversationListViewModel(
     private val loadConversationList: LoadConversationListUseCase = LoadConversationListUseCase(),
     private val deleteConversationMessages: DeleteConversationMessagesUseCase =
         DeleteConversationMessagesUseCase(),
-    private val loadConversationUser: LoadConversationUserUseCase = LoadConversationUserUseCase(),
+    private val loadUserDetail: LoadUserDetailUseCase = LoadUserDetailUseCase(),
+    private val observeIncomingMessagesUseCase: ObserveIncomingMessagesUseCase =
+        ObserveIncomingMessagesUseCase(),
+    private val observeUnreadChangesUseCase: ObserveUnreadChangesUseCase =
+        ObserveUnreadChangesUseCase(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ConversationListUiState())
     val uiState: StateFlow<ConversationListUiState> = _uiState
     private var deferredRefreshJob: Job? = null
+    private var incomingMessagesJob: Job? = null
+    private var unreadChangesJob: Job? = null
 
-    fun load(context: Context) {
-        val appContext = context.applicationContext
+    fun load() {
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -41,7 +47,6 @@ class ConversationListViewModel(
         viewModelScope.launch {
             when (val result = loadConversationList()) {
                 is LoadConversationListUseCase.Result.Success -> publish(
-                    context = appContext,
                     conversations = result.conversations,
                 )
                 is LoadConversationListUseCase.Result.Error -> publishError(result.errorCode)
@@ -49,27 +54,45 @@ class ConversationListViewModel(
         }
     }
 
-    fun refreshAfterNewMessage(context: Context) {
+    fun observeConversationChanges() {
+        if (incomingMessagesJob?.isActive != true) {
+            incomingMessagesJob = viewModelScope.launch {
+                observeIncomingMessagesUseCase().collect {
+                    refreshAfterNewMessage()
+                }
+            }
+        }
+
+        if (unreadChangesJob?.isActive != true) {
+            unreadChangesJob = viewModelScope.launch {
+                observeUnreadChangesUseCase().collect {
+                    refreshAfterNewMessage()
+                }
+            }
+        }
+    }
+
+    fun refreshAfterNewMessage() {
         if (deferredRefreshJob?.isActive == true) {
             return
         }
 
         deferredRefreshJob = viewModelScope.launch {
             delay(1000)
-            load(context.applicationContext)
+            load()
         }
     }
 
-    fun deleteMessages(context: Context, conversation: Conversation) {
+    fun deleteMessages(conversation: Conversation) {
         viewModelScope.launch {
             when (val result = deleteConversationMessages(conversation)) {
-                is DeleteConversationMessagesUseCase.Result.Success -> load(context.applicationContext)
+                is DeleteConversationMessagesUseCase.Result.Success -> load()
                 is DeleteConversationMessagesUseCase.Result.Error -> publishError(result.errorCode)
             }
         }
     }
 
-    private fun publish(context: Context, conversations: List<Conversation>) {
+    private fun publish(conversations: List<Conversation>) {
         val items = conversations.map { it.toUiState() }
         _uiState.update {
             it.copy(
@@ -79,16 +102,15 @@ class ConversationListViewModel(
             )
         }
         conversations.forEach { conversation ->
-            resolveUser(context, conversation.targetId)
+            resolveUser(conversation.targetId)
         }
     }
 
-    private fun resolveUser(context: Context, targetId: String) {
+    private fun resolveUser(targetId: String) {
         viewModelScope.launch {
-            runCatching {
-                loadConversationUser(context, targetId)
-            }.onSuccess { user ->
-                publishUser(targetId, user)
+            when (val result = loadUserDetail(targetId)) {
+                is LoadUserDetailUseCase.Result.Success -> publishUser(targetId, result.user)
+                is LoadUserDetailUseCase.Result.Error -> Unit
             }
         }
     }
