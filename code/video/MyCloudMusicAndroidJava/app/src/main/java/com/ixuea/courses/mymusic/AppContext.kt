@@ -1,6 +1,8 @@
 package com.ixuea.courses.mymusic
 
 import android.app.Application
+import androidx.emoji.bundled.BundledEmojiCompatConfig
+import androidx.emoji.text.EmojiCompat
 import com.ixuea.android.downloader.DownloadService
 import com.ixuea.android.downloader.callback.DownloadManager
 import com.ixuea.courses.mymusic.component.chat.repository.ChatClient
@@ -55,6 +57,7 @@ class AppContext : Application() {
         MMKV.initialize(this)
         Timber.plant(Timber.DebugTree())
         preference = PreferenceUtil.getInstance(this)
+        EmojiCompat.init(BundledEmojiCompatConfig(this))
         initIM()
     }
 

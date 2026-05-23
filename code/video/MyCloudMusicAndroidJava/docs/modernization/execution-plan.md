@@ -90,13 +90,15 @@
 - 歌词列表自定义 View `LyricListView` 已移除 `lyric_list_view.xml`/ViewBinding，改为程序化创建 RecyclerView 和拖拽播放条；桌面歌词自定义 View `GlobalLyricView` 已移除 `view_global_lyric.xml`/ViewBinding，改为程序化创建悬浮歌词、播放控制、颜色和字号设置 UI；主播放器、简单播放器、小播放控件和桌面歌词继续复用歌词能力。
 - 通用占位控件 `PlaceholderView` 已移除 `view_placeholder.xml`/ViewBinding，改为程序化创建图标和文案；无人引用的 `SuperItemSettingView`、其 attrs 和一批旧 item/divider/dropdown/dialog 占位布局已删除，layout XML 当时收敛到 7 个，后续已继续清到 RemoteViews 边界。
 - 剩余编码尾巴已继续收口：歌词行 `item_lyric.xml` 改为 `LyricAdapter` 程序化创建 `LyricLineView`；`SuperDialog`、`SuperRoundLoadingDialogFragment`、`SuperToast` 已迁到 Kotlin 并改为程序化 View；仍被使用的 superui 小工具 `SquareLinearLayout`、`ReflectUtil`、`SuperClickableSpan`、`BitmapUtil`、`DensityUtil`、`SuperClipboardUtil`、`SuperViewUtil` 已迁到 Kotlin；无人引用的旧 `DropDownMenu`、`DrawableCenterTextView`、`BaseFragmentStatePagerAdapter` 和一批 superui 死工具类已删除。当前 `app/src/main/java` 下 Java 源码数为 `0`，`app/src/main/res/layout` 只剩 RemoteViews 必需的 `music_widget.xml`。
+- 已完成模拟器最小可信冒烟第一轮：安装启动、public slim Main、发现页网络数据/滚动、发现页点歌进入播放器、播放/暂停/seek/后台通知保活、动态列表、下载管理双 tab、会话列表空态、动态发布页和本地音乐扫描入口均已打开并复测无 crash。
+- 模拟器冒烟中修复两处运行时问题：`AppContext` 初始化 `EmojiCompat`，避免动态列表 `EmojiTextView` 崩溃；Manifest 补回 `LocalMusicActivity` / `ScanLocalMusicActivity`，避免 smoke 本地音乐入口 `ActivityNotFoundException`。
 
 当前尚未完成：
 
-- 五条链路仍未完成深度人工冒烟；目前只完成入口级检查。
-- 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
-- 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
-- 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；旧通知限流问题需要后续设备端复验是否消失。
+- 五条链路仍未完成完整深度人工冒烟；本轮只做最小可信冒烟，并未覆盖所有交互、权限、账号和异常分支。
+- 音乐播放链路仍需继续确认多歌曲队列、Widget 控制、桌面歌词开关和歌词逐字/拖拽进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
+- 聊天 Kotlin 迁移后的设备端文本/图片发送、动态多图压缩上传、真实下载任务暂停/继续/删除和本地音乐真实扫描仍需继续验证。
+- 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；本轮后台播放和通知 id `100` 通过，通知统计未再出现 rate violation，后续长时间/多次切歌仍可继续观察。
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 是 Android Widget RemoteViews 边界，不建议为清 XML 硬迁。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
@@ -109,6 +111,37 @@
 - RxJava/EventBus 主线已收口；后续不要再为了数量清理 RemoteViews Widget XML 或无明确收益的大拆分。
 
 ## 最新执行记录
+
+### 2026-05-23 模拟器最小冒烟第一轮
+
+本轮目标：
+
+- 用户已启动模拟器，要求开始测安装启动、播放链路和主要入口页面；本轮优先做最小可信冒烟，而不是全量深度验收。
+
+已验证：
+
+- `adb install -r app/build/outputs/apk/dev/debug/app-dev-debug.apk` 安装成功；`SmokeLauncherActivity` 冷启动成功，前台窗口为 `.debug.SmokeLauncherActivity`。
+- public slim `MainActivity` 可打开，UI 显示 `MuseFlow Android` / `Public slim build`。
+- 发现页 `DiscoveryFragment` 可打开，网络数据加载成功，显示 Banner、`每日推荐`、`推荐歌单`、`推荐单曲` 等内容；列表滚动后可见歌曲 `Yesterday`。
+- 从发现页点击 `Yesterday` 进入 `MusicPlayerActivity` 成功；播放器 Compose 页面、黑胶 `RecordPageView`、标题、进度条和播放控制渲染正常。
+- 播放链路通过：`dumpsys media_session` 显示 `state=PLAYING(3)`，曲目 `Yesterday`；媒体键暂停后变为 `PAUSED(2)`，再次恢复为 `PLAYING(3)`；后台后仍保持 `PLAYING(3)`，进程存活。
+- 播放通知通过：`dumpsys notification --noredact` 显示 `com.ixuea.courses.mymusic` 通知 id `100`，category `transport`，包含上一首、暂停、下一首和 `lyric` 四个 action；通知统计 `numRateViolations=0`。
+- 动态列表 `FeedFragment` 复测后可打开，动态文本、九宫格图片、点赞/评论入口、评论富文本渲染正常。
+- 下载管理 `DownloadActivity` 可打开，`下载完成` / `正在下载` 双 tab 可切换，空态和底部操作区渲染正常。
+- 会话列表 `ConversationActivity` 可打开，标题 `我的消息` 和空态 `暂无会话` 渲染正常。
+- 动态发布 `PublishFeedActivity` 可打开，正文输入框、字数、添加图片入口和发布按钮渲染正常。
+- 本地音乐入口修复后可进入扫描本地音乐页面，标题 `扫描本地音乐` 和 `开始扫描` 按钮渲染正常。
+
+本轮修复：
+
+- `AppContext` 新增 `EmojiCompat.init(BundledEmojiCompatConfig(this))`，修复动态列表 `EmojiTextView` 首次创建时 `EmojiCompat is not initialized` 崩溃。
+- Manifest 补回 `LocalMusicActivity` 和 `ScanLocalMusicActivity`，修复 smoke 本地音乐入口 `ActivityNotFoundException`。
+
+验证：
+
+- 修复后 `./gradlew :app:assembleDevDebug` 通过两轮。
+- 修复后重新安装 APK，并复测 Feed 和 LocalMusic 入口均通过。
+- 本轮未继续做聊天文本/图片发送、动态选图压缩上传、真实下载任务操作、Widget/桌面歌词或真实本地媒体扫描。
 
 ### 2026-05-23 阶段 8 收尾：剩余编码尾巴清零
 
