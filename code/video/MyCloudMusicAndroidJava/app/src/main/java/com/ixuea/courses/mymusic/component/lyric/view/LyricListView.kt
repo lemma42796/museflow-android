@@ -180,7 +180,7 @@ class LyricListView @JvmOverloads constructor(
     }
 
     private fun initDatum() {
-        lyricAdapter = LyricAdapter(R.layout.item_lyric)
+        lyricAdapter = LyricAdapter()
         lyricList.adapter = lyricAdapter
     }
 

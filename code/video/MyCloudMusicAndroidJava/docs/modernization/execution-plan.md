@@ -88,7 +88,8 @@
 - 播放器主页 `MusicPlayerActivity` 已从 `activity_music_player.xml`/`BaseTitleActivity`/ViewBinding 迁到 Compose 页面壳，背景、标题栏、下载入口、播放控制和进度条改由 Compose 渲染，黑胶 `RecordPageView` 和 `LyricListView` 继续通过 AndroidView 复用；无引用的 `BaseTitleActivity`、`BaseViewModelActivity` 和四个 toolbar 布局已删除。
 - 小播放控件 `SmallAudioControlPageFragment` 已从旧 `ViewPager`/子 Fragment/`SmallAudioControlAdapter` 迁到 Compose `HorizontalPager`，保留左右滑动切歌、播放/暂停、播放列表弹窗、点击进入播放器、底部进度和当前歌词行显示；旧 `SmallAudioControlFragment` 已删除。
 - 歌词列表自定义 View `LyricListView` 已移除 `lyric_list_view.xml`/ViewBinding，改为程序化创建 RecyclerView 和拖拽播放条；桌面歌词自定义 View `GlobalLyricView` 已移除 `view_global_lyric.xml`/ViewBinding，改为程序化创建悬浮歌词、播放控制、颜色和字号设置 UI；主播放器、简单播放器、小播放控件和桌面歌词继续复用歌词能力。
-- 通用占位控件 `PlaceholderView` 已移除 `view_placeholder.xml`/ViewBinding，改为程序化创建图标和文案；无人引用的 `SuperItemSettingView`、其 attrs 和一批旧 item/divider/dropdown/dialog 占位布局已删除，layout XML 当前收敛到 7 个。
+- 通用占位控件 `PlaceholderView` 已移除 `view_placeholder.xml`/ViewBinding，改为程序化创建图标和文案；无人引用的 `SuperItemSettingView`、其 attrs 和一批旧 item/divider/dropdown/dialog 占位布局已删除，layout XML 当时收敛到 7 个，后续已继续清到 RemoteViews 边界。
+- 剩余编码尾巴已继续收口：歌词行 `item_lyric.xml` 改为 `LyricAdapter` 程序化创建 `LyricLineView`；`SuperDialog`、`SuperRoundLoadingDialogFragment`、`SuperToast` 已迁到 Kotlin 并改为程序化 View；仍被使用的 superui 小工具 `SquareLinearLayout`、`ReflectUtil`、`SuperClickableSpan`、`BitmapUtil`、`DensityUtil`、`SuperClipboardUtil`、`SuperViewUtil` 已迁到 Kotlin；无人引用的旧 `DropDownMenu`、`DrawableCenterTextView`、`BaseFragmentStatePagerAdapter` 和一批 superui 死工具类已删除。当前 `app/src/main/java` 下 Java 源码数为 `0`，`app/src/main/res/layout` 只剩 RemoteViews 必需的 `music_widget.xml`。
 
 当前尚未完成：
 
@@ -96,7 +97,7 @@
 - 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
 - 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
 - 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；旧通知限流问题需要后续设备端复验是否消失。
-- Compose UI 仍未全量铺开：少量仍被运行时 inflate/RemoteViews 使用的通用布局保留 XML，包括 `music_widget`、`item_lyric` 和 superui 弹窗/Toast/loading 边界。
+- 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 是 Android Widget RemoteViews 边界，不建议为清 XML 硬迁。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -104,10 +105,38 @@
 
 - 后续继续在当前项目内渐进迁移，不新建 Android Studio 项目搬代码。
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
-- 继续把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`，下一批优先处理剩余周边旧 UI/通用旧布局。
-- RxJava/EventBus 主线已收口；后续重点转向剩余 Compose UI、设备端冒烟和边界稳定后的 `core:*` / `feature:*` 模块拆分。
+- 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
+- RxJava/EventBus 主线已收口；后续不要再为了数量清理 RemoteViews Widget XML 或无明确收益的大拆分。
 
 ## 最新执行记录
+
+### 2026-05-23 阶段 8 收尾：剩余编码尾巴清零
+
+本轮决策：
+
+- 用户要求“完成剩下的编码”；本轮不做模拟器人工冒烟，集中处理上一轮盘点出的剩余旧 UI/XML/superui Java 尾巴。
+- `music_widget.xml` 属于 Android Widget RemoteViews 边界，继续保留；其他可替换 layout 和无人引用工具边界优先清掉。
+
+已完成：
+
+- `LyricAdapter` 不再依赖 `item_lyric.xml`，改为程序化创建 40dp 行高的 `LyricLineView`；`LyricListView` 直接使用无布局参数的 `LyricAdapter()`。
+- `SuperDialog`、`SuperRoundLoadingDialogFragment`、`SuperToast` 从 Java/XML inflate 迁到 Kotlin 程序化 View，删除 `super_dialog.xml`、`super_round_dialog_loading.xml`、`super_toast.xml`、`divider_small.xml`、`divider_small_vertical.xml`。
+- 保留运行时需要的 id 到 `res/values/ids.xml`，避免删除旧 XML 后 `R.id.content`、`R.id.placeholder`、`R.id.small_audio_control` 消失。
+- 删除无人引用的 `BaseFragmentStatePagerAdapter`、`DropDownMenu`、`DrawableCenterTextView`、`attrs_dropdown.xml` 和一批 superui 死工具类。
+- 仍被业务使用的 superui 小工具迁到 Kotlin：`SquareLinearLayout`、`ReflectUtil`、`SuperClickableSpan`、`BitmapUtil`、`DensityUtil`、`SuperClipboardUtil`、`SuperViewUtil`。
+
+验证：
+
+- `./gradlew :app:assembleDevDebug` 通过。
+- `git diff --check` 通过。
+- `find app/src/main/java -name '*.java' | wc -l` 输出 `0`。
+- `rg --files app/src/main/res/layout | wc -l` 输出 `1`，唯一剩余 layout 是 Widget RemoteViews 使用的 `music_widget.xml`。
+- `rg` 扫描确认 `R.layout`/`@layout` 命中只剩 `music_widget`，且 app 源码/Gradle 中仍无 EventBus、普通 Rx/RxJava、`HttpObserver`、AutoDispose。
+
+下一步建议：
+
+- 纯编码收口已到当前项目可交付状态；下一会话直接进入模拟器设备端深度冒烟，覆盖播放、Widget/桌面歌词、聊天发送/收消息、动态多图压缩上传、下载任务操作、发现页网络数据和本地音乐扫描。
+- 若冒烟发现问题，再按具体链路做小修；不要为了“XML 数量清零”硬改 `music_widget.xml`。
 
 ### 2026-05-23 阶段 8 继续：死布局与 PlaceholderView 收口
 
@@ -3371,7 +3400,7 @@ GitHub 发布策略：
 
 当前分支：`codex/emulator-smoke-progress`。
 
-当前策略：用户要求更新交接、提交并 push；本节为 2026-05-23 收尾交接，下一会话从本文档、Git 历史和 `git status --short` 恢复即可。
+当前策略：用户要求更新交接、提交并 push；本节为 2026-05-23 代码收尾交接，下一会话从本文档、Git 历史和 `git status --short` 恢复，并直接进入模拟器设备端深度冒烟。
 
 当前最新切片：
 
@@ -3397,28 +3426,30 @@ GitHub 发布策略：
 - public slim 后不再加载的旧首页 `activity_main.xml`/`activity_main_content.xml` 已删除，无人引用的 `OnPageChangeListenerAdapter` 已删除。
 - `BGABadgeView-Android` api/compiler 依赖和 `BadgeInit.kt` 已删除；旧非增量 BGA annotation processor 不再参与构建。
 - 旧 API 尾巴已继续收口：返回键迁到 `OnBackPressedDispatcher`，默认偏好入口切到 AndroidX `PreferenceManager`，Parcelable 读取补 API 33 typed overload，`ScreenUtil`/`ImageUtil`/`RichUtil` 移除可替换 deprecated 调用，桌面歌词 overlay type 修正为 API 26+ 使用 `TYPE_APPLICATION_OVERLAY`。
-- 小播放器内层旧 `ViewPager` 仍保留，因为 `fragment_small_audio_control_page.xml` 里已有 ViewPager2 内存泄漏备注；这不是漏改，而是当前有意边界。
+- 剩余编码尾巴已清零：歌词行、superui 弹窗/Toast/loading 不再依赖 layout XML；`BaseFragmentStatePagerAdapter`、旧 DropDownMenu 和无人引用 superui 工具类已删除；仍被业务使用的 superui 小工具已迁到 Kotlin；`app/src/main/java` 当前不再包含 Java 源文件，`app/src/main/res/layout` 只剩 Widget RemoteViews 必需的 `music_widget.xml`。
 
 当前验证：
 
 - `git diff --check` 通过。
 - `./gradlew :app:assembleDevDebug` 通过。
-- 最新构建中 Kotlin 编译无 warning；剩余提示为 `superui` 子包 Java deprecated/unchecked 和 Hilt 生成代码 deprecated。
-- `rg` 扫描确认 app 源码/Gradle 中已无 EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose、BGABadge 依赖/注解入口；旧 ViewPager 命中只剩小播放器保留边界。
-- `@Composable` / `setContent` 扫描确认 Compose 已进入 public slim、下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序和选择歌词；layout XML 数量已从 75 降到 36。
+- 最新构建中 Kotlin 编译无 warning；剩余提示为既有 Hilt kapt 选项提示。
+- `rg` 扫描确认 app 源码/Gradle 中已无 EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose、BGABadge、旧 `FragmentStatePagerAdapter` 和 DropDownMenu 入口；`R.layout` / `@layout` 命中只剩 `music_widget`。
+- `find app/src/main/java -name '*.java' | wc -l` 输出 `0`；`rg --files app/src/main/res/layout | wc -l` 输出 `1`。
+- `@Composable` / `setContent` 扫描确认 Compose 已进入 public slim、下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序和选择歌词；layout XML 当前只剩 Widget RemoteViews 边界。
 - 本轮未做设备端人工冒烟。
 
 恢复步骤：
 
 - 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
-- 如果继续纯编码，优先继续 Compose UI 链路：播放器主页、歌词图片/自定义歌词 View 或剩余周边旧 UI；也可以处理 `superui` 子包 Java warning、Hilt 生成 deprecated 的来源评估，或小播放器旧 `ViewPager` 的泄漏原因复核。
-- 如果继续验证，优先做播放链路、聊天发送/收消息、动态多图压缩上传、下载任务操作、发现页网络数据/滚动、本地音乐扫描和桌面歌词/Widget 的设备端冒烟。
+- 纯编码收口已到当前项目可交付状态；下一会话不要继续按“清 Java/XML 数量”找任务，直接启动模拟器做深度冒烟。
+- 模拟器冒烟优先顺序：播放链路（播放/暂停、上一首/下一首、多歌曲队列、进度/歌词、后台通知）、Widget/桌面歌词、聊天发送/收消息、动态多图压缩上传、下载任务暂停/继续/删除、发现页网络数据/滚动、本地音乐扫描。
+- 冒烟发现问题后，再按具体链路做小修；如果无问题，再评估既有 Hilt kapt 选项提示或后续 `core:*` / `feature:*` 模块拆分。
 - 每个切片继续保持 `./gradlew :app:assembleDevDebug` 和 `git diff --check` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
 
-当前主包剩余 Java 数：`0`。
+当前 app 源码剩余 Java 数：`0`。
 
-主包 Java 清单可用以下命令复核：
+app Java 清单可用以下命令复核：
 
 ```bash
-find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print | sort
+find app/src/main/java -name '*.java' -print | sort
 ```
