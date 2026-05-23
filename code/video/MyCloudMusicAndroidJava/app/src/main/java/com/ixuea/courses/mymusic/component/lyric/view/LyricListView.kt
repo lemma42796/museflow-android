@@ -1,16 +1,26 @@
 package com.ixuea.courses.mymusic.component.lyric.view
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.util.AttributeSet
-import android.view.LayoutInflater
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.annotation.AttrRes
+import androidx.annotation.DimenRes
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.lyric.adapter.LyricAdapter
 import com.ixuea.courses.mymusic.component.lyric.model.Line
 import com.ixuea.courses.mymusic.component.lyric.model.Lyric
-import com.ixuea.courses.mymusic.databinding.LyricListViewBinding
 import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.LyricUtil
@@ -30,8 +40,11 @@ class LyricListView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
     defStyleRes: Int = 0,
-) : LinearLayout(context, attrs, defStyleAttr, defStyleRes) {
-    private val binding = LyricListViewBinding.inflate(LayoutInflater.from(context), this, true)
+) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
+    private val lyricList = RecyclerView(context)
+    private val lyricDragContainer = LinearLayout(context)
+    private val lyricPlay = ImageButton(context)
+    private val lyricTime = TextView(context)
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var lyricAdapter: LyricAdapter
     private var data: Lyric? = null
@@ -45,13 +58,14 @@ class LyricListView @JvmOverloads constructor(
     private var lyricListListener: LyricListListener? = null
 
     init {
+        buildLayout()
         initViews()
         initDatum()
         initListeners()
     }
 
     private fun initListeners() {
-        binding.lyricPlay.setOnClickListener {
+        lyricPlay.setOnClickListener {
             cancelLyricTask()
             showScrollLyricView()
             scrollSelectedLyricLine?.let { line ->
@@ -59,7 +73,7 @@ class LyricListView @JvmOverloads constructor(
             }
         }
 
-        binding.lyricList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        lyricList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 when (newState) {
@@ -85,7 +99,7 @@ class LyricListView @JvmOverloads constructor(
             }
         })
 
-        binding.root.setOnClickListener {
+        setOnClickListener {
             lyricListListener?.onLyricClick()
         }
 
@@ -117,7 +131,7 @@ class LyricListView @JvmOverloads constructor(
         }
 
         scrollSelectedLyricLine?.let { line ->
-            binding.lyricTime.text = SuperDateUtil.ms2ms(line.startTime.toInt())
+            lyricTime.text = SuperDateUtil.ms2ms(line.startTime.toInt())
         }
     }
 
@@ -128,7 +142,7 @@ class LyricListView @JvmOverloads constructor(
         cancelLyricTask()
         lyricTimerTask = object : TimerTask() {
             override fun run() {
-                binding.lyricList.post {
+                lyricList.post {
                     showScrollLyricView()
                 }
             }
@@ -149,7 +163,7 @@ class LyricListView @JvmOverloads constructor(
 
     private fun showScrollLyricView() {
         isDrag = false
-        SuperViewUtil.gone(binding.lyricDragContainer)
+        SuperViewUtil.gone(lyricDragContainer)
     }
 
     private fun showDragView() {
@@ -158,7 +172,7 @@ class LyricListView @JvmOverloads constructor(
         }
 
         isDrag = true
-        SuperViewUtil.show(binding.lyricDragContainer)
+        SuperViewUtil.show(lyricDragContainer)
     }
 
     private fun isLyricEmpty(): Boolean {
@@ -167,13 +181,13 @@ class LyricListView @JvmOverloads constructor(
 
     private fun initDatum() {
         lyricAdapter = LyricAdapter(R.layout.item_lyric)
-        binding.lyricList.adapter = lyricAdapter
+        lyricList.adapter = lyricAdapter
     }
 
     private fun initViews() {
-        binding.lyricList.setHasFixedSize(true)
+        lyricList.setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
-        binding.lyricList.layoutManager = layoutManager
+        lyricList.layoutManager = layoutManager
     }
 
     override fun onDetachedFromWindow() {
@@ -207,9 +221,9 @@ class LyricListView @JvmOverloads constructor(
         val currentLyric = data
         if (currentLyric == null) {
             lyricAdapter.setNewInstance(arrayListOf())
-            SuperViewUtil.gone(binding.lyricList)
+            SuperViewUtil.gone(lyricList)
         } else {
-            SuperViewUtil.show(binding.lyricList)
+            SuperViewUtil.show(lyricList)
             val datum = arrayListOf<Any>()
             addLyricFillData(datum)
             datum.addAll(currentLyric.datum.orEmpty())
@@ -257,7 +271,7 @@ class LyricListView @JvmOverloads constructor(
     }
 
     private fun scrollPosition(lineNumber: Int) {
-        binding.lyricList.post {
+        lyricList.post {
             lyricAdapter.setSelectedIndex(lineNumber)
 
             if (lyricOffsetY > 0) {
@@ -268,6 +282,86 @@ class LyricListView @JvmOverloads constructor(
 
     fun setLyricListListener(lyricListListener: LyricListListener?) {
         this.lyricListListener = lyricListListener
+    }
+
+    private fun buildLayout() {
+        lyricList.apply {
+            isVerticalScrollBarEnabled = false
+        }
+        addView(
+            lyricList,
+            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT),
+        )
+
+        val lightWhite = resolveColorAttr(R.attr.colorLightWhite)
+        val dragButtonSize = dimenPx(R.dimen.d40)
+        val dragButtonPadding = dimenPx(R.dimen.d10)
+        lyricPlay.apply {
+            background = null
+            setPadding(dragButtonPadding, dragButtonPadding, dragButtonPadding, dragButtonPadding)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setImageResource(R.drawable.play)
+            imageTintList = ColorStateList.valueOf(lightWhite)
+        }
+
+        lyricTime.setTextColor(lightWhite)
+
+        lyricDragContainer.apply {
+            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            visibility = View.GONE
+            addView(lyricPlay, LinearLayout.LayoutParams(dragButtonSize, dragButtonSize))
+            addView(createDragDivider(lightWhite))
+            addView(
+                lyricTime,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+
+        val dragContainerLayoutParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT,
+        ).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            rightMargin = dimenPx(R.dimen.padding_outer)
+        }
+        addView(lyricDragContainer, dragContainerLayoutParams)
+    }
+
+    private fun createDragDivider(color: Int): View {
+        return View(context).apply {
+            setBackgroundColor(color)
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                dimenPx(R.dimen.divider_small),
+                1f,
+            ).apply {
+                val horizontalMargin = dimenPx(R.dimen.padding_meddle)
+                leftMargin = horizontalMargin
+                rightMargin = horizontalMargin
+            }
+        }
+    }
+
+    private fun dimenPx(@DimenRes resId: Int): Int {
+        return resources.getDimensionPixelSize(resId)
+    }
+
+    private fun resolveColorAttr(@AttrRes attr: Int): Int {
+        val typedValue = TypedValue()
+        val resolved = context.theme.resolveAttribute(attr, typedValue, true)
+        if (!resolved) {
+            return Color.WHITE
+        }
+
+        return if (typedValue.resourceId != 0) {
+            ContextCompat.getColor(context, typedValue.resourceId)
+        } else {
+            typedValue.data
+        }
     }
 
     /**

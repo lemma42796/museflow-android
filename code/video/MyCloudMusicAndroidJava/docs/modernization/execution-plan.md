@@ -80,8 +80,15 @@
 - 应用入口 `AppContext` 已从 Java 迁到 Kotlin，保留 Manifest 类名、`getInstance()`、`preference`、`chatClient`、`downloadManager`、`orm`、RongCloud 初始化/连接和退出清理行为；Hilt 编译器已切到 kapt。
 - 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留 `CHANNEL_ID_MUSIC`、简单通知、前台 service 通知、桌面歌词解锁通知和聊天消息通知入口。
 - 阶段 8 旧 API 尾巴继续收口：未使用 AutoDispose 依赖已删除，返回键处理已迁到 `OnBackPressedDispatcher`，默认偏好入口已切到 AndroidX `PreferenceManager`，`Song` 和基类页面传参的 Parcelable 读取已补 API 33 typed overload 兼容封装，`ScreenUtil`/`ImageUtil`/`RichUtil` 已移除可替换的 deprecated 调用。
-- 下载管理双 tab 已继续从旧 `ViewPager2 + FragmentStateAdapter` 推进到 Compose `TabRow + LazyColumn`；public slim 后不再加载的旧首页 `activity_main*` 布局已删除；剩余旧 pager 基类已修正空列表不清旧数据的问题，小播放器内层 `ViewPager` 因既有泄漏备注继续作为有意保留边界。
+- 下载管理双 tab 已继续从旧 `ViewPager2 + FragmentStateAdapter` 推进到 Compose `TabRow + LazyColumn`；public slim 后不再加载的旧首页 `activity_main*` 布局已删除；剩余旧 pager 基类已修正空列表不清旧数据的问题。
 - Compose UI 第一批已落地：public slim `MainActivity`、下载管理 `DownloadActivity`、会话列表 `ConversationActivity`、动态发布 `PublishFeedActivity`、评论页 `CommentActivity`、歌单详情 `SheetDetailActivity`、发现页 `DiscoveryFragment`、动态列表 `FeedFragment`、聊天详情 `ChatActivity`、本地音乐 `LocalMusicActivity`、本地音乐扫描 `ScanLocalMusicActivity`、自定义发现排序 `CustomDiscoveryActivity` 和选择歌词 `SelectLyricActivity` 已从 XML/ViewBinding/RecyclerView/Adapter 入口迁到 Compose；下载、会话、评论、发现、动态列表、聊天、歌单详情、本地音乐、自定义发现排序和选择歌词的旧专属 Adapter/布局已删除；已无人加载的旧登录布局也已删除。
+- 播放器/歌词周边 Compose 继续推进：歌词图片分享页 `ShareLyricImageActivity` 已从 XML 菜单/ViewBinding 迁到 Compose 壳，并保留可截图分享的内容 View；简单播放器 `SimplePlayerActivity` 已从 XML/RecyclerView/`SimplePlayerAdapter` 迁到 Compose，继续复用 `MusicListManager`、Media3 播放桥和 `LyricListView` 歌词控件；选择歌词页“歌词图片”按钮文案已修正。
+- 播放列表弹窗 `MusicPlayListDialogFragment` 已从 BottomSheet XML/RecyclerView/`MusicPlayListAdapter` 迁到 Compose bottom sheet，保留循环模式切换、数量展示、删除全部、单项删除和点击播放入口。
+- 黑胶唱片页底层 View 已继续收口：`RecordFragment` 已从 `fragment_record.xml`/ViewBinding 迁到 Compose `AndroidView` 壳；`RecordPageView` 和 `RecordView` 不再 inflate XML，而是程序化创建 ViewPager2、唱针、唱片背景和圆形封面，继续保留 ViewPager 队列滑动、唱针动画和唱片旋转行为。
+- 播放器主页 `MusicPlayerActivity` 已从 `activity_music_player.xml`/`BaseTitleActivity`/ViewBinding 迁到 Compose 页面壳，背景、标题栏、下载入口、播放控制和进度条改由 Compose 渲染，黑胶 `RecordPageView` 和 `LyricListView` 继续通过 AndroidView 复用；无引用的 `BaseTitleActivity`、`BaseViewModelActivity` 和四个 toolbar 布局已删除。
+- 小播放控件 `SmallAudioControlPageFragment` 已从旧 `ViewPager`/子 Fragment/`SmallAudioControlAdapter` 迁到 Compose `HorizontalPager`，保留左右滑动切歌、播放/暂停、播放列表弹窗、点击进入播放器、底部进度和当前歌词行显示；旧 `SmallAudioControlFragment` 已删除。
+- 歌词列表自定义 View `LyricListView` 已移除 `lyric_list_view.xml`/ViewBinding，改为程序化创建 RecyclerView 和拖拽播放条；桌面歌词自定义 View `GlobalLyricView` 已移除 `view_global_lyric.xml`/ViewBinding，改为程序化创建悬浮歌词、播放控制、颜色和字号设置 UI；主播放器、简单播放器、小播放控件和桌面歌词继续复用歌词能力。
+- 通用占位控件 `PlaceholderView` 已移除 `view_placeholder.xml`/ViewBinding，改为程序化创建图标和文案；无人引用的 `SuperItemSettingView`、其 attrs 和一批旧 item/divider/dropdown/dialog 占位布局已删除，layout XML 当前收敛到 7 个。
 
 当前尚未完成：
 
@@ -89,7 +96,7 @@
 - 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
 - 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
 - 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；旧通知限流问题需要后续设备端复验是否消失。
-- Compose UI 仍未全量铺开：播放器主页、歌词图片/自定义歌词 View 等部分周边页面仍主要保留 XML/ViewBinding/RecyclerView/自定义 View。
+- Compose UI 仍未全量铺开：少量仍被运行时 inflate/RemoteViews 使用的通用布局保留 XML，包括 `music_widget`、`item_lyric` 和 superui 弹窗/Toast/loading 边界。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -97,10 +104,199 @@
 
 - 后续继续在当前项目内渐进迁移，不新建 Android Studio 项目搬代码。
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
-- 继续把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`，下一批优先处理播放器主页、歌词图片/自定义歌词 View 或剩余周边旧 UI 页面。
+- 继续把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`，下一批优先处理剩余周边旧 UI/通用旧布局。
 - RxJava/EventBus 主线已收口；后续重点转向剩余 Compose UI、设备端冒烟和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 
 ## 最新执行记录
+
+### 2026-05-23 阶段 8 继续：死布局与 PlaceholderView 收口
+
+本轮决策：
+
+- 用户继续要求不要停；桌面歌词 XML 收口并构建通过后，继续扫描剩余 layout 的真实引用面。
+- 只删除无 `R.layout.*`、无 `@layout/*`、无 Binding 依赖的死布局；`music_widget`、`item_lyric`、`super_dialog`、`super_toast` 和 `super_round_dialog_loading` 仍被运行时使用，继续保留。
+- 扫描发现 `view_placeholder.xml` 没有直接 `R.layout` 引用，但仍由 `ViewPlaceholderBinding` 生成类承接；本轮改 `PlaceholderView`，不回退占位布局。
+- `SuperItemSettingView` 起初也暴露为 Binding 依赖，继续全局扫描后确认没有外部引用，因此作为死 Java/view/attrs 边界删除。
+
+本轮代码变更：
+
+- `PlaceholderView` 移除 `ViewPlaceholderBinding`，改为程序化创建 150dp 图标和错误文案，保留 `show(...)`、`showTitle(...)`、`showIcon(...)` 调用面。
+- 删除无人引用的 `discovery_button.xml`、`divider.xml`、`layout_indicator_skeleton.xml`、`item_tag.xml`、`view_placeholder.xml`、`fill.xml`、`fragment_dialog_term_service.xml`、`recycler_view.xml`、`item_dropdown.xml`、`divider_small_vertical_grey.xml`、`dropdown_phone_brand.xml` 和 `item_list_region.xml`。
+- 删除无人引用的 `SuperItemSettingView.java`、`super_item_setting_view.xml` 和 `attrs_super_setting.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；第一次删除后暴露 `ViewPlaceholderBinding` 依赖，迁移 `PlaceholderView` 后再次通过；删除 `SuperItemSettingView`/attrs 后第三次通过。
+- `ViewPlaceholderBinding`、`view_placeholder`、`SuperItemSettingView` 和本轮删除的死布局主源码/资源引用扫描无残留；layout XML 当前从 20 降到 7。
+
+当前边界：
+
+- 本轮未做设备端错误/空态占位展示、Widget 或 Toast/loading 弹窗人工冒烟。
+- 剩余 7 个 layout 里，`music_widget` 属于 RemoteViews 边界，`item_lyric` 属于歌词列表 adapter 行布局，superui 布局属于仍在 Java/第三方风格工具类中运行时 inflate 的保留边界。
+
+### 2026-05-23 阶段 8 继续：GlobalLyricView XML/ViewBinding 收口
+
+本轮决策：
+
+- 用户继续要求不要停；`LyricListView` 程序化布局构建通过后，继续处理歌词方向剩余最大的桌面悬浮歌词 XML 边界。
+- 本轮仍不改 `GlobalLyricManagerImpl`、悬浮窗权限/WindowManager 逻辑或播放 manager，只替换 `GlobalLyricView` 内部布局创建方式。
+- 颜色单选和字号设置继续复用 `PreferenceUtil` 持久化；桌面歌词监听接口、拖拽回调、上一首/播放/下一首/锁定/关闭回调保持不变。
+
+本轮代码变更：
+
+- `GlobalLyricView` 移除 `ViewGlobalLyricBinding.inflate(...)`，改为程序化创建 logo、两行 `LyricLineView`、关闭按钮、播放控制栏、颜色单选组和字号按钮。
+- 桌面歌词颜色按钮改用运行时生成的 View id，避免删除 XML 后继续依赖 `R.id.radio_button*`。
+- 保留普通样式/简单样式切换、拖拽拦截、精准歌词逐字高亮、下一行歌词预览、播放状态图标切换和偏好读写行为。
+- 删除 `view_global_lyric.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过，未新增 Kotlin warning；剩余提示为既有 Hilt kapt 选项提示和 Java deprecated note。
+- `git diff --check` 通过。
+- `ViewGlobalLyricBinding`、`view_global_lyric`、旧桌面歌词 XML id 的主源码/资源引用扫描无残留；layout XML 当前从 21 降到 20。
+
+当前边界：
+
+- 本轮未做设备端桌面歌词开启/关闭、拖拽、锁定、颜色切换、字号调整、播放控制和简单/普通样式切换人工冒烟。
+- 剩余 XML 主要是通用 widget/dialog/divider/dropdown/item 小布局，下一步可继续按引用面选择低风险收口。
+
+### 2026-05-23 阶段 8 继续：LyricListView XML/ViewBinding 收口
+
+本轮决策：
+
+- 用户继续要求不要停；小播放控件 Compose pager 构建通过后，继续沿播放器歌词链路收掉一个仍被主播放器/简单播放器复用的旧 XML 边界。
+- 本轮优先处理 `LyricListView`，因为它只承担列表歌词、拖拽选中时间和点击回调，风险比桌面悬浮歌词 `GlobalLyricView` 更集中。
+- 不重写 `LyricAdapter`、`item_lyric.xml` 或 `LyricLineView`，继续保留逐字歌词高亮和现有列表行渲染。
+
+本轮代码变更：
+
+- `LyricListView` 从 `LinearLayout + LyricListViewBinding.inflate(...)` 改为 `FrameLayout` 程序化布局。
+- 内部程序化创建歌词 `RecyclerView`、拖拽播放按钮、进度分割线和时间文本，保留拖拽显示、延迟隐藏、点播放 seek 到选中歌词、列表点击/长按和精准歌词逐字进度刷新行为。
+- 删除 `lyric_list_view.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过，未新增 Kotlin warning；剩余提示为既有 Hilt kapt 选项提示和 Java deprecated note。
+- `git diff --check` 通过。
+- `LyricListViewBinding`、`lyric_list_view` 和已删除歌词列表 XML id 的主源码/资源引用扫描无残留；layout XML 当前从 22 降到 21。
+
+当前边界：
+
+- 本轮未做设备端主播放器/简单播放器歌词列表显示、歌词拖拽、点击 seek、逐字高亮和小播放歌词刷新人工冒烟。
+- `GlobalLyricView` 及 `view_global_lyric.xml` 仍是歌词/桌面歌词方向下一批可收口重点。
+
+### 2026-05-23 阶段 8 继续：小播放控件 Compose Pager 收口
+
+本轮决策：
+
+- 用户要求继续编码不要停；播放器主页 Compose 壳通过后，继续处理同一播放链路里的小播放控件。
+- 旧实现是 `SmallAudioControlPageFragment -> ViewPager -> SmallAudioControlAdapter -> SmallAudioControlFragment`，每一页都创建子 Fragment；本轮改成单个 Compose `HorizontalPager`，减少 Fragment/Adapter 边界。
+- 旧 ViewPager2 泄漏备注来自 XML 时代的播放器控件；本轮直接迁到 Compose pager，不再保留旧 `ViewPager` 作为边界。
+
+本轮代码变更：
+
+- 新增 `SmallAudioControlScreen`，用 Compose `HorizontalPager` 渲染歌曲页，保留封面、标题、单行歌词、播放/暂停、播放列表按钮和底部进度条。
+- `SmallAudioControlPageFragment` 从 `BaseViewModelFragment<FragmentSmallAudioControlPageBinding>` 改为 `BaseLogicFragment + ComposeView`，播放列表、当前歌曲 id、播放状态、进度和时长改为 Compose state。
+- 当前歌词行继续通过 `LyricLineView` 的 AndroidView 复用，保留逐字歌词高亮计算。
+- 删除 `SmallAudioControlFragment`、`SmallAudioControlAdapter`、`fragment_small_audio_control_page.xml` 和 `fragment_audio_control.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；把 `LinearProgressIndicator` 切到 lambda progress 重载后再次通过，未新增 Kotlin warning。
+- `git diff --check` 通过。
+- `SmallAudioControlFragment`、`SmallAudioControlAdapter`、`FragmentAudioControlBinding`、`FragmentSmallAudioControlPageBinding`、`fragment_audio_control`、`fragment_small_audio_control_page` 主源码/资源引用扫描无残留；layout XML 当前从 24 降到 22。
+
+当前边界：
+
+- 本轮未做设备端小播放控件显示/隐藏、左右滑动切歌、歌词刷新、播放/暂停、播放列表弹窗和点击进入播放器人工冒烟。
+- `LyricListView`、`GlobalLyricView` 和少量通用旧布局仍是后续 Compose/程序化 View 收口重点。
+
+### 2026-05-23 阶段 8 继续：播放器主页 Compose 壳落地
+
+本轮决策：
+
+- 用户要求不要停；黑胶 View 层收口并构建通过后，继续推进播放器主页 `MusicPlayerActivity` 本体。
+- 本轮不重写播放核心、下载 use case、Media3 manager 或歌词自定义控件，采用 Compose 页面壳 + `AndroidView` 复用黑胶/歌词复杂 View，降低一次性重写风险。
+- 主播放器切出 XML 后，旧 `BaseTitleActivity` / `BaseViewModelActivity` 已无子类，toolbar include 布局也无引用，因此作为同轮死边界一起删除。
+
+本轮代码变更：
+
+- 新增 `MusicPlayerScreen`：Compose 渲染模糊背景容器、透明标题栏、五个迷你操作按钮、播放进度 Slider 和播放控制按钮。
+- `MusicPlayerActivity` 从 `BaseTitleActivity<ActivityMusicPlayerBinding>` 改为 `BaseLogicActivity + setContent`，标题/副标题、播放状态、歌词显示状态、进度、时长、循环模式和下载图标改为 Compose state。
+- `MusicPlayerActivity` 继续复用 `DownloadActionsUseCase`、`MusicListManager`、`MusicPlayerManager`、播放列表弹窗、Media3 播放事件和歌词长按选择入口；`RecordPageView` 与 `LyricListView` 通过 AndroidView 回调绑定。
+- 背景图加载增加当前歌曲 id 保护，避免进度刷新时反复触发 Glide 背景加载；黑胶队列数据绑定增加列表快照保护，避免播放进度重组时反复 setData；歌词 AndroidView 改为仅歌词模式显示时挂载，避免透明 View 抢掉黑胶点击。
+- `MusicPlayerManager` 和 `DownloadActionsUseCase` 在 `setContent` 前初始化，避免 ViewPager/AndroidView 初始回调早于旧 `initDatum()` 时触发 lateinit 风险。
+- 删除 `activity_music_player.xml`。
+- 删除已无引用的 `BaseTitleActivity.kt`、`BaseViewModelActivity.kt`、`toolbar.xml`、`toolbar_light.xml`、`toolbar_transparent_dark.xml` 和 `toolbar_transparent_light.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；补完 AndroidView 事件遮挡和 manager 初始化时序后再次通过。
+- `git diff --check` 通过。
+- `ActivityMusicPlayerBinding`、`activity_music_player`、`BaseTitleActivity`、`BaseViewModelActivity` 和 toolbar 布局引用扫描无残留；layout XML 当前从 29 降到 24。
+
+当前边界：
+
+- 本轮未做设备端播放器主页打开、背景模糊切换、播放/暂停、上一首/下一首、下载按钮、进度拖动、黑胶/歌词切换和播放列表弹窗联动人工冒烟。
+- `LyricListView`、`GlobalLyricView`、小播放控件和少量通用旧布局仍是后续 Compose/程序化 View 收口重点。
+
+### 2026-05-23 阶段 8 继续：黑胶唱片 View XML 收口
+
+本轮决策：
+
+- 用户要求继续；上一轮已收口歌词图片、简单播放器和播放列表弹窗，本轮继续沿播放器主页内层推进。
+- `MusicPlayerActivity` 主页面仍直接承载背景、下载、进度、播放控制、歌词切换等多个行为，本轮先不整体迁 Activity，改为收掉其下更稳定的黑胶唱片 View 层 XML。
+- `RecordPageView`/`RecordView` 行为主要是 ViewPager2、唱针动画、唱片布局和旋转，适合改为程序化 View，以删除 XML/ViewBinding 但保持 Activity 调用面。
+
+本轮代码变更：
+
+- `RecordPageView` 移除 `RecordPageViewBinding`，改为程序化创建 `ViewPager2` 和唱针 `ImageView`，继续保留 `initAdapter(...)`、`setData(...)`、`scrollPosition(...)`、`setPlaying(...)` 调用面。
+- `RecordView` 移除 `RecordViewBinding`，改为程序化创建唱片背景和圆形封面 `CircleImageView`，继续保留 `incrementRotate()` 行为，并向外提供 `iconView` 供封面加载。
+- `RecordFragment` 从 `BaseViewModelFragment<FragmentRecordBinding>` 改为 `BaseLogicFragment` + Compose `AndroidView` 壳，点击唱片仍通过 `NotifyRecordClickedUseCase` 触发歌词页切换。
+- `MusicPlayerActivity` 中对 `RecordPageView` 内部 ViewPager2 的访问从 `binding.record.binding.list` 改为 `binding.record.list`。
+- 删除 `fragment_record.xml`、`record_page_view.xml` 和 `record_view.xml`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；移除无用构造参数后再次通过，未新增 Kotlin warning。
+- `git diff --check` 通过。
+- `RecordViewBinding`、`RecordPageViewBinding`、`FragmentRecordBinding`、`fragment_record`、`record_page_view`、`record_view`、`binding.record.binding` 引用扫描无残留；layout XML 当前从 32 降到 29。
+
+当前边界：
+
+- 本轮未做设备端打开播放器主页、左右滑动黑胶、点击切歌词、唱针动画和唱片旋转人工冒烟。
+- 播放器主页 `MusicPlayerActivity` 的整体 XML、播放控制区、下载按钮、进度条和小播放控件仍是下一批重点。
+
+### 2026-05-23 阶段 8 继续：播放器/歌词周边 Compose 收口
+
+本轮决策：
+
+- 用户要求继续编码、不停下来；在第一批 Compose 页面落地后，继续选择播放器/歌词周边里入口相对独立、可编译验证兜底的歌词图片分享页和简单播放器页。
+- 播放器主页面仍是复杂黑胶/歌词/下载/队列组合页面，本轮先不直接大改，避免把多个播放行为风险绑在同一个切片里；播放列表弹窗属于队列周边但入口独立，适合作为同轮追加收口。
+- 歌词图片分享页需要保留“截图内容并分享图片”的旧行为，因此采用 Compose 页面壳 + 可捕获 AndroidView 内容桥接，不引入新的图片生成链路。
+
+本轮代码变更：
+
+- `ShareLyricImageActivity` 从 `BaseTitleActivity<ActivityShareLyricImageBinding>` 改为 Compose `setContent` 页面，顶部分享入口迁到 `MuseFlowScaffold` actions。
+- 新增 `ShareLyricImageScreen`，复用原封面、歌词、歌曲信息和尾巴布局语义，并保留 `SuperViewUtil.captureBitmap(...) -> StorageUtil.savePicture(...) -> ShareUtil.shareImage(...)` 分享路径。
+- 删除 `activity_share_lyric_image.xml` 和 `menu_share_lyric_image.xml`。
+- `SimplePlayerActivity` 从 XML/RecyclerView/SeekBar 改为 Compose 页面，播放列表用 `LazyColumn`，播放控制用 Compose `Slider` 和图标按钮，歌词区域继续通过 `AndroidView` 承接既有 `LyricListView`。
+- 删除简单播放器专属 `SimplePlayerAdapter` 和 `activity_simple_player.xml`。
+- `MusicPlayListDialogFragment` 从 ViewBinding bottom sheet 改为 `ComposeView` bottom sheet，新增 `MusicPlayListSheet` 渲染 header 和歌曲队列。
+- 删除播放列表弹窗专属 `MusicPlayListAdapter`、`fragment_dialog_audio_play_list.xml` 和 `item_play_list.xml`；单项删除保留为显式删除按钮，本轮不再保留旧 RecyclerView 侧滑删除手势。
+- `SelectLyricScreen` 的第二个分享按钮文案从重复的“分享歌词”修正为“歌词图片”。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过。
+- `git diff --check` 通过。
+- 旧 `SimplePlayerAdapter`、`ActivitySimplePlayerBinding`、`activity_simple_player`、`ActivityShareLyricImageBinding`、`activity_share_lyric_image`、`menu_share_lyric_image` 引用扫描无残留；layout XML 当前从 36 降到 34。
+- 继续追加播放列表弹窗迁移后，`./gradlew :app:assembleDevDebug` 再次通过；旧 `MusicPlayListAdapter`、`FragmentDialogAudioPlayListBinding`、`fragment_dialog_audio_play_list`、`item_play_list` 引用扫描无残留；layout XML 当前降到 32。
+
+当前边界：
+
+- 本轮未做设备端打开歌词图片分享页、实际系统分享面板、简单播放器播放/拖动进度/歌词滚动、播放列表弹窗打开/删除/切歌人工冒烟。
+- 播放器主页 `MusicPlayerActivity`、小播放控件、歌词自定义 View 和桌面歌词仍是后续 Compose/边界收口重点。
 
 ### 2026-05-23 阶段 8 继续：Compose UI 第一批落地
 

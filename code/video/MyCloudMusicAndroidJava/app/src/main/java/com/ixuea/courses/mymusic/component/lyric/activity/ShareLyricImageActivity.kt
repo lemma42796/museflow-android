@@ -2,14 +2,15 @@ package com.ixuea.courses.mymusic.component.lyric.activity
 
 import android.app.Activity
 import android.content.Intent
-import android.view.Menu
-import android.view.MenuItem
+import android.os.Bundle
+import android.view.View
+import androidx.activity.compose.setContent
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
+import com.ixuea.courses.mymusic.component.lyric.ui.ShareLyricImageScreen
 import com.ixuea.courses.mymusic.component.song.model.Song
-import com.ixuea.courses.mymusic.databinding.ActivityShareLyricImageBinding
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
-import com.ixuea.courses.mymusic.util.ImageUtil
 import com.ixuea.courses.mymusic.util.ShareUtil
 import com.ixuea.courses.mymusic.util.StorageUtil
 import com.ixuea.superui.toast.SuperToast
@@ -19,40 +20,39 @@ import timber.log.Timber
 /**
  * 分享歌词图片界面
  */
-class ShareLyricImageActivity : BaseTitleActivity<ActivityShareLyricImageBinding>() {
-    private var data: Song? = null
+class ShareLyricImageActivity : BaseLogicActivity() {
+    private lateinit var data: Song
     private var lyric: String = ""
+    private var lyricContentView: View? = null
 
-    override fun initDatum() {
-        super.initDatum()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         data = extraData()
         lyric = extraId().orEmpty()
 
-        val song = data ?: return
-        ImageUtil.show(hostActivity, binding.icon, song.icon)
-        binding.lyric.text = lyric
-        binding.song.text = getString(
-            R.string.share_song_name,
-            song.singer?.nickname.orEmpty(),
-            song.title
-        )
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_share_lyric_image, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_share) {
-            shareClick()
-            return true
+        setContent {
+            MuseFlowTheme {
+                ShareLyricImageScreen(
+                    song = data,
+                    lyric = lyric,
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onShareClick = ::shareClick,
+                    onContentViewReady = { view ->
+                        lyricContentView = view
+                    },
+                )
+            }
         }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun shareClick() {
-        val bitmap = SuperViewUtil.captureBitmap(binding.lyricContainer)
+        val contentView = lyricContentView
+        if (contentView == null) {
+            SuperToast.show(R.string.error_share_failed)
+            return
+        }
+
+        val bitmap = SuperViewUtil.captureBitmap(contentView)
         val uri = StorageUtil.savePicture(hostActivity, bitmap)
 
         if (uri != null) {

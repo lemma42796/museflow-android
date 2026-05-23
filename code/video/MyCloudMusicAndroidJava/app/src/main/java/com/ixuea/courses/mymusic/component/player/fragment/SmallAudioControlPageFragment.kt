@@ -1,20 +1,25 @@
 package com.ixuea.courses.mymusic.component.player.fragment
 
 import android.media.MediaPlayer
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.viewpager.widget.ViewPager
-import com.ixuea.courses.mymusic.AppContext
-import com.ixuea.courses.mymusic.component.player.adapter.SmallAudioControlAdapter
 import com.ixuea.courses.mymusic.component.player.domain.ObserveMusicPlayListChangesUseCase
+import com.ixuea.courses.mymusic.component.player.ui.SmallAudioControlScreen
 import com.ixuea.courses.mymusic.component.song.model.Song
-import com.ixuea.courses.mymusic.databinding.FragmentSmallAudioControlPageBinding
-import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
+import com.ixuea.courses.mymusic.fragment.BaseLogicFragment
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.playback.PlaybackService
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -22,56 +27,57 @@ import kotlinx.coroutines.launch
  * 就是在主界面底部显示的那个小控制条，可以左右滚动切换音乐
  */
 class SmallAudioControlPageFragment :
-    BaseViewModelFragment<FragmentSmallAudioControlPageBinding>(),
+    BaseLogicFragment(),
     MusicPlayerListener {
 
-    private lateinit var adapter: SmallAudioControlAdapter
     private lateinit var musicPlayerManager: MusicPlayerManager
     private val observeMusicPlayListChanges = ObserveMusicPlayListChangesUseCase()
 
-    /**
-     * 歌曲滚动监听器
-     */
-    private val onPageChangeListener = object : ViewPager.OnPageChangeListener {
-        override fun onPageScrolled(
-            position: Int,
-            positionOffset: Float,
-            positionOffsetPixels: Int
-        ) {
-        }
+    private var songs by mutableStateOf<List<Song>>(emptyList())
+    private var currentSongId by mutableStateOf<String?>(null)
+    private var isPlaying by mutableStateOf(false)
+    private var progress by mutableStateOf(0)
+    private var duration by mutableStateOf(0)
 
-        /**
-         * 页面滚动完成了
-         * 用这个方法，会导致第一次进入应用就开始播放了
-         * 因为要调用scrollPosition方法滚动到当前音乐，用onPageScrollStateChanged不会有这问题
-         */
-        override fun onPageSelected(position: Int) {
-            val songs = musicListManager.datum
-            if (position !in songs.indices) {
-                return
-            }
-
-            musicListManager.play(songs[position])
-        }
-
-        /**
-         * 滚动状态改变了，例如：现在是静止的，开始滚动了；或者现在是滚动，停止滚动了
-         */
-        override fun onPageScrollStateChanged(state: Int) {
-            if (ViewPager.SCROLL_STATE_IDLE != state) {
-                return
-            }
-
-            val songs = musicListManager.datum
-            val currentItem = binding.list.currentItem
-            if (currentItem !in songs.indices) {
-                return
-            }
-
-            val song = songs[currentItem]
-            val currentSong = musicListManager.data
-            if (currentSong == null || currentSong.id != song.id) {
-                musicListManager.play(song)
+    override fun getLayoutView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: android.os.Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MuseFlowTheme {
+                    SmallAudioControlScreen(
+                        songs = songs,
+                        selectedIndex = selectedIndex(),
+                        isPlaying = isPlaying,
+                        progress = progress,
+                        duration = duration,
+                        onSongSettled = { position ->
+                            val currentSongs = musicListManager.datum
+                            if (position in currentSongs.indices) {
+                                val song = currentSongs[position]
+                                if (song.id != musicListManager.data?.id) {
+                                    musicListManager.play(song)
+                                }
+                            }
+                        },
+                        onPlayPauseClick = {
+                            if (musicPlayerManager.isPlaying) {
+                                musicListManager.pause()
+                            } else {
+                                musicListManager.resume()
+                            }
+                        },
+                        onListClick = {
+                            MusicPlayListDialogFragment.show(childFragmentManager)
+                        },
+                        onOpenPlayerClick = {
+                            startMusicPlayerActivity()
+                        },
+                    )
+                }
             }
         }
     }
@@ -79,11 +85,9 @@ class SmallAudioControlPageFragment :
     override fun initDatum() {
         super.initDatum()
         musicPlayerManager = PlaybackService.getMusicPlayerManager(
-            AppContext.getInstance().applicationContext
+            hostActivity.applicationContext
         )
 
-        adapter = SmallAudioControlAdapter(hostActivity, childFragmentManager)
-        binding.list.adapter = adapter
         observePlayerEvents()
     }
 
@@ -97,27 +101,11 @@ class SmallAudioControlPageFragment :
         }
     }
 
-    override fun initListeners() {
-        super.initListeners()
-        binding.play.setOnClickListener {
-            if (musicPlayerManager.isPlaying) {
-                musicListManager.pause()
-            } else {
-                musicListManager.resume()
-            }
-        }
-
-        binding.listButton.setOnClickListener {
-            MusicPlayListDialogFragment.show(childFragmentManager)
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         showMusicInfo()
 
         musicPlayerManager.addMusicPlayerListener(this)
-        binding.list.addOnPageChangeListener(onPageChangeListener)
     }
 
     /**
@@ -126,24 +114,22 @@ class SmallAudioControlPageFragment :
     override fun onPause() {
         super.onPause()
         musicPlayerManager.removeMusicPlayerListener(this)
-        binding.list.removeOnPageChangeListener(onPageChangeListener)
     }
 
     fun showMusicInfo() {
-        val songs = musicListManager.datum
-        adapter.setDatum(songs)
+        songs = musicListManager.datum.toList()
 
         if (songs.isNotEmpty()) {
-            binding.container.visibility = View.VISIBLE
-
             val data = musicListManager.data ?: songs[0]
-
-            scrollPosition(data)
+            currentSongId = data.id
             showDuration(data)
             showProgress(data)
             showMusicPlayStatus()
         } else {
-            binding.container.visibility = View.GONE
+            currentSongId = null
+            progress = 0
+            duration = 0
+            isPlaying = false
         }
     }
 
@@ -151,14 +137,15 @@ class SmallAudioControlPageFragment :
      * 显示时长
      */
     private fun showDuration(data: Song) {
-        binding.progress.max = data.duration.toInt()
+        duration = data.duration.toInt()
     }
 
     /**
      * 显示播放进度
      */
     private fun showProgress(data: Song) {
-        binding.progress.progress = data.progress.toInt()
+        progress = data.progress.toInt()
+        currentSongId = data.id
     }
 
     /**
@@ -176,26 +163,14 @@ class SmallAudioControlPageFragment :
      * 显示播放状态
      */
     private fun showPlayStatus() {
-        // 这种图片切换可以使用Selector来实现
-        binding.play.isSelected = false
+        isPlaying = false
     }
 
     /**
      * 显示暂停状态
      */
     private fun showPauseStatus() {
-        binding.play.isSelected = true
-    }
-
-    /**
-     * 滚动到当前音乐位置
-     */
-    private fun scrollPosition(data: Song) {
-        val songs = musicListManager.datum
-        val index = songs.indexOf(data)
-        if (index != -1) {
-            binding.list.setCurrentItem(index, false)
-        }
+        isPlaying = true
     }
 
     override fun onPaused(data: Song) {
@@ -208,11 +183,19 @@ class SmallAudioControlPageFragment :
 
     override fun onPrepared(mp: MediaPlayer?, data: Song) {
         showDuration(data)
-        scrollPosition(data)
+        currentSongId = data.id
     }
 
     override fun onProgress(data: Song) {
-        binding.progress.progress = data.progress.toInt()
+        showProgress(data)
     }
 
+    private fun selectedIndex(): Int {
+        if (songs.isEmpty()) {
+            return 0
+        }
+
+        val index = songs.indexOfFirst { it.id == currentSongId }
+        return if (index == -1) 0 else index
+    }
 }

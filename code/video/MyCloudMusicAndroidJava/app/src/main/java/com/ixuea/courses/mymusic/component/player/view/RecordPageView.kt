@@ -4,14 +4,15 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.LinearLayout
+import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
+import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.player.adapter.MusicPlayerRecordAdapter
 import com.ixuea.courses.mymusic.component.song.model.Song
-import com.ixuea.courses.mymusic.databinding.RecordPageViewBinding
 import com.ixuea.superui.util.DensityUtil
 
 /**
@@ -20,16 +21,16 @@ import com.ixuea.superui.util.DensityUtil
 class RecordPageView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0,
-    defStyleRes: Int = 0
-) : LinearLayout(context, attrs, defStyleAttr, defStyleRes), ValueAnimator.AnimatorUpdateListener {
+    defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr), ValueAnimator.AnimatorUpdateListener {
 
     @JvmField
-    val binding: RecordPageViewBinding =
-        RecordPageViewBinding.inflate(LayoutInflater.from(context), this, true)
+    val list: ViewPager2 = ViewPager2(context)
 
     @JvmField
     var adapter: MusicPlayerRecordAdapter? = null
+
+    private val recordThumb: ImageView = ImageView(context)
 
     private var isPlaying = true
 
@@ -54,18 +55,43 @@ class RecordPageView @JvmOverloads constructor(
 
     private fun initViews() {
         val rotate = DensityUtil.dip2px(context, 15F).toInt()
-        binding.recordThumb.pivotX = rotate.toFloat()
-        binding.recordThumb.pivotY = rotate.toFloat()
+        addView(
+            list.apply {
+                id = View.generateViewId()
+                overScrollMode = View.OVER_SCROLL_NEVER
+            },
+            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).apply {
+                leftToLeft = LayoutParams.PARENT_ID
+                rightToRight = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            },
+        )
+        addView(
+            recordThumb.apply {
+                id = View.generateViewId()
+                setImageResource(R.drawable.cd_thumb)
+                pivotX = rotate.toFloat()
+                pivotY = rotate.toFloat()
+            },
+            LayoutParams(dp(92), dp(138)).apply {
+                leftToLeft = LayoutParams.PARENT_ID
+                rightToRight = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                leftMargin = dp(61)
+                topMargin = resources.getDimensionPixelSize(R.dimen.padding_meddle)
+            },
+        )
 
-        binding.list.offscreenPageLimit = 3
+        list.offscreenPageLimit = 3
 
-        val child = binding.list.getChildAt(0)
+        val child = list.getChildAt(0)
         if (child is RecyclerView) {
             child.overScrollMode = View.OVER_SCROLL_NEVER
         }
 
         playThumbAnimator = ObjectAnimator.ofFloat(
-            binding.recordThumb,
+            recordThumb,
             "rotation",
             THUMB_ROTATION_PAUSE,
             THUMB_ROTATION_PLAY
@@ -84,7 +110,7 @@ class RecordPageView @JvmOverloads constructor(
 
     fun initAdapter(fragmentActivity: FragmentActivity) {
         adapter = MusicPlayerRecordAdapter(fragmentActivity)
-        binding.list.adapter = adapter
+        list.adapter = adapter
     }
 
     fun setData(data: List<Song>?) {
@@ -95,9 +121,9 @@ class RecordPageView @JvmOverloads constructor(
      * 选中当前音乐
      */
     fun scrollPosition(index: Int) {
-        binding.list.post {
+        list.post {
             if (index != -1) {
-                binding.list.setCurrentItem(index, false)
+                list.setCurrentItem(index, false)
             }
         }
     }
@@ -118,7 +144,7 @@ class RecordPageView @JvmOverloads constructor(
         if (isPlaying) {
             playThumbAnimator.start()
         } else {
-            val thumbRotation = binding.recordThumb.rotation
+            val thumbRotation = recordThumb.rotation
             if (THUMB_ROTATION_PAUSE == thumbRotation) {
                 return
             }
@@ -131,7 +157,17 @@ class RecordPageView @JvmOverloads constructor(
      * 属性动画回调
      */
     override fun onAnimationUpdate(animation: ValueAnimator) {
-        binding.recordThumb.rotation = animation.animatedValue as Float
+        recordThumb.rotation = animation.animatedValue as Float
+    }
+
+    override fun onDetachedFromWindow() {
+        playThumbAnimator.cancel()
+        pauseThumbAnimator.cancel()
+        super.onDetachedFromWindow()
+    }
+
+    private fun dp(value: Int): Int {
+        return DensityUtil.dip2px(context, value.toFloat()).toInt()
     }
 
     companion object {

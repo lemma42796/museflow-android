@@ -163,7 +163,7 @@ private fun SelectLyricActions(
             onClick = onShareLyricClick,
         )
         LyricActionButton(
-            text = stringResource(R.string.share_lyric),
+            text = stringResource(R.string.lyric_image),
             contentColor = contentColor,
             onClick = onShareLyricImageClick,
         )

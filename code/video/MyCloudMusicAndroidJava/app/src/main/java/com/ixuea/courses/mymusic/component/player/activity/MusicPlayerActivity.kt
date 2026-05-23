@@ -1,12 +1,13 @@
 package com.ixuea.courses.mymusic.component.player.activity
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
 import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
-import android.view.View
-import android.widget.SeekBar
+import android.os.Bundle
+import android.widget.ImageView
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,25 +19,27 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.download.domain.DownloadActionsUseCase
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener
 import com.ixuea.courses.mymusic.component.lyric.activity.SelectLyricActivity
+import com.ixuea.courses.mymusic.component.lyric.model.Lyric
 import com.ixuea.courses.mymusic.component.lyric.view.LyricListView
 import com.ixuea.courses.mymusic.component.player.domain.ObserveMusicPlayListChangesUseCase
 import com.ixuea.courses.mymusic.component.player.domain.ObserveRecordClicksUseCase
 import com.ixuea.courses.mymusic.component.player.fragment.MusicPlayListDialogFragment
+import com.ixuea.courses.mymusic.component.player.ui.MusicPlayerScreen
+import com.ixuea.courses.mymusic.component.player.view.RecordPageView
 import com.ixuea.courses.mymusic.component.song.model.Song
-import com.ixuea.courses.mymusic.databinding.ActivityMusicPlayerBinding
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.manager.model.MusicPlayListChange
 import com.ixuea.courses.mymusic.playback.PlaybackService
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.FileUtil
 import com.ixuea.courses.mymusic.util.PlayListUtil
 import com.ixuea.courses.mymusic.util.ResourceUtil
 import com.ixuea.courses.mymusic.util.StorageUtil
-import com.ixuea.courses.mymusic.util.SuperDateUtil
 import com.ixuea.courses.mymusic.util.SwitchDrawableUtil
 import com.ixuea.superui.toast.SuperToast
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper
@@ -50,9 +53,8 @@ import java.lang.ref.SoftReference
  * 黑胶唱片界面
  */
 class MusicPlayerActivity :
-    BaseTitleActivity<ActivityMusicPlayerBinding>(),
+    BaseLogicActivity(),
     MusicPlayerListener,
-    SeekBar.OnSeekBarChangeListener,
     LyricListView.LyricListListener {
 
     private lateinit var musicPlayerManager: MusicPlayerManager
@@ -60,11 +62,69 @@ class MusicPlayerActivity :
     private var isSeekTracking = false
     private val observeRecordClicks = ObserveRecordClicksUseCase()
     private val observeMusicPlayListChanges = ObserveMusicPlayListChangesUseCase()
+    private var backgroundView: ImageView? = null
+    private var recordPageView: RecordPageView? = null
+    private var registeredRecordPageView: RecordPageView? = null
+    private var lyricListView: LyricListView? = null
+    private var loadedBackgroundSongId: String? = null
+    private var recordSongsSnapshot: List<Song> = emptyList()
+    private var titleText by mutableStateOf("")
+    private var subtitleText by mutableStateOf("")
+    private var isPlaying by mutableStateOf(false)
+    private var isLyricVisible by mutableStateOf(false)
+    private var playbackProgress by mutableStateOf(0)
+    private var playbackDuration by mutableStateOf(0)
+    private var loopModel by mutableStateOf(0)
+    private var downloadIcon by mutableStateOf(R.drawable.ic_download)
+    private var lyricData by mutableStateOf<Lyric?>(null)
 
     /**
      * 下载任务
      */
     private var downloadInfo: DownloadInfo? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
+        downloadActionsUseCase = DownloadActionsUseCase()
+        setContent {
+            MuseFlowTheme {
+                MusicPlayerScreen(
+                    title = titleText.ifBlank { getString(R.string.activity_music_player) },
+                    subtitle = subtitleText,
+                    isPlaying = isPlaying,
+                    isLyricVisible = isLyricVisible,
+                    progress = playbackProgress,
+                    duration = playbackDuration,
+                    loopModel = loopModel,
+                    downloadIcon = downloadIcon,
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onDownloadClick = ::downloadClick,
+                    onLoopClick = {
+                        musicListManager.changeLoopModel()
+                        showLoopModel()
+                    },
+                    onPreviousClick = ::playPrevious,
+                    onPlayPauseClick = ::playOrPause,
+                    onNextClick = ::playNext,
+                    onListClick = {
+                        MusicPlayListDialogFragment.show(supportFragmentManager)
+                    },
+                    onSeekChange = { value ->
+                        isSeekTracking = true
+                        playbackProgress = value
+                        musicListManager.seekTo(value)
+                    },
+                    onSeekFinished = {
+                        isSeekTracking = false
+                    },
+                    onBackgroundReady = ::bindBackgroundView,
+                    onRecordReady = ::bindRecordPageView,
+                    onLyricReady = ::bindLyricListView,
+                )
+            }
+        }
+    }
 
     override fun initViews() {
         super.initViews()
@@ -102,33 +162,16 @@ class MusicPlayerActivity :
 
     fun currentRecordSong(): Song? {
         val songs = musicListManager.datum
-        val currentItem = binding.record.binding.list.currentItem
+        val currentItem = recordPageView?.list?.currentItem ?: 0
         return songs.getOrNull(currentItem)
     }
 
     fun showLyricList() {
-        binding.lyricList.alpha = 0F
-        binding.lyricList.visibility = View.VISIBLE
-
-        ValueAnimator.ofFloat(0F, 1F).apply {
-            addUpdateListener { animation ->
-                val value = animation.animatedValue as Float
-                binding.lyricList.alpha = value
-                binding.record.alpha = 1F - value
-            }
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    super.onAnimationEnd(animation)
-                    binding.record.visibility = View.GONE
-                }
-            })
-            duration = ANIMATION_DURATION
-            start()
-        }
+        isLyricVisible = true
     }
 
     fun handleMusicPlayListChange(event: MusicPlayListChange) {
-        binding.record.adapter?.let { adapter ->
+        recordPageView?.adapter?.let { adapter ->
             if (event.isDeleteAll) {
                 adapter.removeAll()
             } else if (event.position in 0 until adapter.itemCount) {
@@ -143,16 +186,18 @@ class MusicPlayerActivity :
 
     fun recordRotate(data: Song, isRotate: Boolean) {
         data.isRotate = isRotate
-        binding.record.setPlaying(isRotate)
+        recordPageView?.setPlaying(isRotate)
     }
 
     override fun initDatum() {
         super.initDatum()
-        musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
-        downloadActionsUseCase = DownloadActionsUseCase()
+        if (!::musicPlayerManager.isInitialized) {
+            musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
+        }
+        if (!::downloadActionsUseCase.isInitialized) {
+            downloadActionsUseCase = DownloadActionsUseCase()
+        }
 
-        binding.record.initAdapter(hostActivity)
-        binding.record.setData(musicListManager.datum)
         observePlayerEvents()
     }
 
@@ -170,40 +215,6 @@ class MusicPlayerActivity :
                 }
             }
         }
-    }
-
-    override fun initListeners() {
-        super.initListeners()
-        binding.record.binding.list.registerOnPageChangeCallback(pageChangeCallback)
-
-        binding.download.setOnClickListener {
-            downloadClick()
-        }
-
-        binding.progress.setOnSeekBarChangeListener(this)
-
-        binding.loopModel.setOnClickListener {
-            musicListManager.changeLoopModel()
-            showLoopModel()
-        }
-
-        binding.previous.setOnClickListener {
-            playPrevious()
-        }
-
-        binding.play.setOnClickListener {
-            playOrPause()
-        }
-
-        binding.next.setOnClickListener {
-            playNext()
-        }
-
-        binding.listButton.setOnClickListener {
-            MusicPlayListDialogFragment.show(supportFragmentManager)
-        }
-
-        binding.lyricList.setLyricListListener(this)
     }
 
     fun downloadClick() {
@@ -307,7 +318,7 @@ class MusicPlayerActivity :
         if (info != null) {
             when (info.status) {
                 DownloadInfo.STATUS_COMPLETED -> {
-                    binding.download.setImageResource(R.drawable.ic_downloaded)
+                    downloadIcon = R.drawable.ic_downloaded
                 }
 
                 else -> normalDownloadStatusUI()
@@ -325,13 +336,11 @@ class MusicPlayerActivity :
      * 未下载状态
      */
     private fun normalDownloadStatusUI() {
-        binding.download.setImageResource(R.drawable.ic_download)
+        downloadIcon = R.drawable.ic_download
     }
 
     fun showLoopModel() {
-        binding.loopModel.setImageResource(
-            PlayListUtil.getLoopModelIcon(musicListManager.loopModel)
-        )
+        loopModel = musicListManager.loopModel
     }
 
     /**
@@ -350,11 +359,12 @@ class MusicPlayerActivity :
      */
     private fun scrollPosition() {
         val index = musicListManager.datum.indexOf(currentSong())
-        binding.record.scrollPosition(index)
+        recordPageView?.scrollPosition(index)
     }
 
     private fun showLyricData() {
-        binding.lyricList.setData(currentSong()?.parsedLyric)
+        lyricData = currentSong()?.parsedLyric
+        lyricListView?.setData(lyricData)
     }
 
     override fun onResume() {
@@ -379,7 +389,8 @@ class MusicPlayerActivity :
     }
 
     override fun onDestroy() {
-        binding.record.binding.list.unregisterOnPageChangeCallback(pageChangeCallback)
+        registeredRecordPageView?.list?.unregisterOnPageChangeCallback(pageChangeCallback)
+        registeredRecordPageView = null
         super.onDestroy()
     }
 
@@ -387,16 +398,16 @@ class MusicPlayerActivity :
      * 显示播放状态
      */
     private fun showPlayStatus() {
-        binding.play.setImageResource(R.drawable.music_play)
-        binding.record.setPlaying(false)
+        isPlaying = false
+        recordPageView?.setPlaying(false)
     }
 
     /**
      * 显示暂停状态
      */
     private fun showPauseStatus() {
-        binding.play.setImageResource(R.drawable.music_pause)
-        binding.record.setPlaying(true)
+        isPlaying = true
+        recordPageView?.setPlaying(true)
     }
 
     /**
@@ -416,9 +427,8 @@ class MusicPlayerActivity :
     private fun showProgress() {
         val progress = currentSong()?.progress?.toInt() ?: 0
 
-        binding.start.text = SuperDateUtil.ms2ms(progress)
-        binding.progress.progress = progress
-        binding.lyricList.setProgress(progress)
+        playbackProgress = progress
+        lyricListView?.setProgress(progress)
     }
 
     /**
@@ -427,8 +437,7 @@ class MusicPlayerActivity :
     private fun showDuration() {
         val end = currentSong()?.duration?.toInt() ?: 0
 
-        binding.end.text = SuperDateUtil.ms2ms(end)
-        binding.progress.max = end
+        playbackDuration = end
     }
 
     /**
@@ -441,8 +450,8 @@ class MusicPlayerActivity :
             return
         }
 
-        title = data.title
-        toolbar.subtitle = data.singer?.nickname.orEmpty()
+        titleText = data.title.orEmpty()
+        subtitleText = data.singer?.nickname.orEmpty()
         loadBackground(data)
 
         downloadInfo = data.id?.let { songId -> downloadActionsUseCase.getDownloadById(songId) }
@@ -454,6 +463,8 @@ class MusicPlayerActivity :
     }
 
     private fun loadBackground(data: Song) {
+        val targetView = backgroundView ?: return
+        loadedBackgroundSongId = data.id
         val requestBuilder: RequestBuilder<Drawable> = Glide.with(this).asDrawable()
         if (StringUtils.isBlank(data.icon)) {
             requestBuilder.load(R.drawable.default_cover)
@@ -470,10 +481,10 @@ class MusicPlayerActivity :
                     transition: Transition<in Drawable>?
                 ) {
                     val switchDrawableUtil = SwitchDrawableUtil(
-                        binding.background.drawable,
+                        targetView.drawable,
                         resource
                     )
-                    binding.background.setImageDrawable(switchDrawableUtil.drawable)
+                    targetView.setImageDrawable(switchDrawableUtil.drawable)
                     switchDrawableUtil.start()
                 }
 
@@ -512,48 +523,8 @@ class MusicPlayerActivity :
         showProgress()
     }
 
-    /**
-     * 进度条改变了
-     */
-    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-        if (fromUser) {
-            musicListManager.seekTo(progress)
-        }
-    }
-
-    /**
-     * 开始拖拽进度条
-     */
-    override fun onStartTrackingTouch(seekBar: SeekBar) {
-        isSeekTracking = true
-    }
-
-    /**
-     * 停止拖拽进度条
-     */
-    override fun onStopTrackingTouch(seekBar: SeekBar) {
-        isSeekTracking = false
-    }
-
     override fun onLyricClick() {
-        binding.record.alpha = 0F
-        binding.record.visibility = View.VISIBLE
-
-        ValueAnimator.ofFloat(0F, 1F).apply {
-            addUpdateListener { animation ->
-                val value = animation.animatedValue as Float
-                binding.record.alpha = value
-                binding.lyricList.alpha = 1F - value
-            }
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    super.onAnimationEnd(animation)
-                    binding.lyricList.visibility = View.GONE
-                }
-            })
-            duration = ANIMATION_DURATION
-            start()
-        }
+        isLyricVisible = false
     }
 
     override fun onLyricLongClick(): Boolean {
@@ -562,7 +533,39 @@ class MusicPlayerActivity :
         return true
     }
 
-    companion object {
-        private const val ANIMATION_DURATION = 300L
+    private fun bindBackgroundView(view: ImageView) {
+        backgroundView = view
+        currentSong()
+            ?.takeIf { song -> loadedBackgroundSongId != song.id }
+            ?.let(::loadBackground)
+    }
+
+    private fun bindRecordPageView(view: RecordPageView) {
+        if (recordPageView !== view) {
+            recordPageView = view
+        }
+
+        if (view.adapter == null) {
+            view.initAdapter(hostActivity)
+        }
+
+        val songs = musicListManager.datum.toList()
+        if (recordSongsSnapshot != songs) {
+            view.setData(songs)
+            recordSongsSnapshot = songs
+        }
+
+        if (registeredRecordPageView !== view) {
+            registeredRecordPageView?.list?.unregisterOnPageChangeCallback(pageChangeCallback)
+            view.list.registerOnPageChangeCallback(pageChangeCallback)
+            registeredRecordPageView = view
+        }
+    }
+
+    private fun bindLyricListView(view: LyricListView) {
+        lyricListView = view
+        view.setLyricListListener(this)
+        view.setData(lyricData)
+        view.setProgress(playbackProgress)
     }
 }

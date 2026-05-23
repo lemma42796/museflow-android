@@ -1,39 +1,68 @@
 package com.ixuea.courses.mymusic.component.player.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.viewinterop.AndroidView
 import com.ixuea.courses.mymusic.component.player.domain.NotifyRecordClickedUseCase
+import com.ixuea.courses.mymusic.component.player.view.RecordView
 import com.ixuea.courses.mymusic.component.song.model.Song
-import com.ixuea.courses.mymusic.databinding.FragmentRecordBinding
-import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
+import com.ixuea.courses.mymusic.fragment.BaseLogicFragment
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.playback.PlaybackService
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.ImageUtil
 
 /**
  * 音乐黑胶唱片界面
  */
-class RecordFragment : BaseViewModelFragment<FragmentRecordBinding>(), MusicPlayerListener {
+class RecordFragment : BaseLogicFragment(), MusicPlayerListener {
     private lateinit var musicPlayerManager: MusicPlayerManager
     private val notifyRecordClicked = NotifyRecordClickedUseCase()
+    private var recordView: RecordView? = null
+    private lateinit var data: Song
+
+    override fun getLayoutView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        data = extraData()
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MuseFlowTheme {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            RecordView(context).apply {
+                                setOnClickListener {
+                                    notifyRecordClicked()
+                                }
+                            }
+                        },
+                        update = { view ->
+                            recordView = view
+                            ImageUtil.show(hostActivity, view.iconView, data.icon)
+                        },
+                    )
+                }
+            }
+        }
+    }
 
     override fun initDatum() {
         super.initDatum()
-        val data = extraData<Song>()
-
-        ImageUtil.show(hostActivity, binding.record.binding.icon, data.icon)
-
         musicPlayerManager = PlaybackService.getMusicPlayerManager(
             hostActivity.applicationContext
         )
-    }
-
-    override fun initListeners() {
-        super.initListeners()
-        binding.container.setOnClickListener {
-            notifyRecordClicked()
-        }
     }
 
     /**
@@ -57,7 +86,12 @@ class RecordFragment : BaseViewModelFragment<FragmentRecordBinding>(), MusicPlay
             return
         }
 
-        binding.record.incrementRotate()
+        recordView?.incrementRotate()
+    }
+
+    override fun onDestroyView() {
+        recordView = null
+        super.onDestroyView()
     }
 
     companion object {
