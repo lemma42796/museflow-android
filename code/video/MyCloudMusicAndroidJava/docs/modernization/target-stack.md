@@ -21,9 +21,9 @@
 
 - Kotlin/Compose/Flow/Media3 主线已经落到当前工作分支，`app/src/main/java` 下 Java 源码数为 `0`。
 - 常规 UI layout XML 已清零；桌面 Widget 改用 Jetpack Glance（Compose-style AppWidget），只保留 `res/xml/music_widget.xml` 作为 provider 元数据。
-- Compose 已覆盖 public slim shell、播放器主页/播放列表、下载管理、会话列表、聊天详情、动态发布/动态列表、评论页、歌单详情、发现页、本地音乐、本地音乐扫描、自定义发现排序和选择歌词。
+- Compose 已覆盖主启动入口、播放器主页/播放列表、下载管理、会话列表、聊天详情、动态发布/动态列表、评论页、歌单详情、发现页、本地音乐、本地音乐扫描、自定义发现排序和选择歌词。
 - 后续图片/图标替换也要按 Android 最新系统风格执行：Material 3 / Material You / Material 3 Expressive、adaptive icon foreground/background/monochrome、themed icon、动态色兼容和系统 mask 安全边距。
-- 下一步不再新增 UI 框架；新会话只处理 MuseFlow Android 视觉资产生成和替换，再做构建与必要设备端冒烟。
+- 下一步不再新增 UI 框架；继续按当前 Kotlin/Compose/Flow 结构恢复和验证真实用户链路，不能再把启动入口退化为无功能占位页。
 
 ## 官方依据
 

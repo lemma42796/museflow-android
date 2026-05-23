@@ -6,6 +6,8 @@ Date: 2026-05-16
 
 Build a public-slim Android branch that removes frozen features from the repository. The user clarified that history cleanup is not required; the priority is removing frozen feature code from the working tree.
 
+2026-05-24 correction: this document is historical context for the temporary public-slim branch, not the product target for the full modernization workspace. The main app must keep a usable launcher and user-operable flows while it is modernized to Kotlin/Compose/Flow/Media3.
+
 ## Workspace
 
 - Main full workspace: `/Users/a123/StudioProjects/my-cloud-music-android-java/code/video/MyCloudMusicAndroidJava`
@@ -107,10 +109,12 @@ Latest state in the full workspace:
 - Java source cleanup is complete: `app/src/main/java` has no `.java` files.
 - Normal layout XML cleanup is complete: `app/src/main/res/layout` is empty.
 - The last Widget RemoteViews layout was replaced with Jetpack Glance; `res/xml/music_widget.xml` remains only as AppWidget provider metadata.
-- Public-facing text/course trace cleanup has one low-risk pass completed on the progress branch; the next visible gap is bitmap/image assets.
+- Public-facing text/course trace cleanup and MuseFlow bitmap/image replacement have both landed on the progress branch.
+- `MainActivity` is no longer allowed to remain a public-slim placeholder. It has been restored as a Kotlin/Compose launcher with discover/feed hosts, mini player, and entry points for local music, messages, downloads, and publishing.
 
-Next public-facing asset work:
+Next public-facing verification work:
 
-- Generate new MuseFlow Android launcher, splash/logo, placeholder/default avatar-cover, and Widget preview assets in a new session.
-- Use the local untracked `docs/modernization/course-trace-cleanup-task.md` as the task note, but do not submit or push that file.
+- Smoke the restored launcher and retained feature entry points on emulator/device before treating the branch as product-usable.
+- Check the generated launcher mask/themed icon, splash logo, and Widget preview on a device or emulator before treating the public visual surface as fully accepted.
+- Keep the local untracked `docs/modernization/course-trace-cleanup-task.md` as the private task note; do not submit or push that file unless the publication policy changes.
 - Keep Gitee read-only and push only to GitHub `origin`.

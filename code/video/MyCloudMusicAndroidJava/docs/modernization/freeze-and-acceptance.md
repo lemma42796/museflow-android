@@ -56,7 +56,9 @@
 - 代码层：`app/src/main/java` 下 Java 源码数为 `0`，普通 layout XML 已清零；Widget 已迁到 Jetpack Glance。
 - 最小冒烟层：已完成一轮模拟器入口冒烟，覆盖启动、发现页、播放器、后台通知、动态列表、下载管理、会话列表、动态发布页和本地音乐扫描入口。
 - 未完成层：完整深度人工冒烟仍缺口较大，尤其是 Widget 添加/点击、桌面歌词、多歌曲队列、聊天文本/图片发送、动态多图压缩上传、真实下载任务和真实本地媒体扫描。
-- 下一会话不再扩大编码范围，优先处理 MuseFlow Android 图片/图标生成与替换；替换后至少重新跑构建，并按需要做启动页、launcher、Widget preview 的设备端可视检查。
+- 图片资产层：MuseFlow Android 的 launcher/playstore/adaptive monochrome、splash/logo、placeholder/default avatar-cover、Widget preview 和冻结 guide 图已生成、审查并替换；`./gradlew :app:assembleDevDebug` 已重新通过。
+- 首页可用性层：`MainActivity` 已从 public-slim 空壳纠偏为 Kotlin/Compose 可操作首页，重新接回发现、动态、小播放控件、本地音乐、消息、下载和发布入口；这属于恢复核心验收条件，不是产品行为重设计。
+- 剩余可视检查：仍需按需要在设备端确认启动页、launcher mask/themed icon 和 Widget preview 实际效果。
 
 ## 非目标
 
@@ -98,4 +100,5 @@
 - [x] App 构建通过。
 - [x] 最小可信人工冒烟记录已补充。
 - [ ] 深度人工冒烟记录已补齐。
-- [ ] MuseFlow Android 图片和图标资产已生成、审查并替换。
+- [x] MuseFlow Android 图片和图标资产已生成、审查并替换。
+- [x] 启动入口恢复为可操作首页，不再是 public-slim 占位页。

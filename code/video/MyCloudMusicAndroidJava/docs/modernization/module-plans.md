@@ -7,7 +7,8 @@
 - 五条选中链路的主体迁移已完成到可交接状态，旧 Java 源码数为 `0`。
 - 常规 layout XML 已清零；最后一个 Widget RemoteViews layout 已迁到 Jetpack Glance，`res/xml/music_widget.xml` 只作为 AppWidget provider 元数据保留。
 - 下面各节的 `.java` 入口是立项时的历史入口记录；当前对应实现已经迁到 Kotlin/Compose/Flow/Media3/Glance，恢复现场时以源码和 `docs/modernization/execution-plan.md` 的最新执行记录为准。
-- 下一会话的主动任务不是继续拆代码，而是按本地未跟踪任务文档生成 MuseFlow Android 图片和图标资产；`docs/modernization/course-trace-cleanup-task.md` 不提交、不 push。
+- `MainActivity` 已从 public-slim 占位壳纠偏为可操作 Compose 首页；后续不能以“现代化”为由删除用户启动后的核心入口。
+- MuseFlow Android 图片和图标资产已生成并替换；下一步若继续，不是继续拆代码，而是做启动页、launcher/themed icon、Widget preview 和核心链路的设备端可视/人工冒烟检查。
 
 ## 1. 音乐播放链路
 

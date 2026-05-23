@@ -31,13 +31,15 @@
 - `app/src/main/res/layout` 已清零；最后一个 `music_widget.xml` 已迁到 Jetpack Glance，`res/xml/music_widget.xml` 只保留 AppWidget provider 元数据。
 - 五条重点链路已完成 Kotlin/Compose/Flow/Media3 方向的主体迁移；播放器、聊天、动态发布、下载、发现/信息流、本地音乐和歌词周边的旧 XML/Adapter/Java 尾巴已收口。
 - 已完成一轮模拟器最小可信冒烟：安装启动、发现页、播放器、后台通知、动态列表、下载管理、会话列表、动态发布页和本地音乐扫描入口均可打开；完整深度人工冒烟仍未补齐。
-- 公开展示面的第一层文案/课程痕迹清理已完成；下一会话只生成并替换图片和图标资产，不再重复做 strings/注释清理。
+- 公开展示面的第一层文案/课程痕迹清理和 MuseFlow 图片/图标资产替换已完成。
+- 2026-05-24 已纠偏 `MainActivity` 的 public-slim 空壳问题：启动入口重新变为 Kotlin/Compose 可操作首页，接回发现、动态、小播放控件、本地音乐、消息、下载和发布入口。
 
 下一会话入口：
 
-- 使用本地未跟踪的 `docs/modernization/course-trace-cleanup-task.md` 作为图片生成任务说明；该文件不要 `git add`，不要 push。
-- 先生成并人工审查 MuseFlow Android 的 launcher / splash / placeholder / default avatar-cover / widget preview 资产。
-- 图片和图标必须遵循最新版 Android 系统风格：Material 3 / Material You / Material 3 Expressive、adaptive icon、themed icon/monochrome、动态色兼容和系统 mask 安全边距。
+- 先从 `docs/modernization/execution-plan.md` 的“最新交接”恢复现场。
+- 不要继续用“清 Java/XML 数量”或“public slim”作为删页面依据；现代化目标是保留可用产品链路。
+- 优先做设备端可视/人工冒烟：恢复后的首页导航、发现页加载/滚动/点歌、小播放控件、本地音乐/扫描、消息、下载、动态发布、launcher/themed icon、splash 和 Widget preview。
+- 本地未跟踪的 `docs/modernization/course-trace-cleanup-task.md` 仍是私有任务说明；该文件不要 `git add`，不要 push。
 
 ## 初始项目状态
 
