@@ -126,6 +126,14 @@
     <!--评论-->
     <string name="hint_comment">请输入评论内容.</string>
     <string name="comment">评论</string>
+    <string name="no_comment">暂无评论</string>
+    <string name="no_feed">暂无动态</string>
+    <string name="no_sheet_detail">暂无歌单详情</string>
+    <string name="no_sheet_song">暂无歌曲</string>
+    <string name="refresh">刷新</string>
+    <string name="load_more">加载更多</string>
+    <string name="no_more_data">没有更多了</string>
+    <string name="like">赞</string>
     <string name="send">发送</string>
     <string name="comment_create_success">评论发布成功</string>
     <string name="reply_comment">\@%1$s: %2$s</string>
@@ -181,6 +189,8 @@
     <string name="delete_all">全部删除</string>
     <string name="download_complete">下载完成</string>
     <string name="downloading">正在下载</string>
+    <string name="no_downloaded_music">暂无已下载音乐</string>
+    <string name="no_downloading_task">暂无下载任务</string>
     <string name="already_downloaded">已经下载了</string>
     <string name="already_in_download_list">已经在下载列表中了</string>
     <string name="add_success">添加成功</string>
@@ -343,6 +353,9 @@
 
     <!--聊天-->
     <string name="error_message_login">登录聊天服务器失败，可以注册新账号试试，如果还有问题联系客服</string>
+    <string name="no_conversation">暂无会话</string>
+    <string name="no_message">暂无消息</string>
+    <string name="select_image">选择图片</string>
     <string name="hint_enter_message">请输入你要发送消息</string>
     <string name="error_send_message">发送失败</string>
     <string name="click_refresh">点击刷新</string>

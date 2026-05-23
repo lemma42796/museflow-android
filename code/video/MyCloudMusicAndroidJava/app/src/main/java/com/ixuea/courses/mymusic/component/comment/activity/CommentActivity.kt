@@ -2,190 +2,90 @@ package com.ixuea.courses.mymusic.component.comment.activity
 
 import android.content.Context
 import android.content.Intent
-import android.text.Editable
-import androidx.lifecycle.Lifecycle
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.RecyclerView
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
-import com.ixuea.courses.mymusic.adapter.TextWatcherAdapter
-import com.ixuea.courses.mymusic.component.comment.adapter.CommentAdapter
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.comment.fragment.CommentMoreDialogFragment
 import com.ixuea.courses.mymusic.component.comment.model.Comment
-import com.ixuea.courses.mymusic.component.comment.ui.CommentLoadOperation
+import com.ixuea.courses.mymusic.component.comment.ui.CommentScreen
 import com.ixuea.courses.mymusic.component.comment.ui.CommentUiState
 import com.ixuea.courses.mymusic.component.comment.ui.CommentViewModel
 import com.ixuea.courses.mymusic.component.user.activity.UserActivity
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
-import com.ixuea.courses.mymusic.databinding.ActivityCommentBinding
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.RichUtil
 import com.ixuea.superui.toast.SuperToast
-import com.ixuea.superui.util.KeyboardUtil
 import com.ixuea.superui.util.SuperClipboardUtil
-import com.ixuea.superui.util.SuperRecyclerViewUtil
-import kotlinx.coroutines.launch
-import org.apache.commons.lang3.StringUtils
 import timber.log.Timber
-import kotlin.math.abs
 
 /**
- * 评论界面
+ * Comment screen backed by Compose.
  */
-class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
+class CommentActivity : BaseLogicActivity() {
     private var sheetId: String? = null
-    private lateinit var adapter: CommentAdapter
     private lateinit var viewModel: CommentViewModel
     private var parentId: String? = null
-    private var handledLoadCompleteVersion = 0L
+    private var inputContent by mutableStateOf("")
+    private var replyHintName by mutableStateOf<String?>(null)
     private var handledCreateCompleteVersion = 0L
-    private var handledLikeUpdateVersion = 0L
     private var handledErrorVersion = 0L
 
-    override fun initViews() {
-        super.initViews()
-        SuperRecyclerViewUtil.initVerticalLinearRecyclerView(binding.list, true)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sheetId = extraString(Constant.SHEET_ID)
+        viewModel = ViewModelProvider(this)[CommentViewModel::class.java]
+
+        setContent {
+            val state by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(state.createCompleteVersion) {
+                renderCreateComplete(state)
+            }
+            LaunchedEffect(state.errorVersion) {
+                renderError(state)
+            }
+
+            MuseFlowTheme {
+                CommentScreen(
+                    state = state,
+                    input = inputContent,
+                    replyHintName = replyHintName,
+                    onInputChange = ::onInputChange,
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onRefresh = { loadData() },
+                    onLoadMore = { viewModel.loadMore(sheetId) },
+                    onSubmit = ::sendClick,
+                    onLike = ::likeClick,
+                    onUserClick = ::openCommentUser,
+                    onCommentMore = ::showCommentMoreDialog,
+                )
+            }
+        }
     }
 
     override fun initDatum() {
         super.initDatum()
-        sheetId = extraString(Constant.SHEET_ID)
-        viewModel = ViewModelProvider(this)[CommentViewModel::class.java]
-
-        adapter = CommentAdapter(R.layout.item_comment)
-        binding.list.adapter = adapter
-        observeCommentState()
-
         loadData()
     }
 
-    override fun initListeners() {
-        super.initListeners()
-        adapter.addChildClickViewIds(
-            R.id.icon,
-            R.id.user_container,
-            R.id.like_container,
-            R.id.content,
-            R.id.reply_content,
-        )
-        adapter.setOnItemChildClickListener { itemAdapter, view, position ->
-            val data = itemAdapter.getItem(position) as Comment
-            when (view.id) {
-                R.id.icon,
-                R.id.user_container -> {
-                    val userId = data.user?.id ?: return@setOnItemChildClickListener
-                    startActivityExtraId(UserDetailActivity::class.java, userId)
-                }
-
-                R.id.like_container -> likeClick(data)
-
-                R.id.content,
-                R.id.reply_content -> showCommentMoreDialog(data)
-            }
+    private fun onInputChange(content: String) {
+        inputContent = content
+        if (content.endsWith(RichUtil.MENTION)) {
+            UserActivity.start(hostActivity, Constant.STYLE_FRIEND_SELECT)
         }
-
-        adapter.setOnItemClickListener { itemAdapter, _, position ->
-            showCommentMoreDialog(itemAdapter.getItem(position) as Comment)
-        }
-
-        binding.refresh.setOnRefreshListener {
-            loadData()
-        }
-
-        binding.refresh.setOnLoadMoreListener {
-            loadMore()
-        }
-
-        binding.input.send.setOnClickListener {
-            sendClick()
-        }
-
-        binding.list.addOnScrollListener(
-            object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-
-                    if (abs(dy) > 10 && binding.input.content.text.toString().trim().isEmpty()) {
-                        clearInputContent()
-                    }
-                }
-            },
-        )
-
-        binding.input.content.addTextChangedListener(
-            object : TextWatcherAdapter() {
-                override fun afterTextChanged(s: Editable) {
-                    super.afterTextChanged(s)
-
-                    if (s.toString().endsWith(RichUtil.MENTION)) {
-                        UserActivity.start(hostActivity, Constant.STYLE_FRIEND_SELECT)
-                    }
-                }
-            },
-        )
-    }
-
-    private fun observeCommentState() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    render(state)
-                }
-            }
-        }
-    }
-
-    private fun render(state: CommentUiState) {
-        if (state.loadCompleteVersion != handledLoadCompleteVersion) {
-            handledLoadCompleteVersion = state.loadCompleteVersion
-            renderComments(state)
-        }
-
-        if (state.createCompleteVersion != handledCreateCompleteVersion) {
-            handledCreateCompleteVersion = state.createCompleteVersion
-            SuperToast.success(R.string.comment_create_success)
-            loadData()
-            clearInputContent()
-            KeyboardUtil.hideKeyboard(hostActivity, binding.input.content)
-        }
-
-        if (state.likeUpdateVersion != handledLikeUpdateVersion) {
-            handledLikeUpdateVersion = state.likeUpdateVersion
-            adapter.notifyDataSetChanged()
-        }
-
-        if (state.errorVersion != handledErrorVersion) {
-            handledErrorVersion = state.errorVersion
-            finishRefreshAndLoadMore(noMoreData = false)
-            if (state.error != null) {
-                Timber.e(state.error, "comment request error %s", state.errorMessage)
-            } else {
-                Timber.e("comment request error %s", state.errorMessage)
-            }
-            state.errorMessage?.takeIf { it.isNotBlank() }?.let(SuperToast::show)
-        }
-    }
-
-    private fun renderComments(state: CommentUiState) {
-        finishRefreshAndLoadMore(state.noMoreData)
-        if (state.loadOperation == CommentLoadOperation.REFRESH) {
-            adapter.setNewInstance(state.comments.toMutableList())
-        } else {
-            adapter.addData(state.pageComments)
-        }
-    }
-
-    private fun finishRefreshAndLoadMore(noMoreData: Boolean) {
-        binding.refresh.finishRefresh(2000, true, false)
-        binding.refresh.finishLoadMore(2000, true, noMoreData)
     }
 
     private fun sendClick() {
-        val content = binding.input.content.text.toString().trim()
-
-        if (StringUtils.isBlank(content)) {
+        val content = inputContent.trim()
+        if (content.isBlank()) {
             SuperToast.show(R.string.hint_comment)
             return
         }
@@ -193,10 +93,18 @@ class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
         viewModel.create(sheetId, parentId, content)
     }
 
-    private fun clearInputContent() {
-        parentId = null
-        binding.input.content.setText("")
-        binding.input.content.setHint(R.string.hint_comment)
+    private fun likeClick(data: Comment) {
+        if (!sp.isLogin) {
+            toLogin()
+            return
+        }
+
+        viewModel.toggleLike(data)
+    }
+
+    private fun openCommentUser(data: Comment) {
+        val userId = data.user?.id ?: return
+        startActivityExtraId(UserDetailActivity::class.java, userId)
     }
 
     private fun showCommentMoreDialog(data: Comment) {
@@ -210,10 +118,7 @@ class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
         when (which) {
             0 -> {
                 parentId = data.id
-                binding.input.content.hint = resources.getString(
-                    R.string.reply_hint,
-                    data.user?.nickname.orEmpty(),
-                )
+                replyHintName = data.user?.nickname.orEmpty()
             }
 
             1 -> {
@@ -231,22 +136,40 @@ class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
         }
     }
 
-    private fun likeClick(data: Comment) {
-        if (!sp.isLogin) {
-            toLogin()
+    private fun renderCreateComplete(state: CommentUiState) {
+        if (state.createCompleteVersion == handledCreateCompleteVersion) {
             return
         }
 
-        viewModel.toggleLike(data)
+        handledCreateCompleteVersion = state.createCompleteVersion
+        SuperToast.success(R.string.comment_create_success)
+        clearInputContent()
+        loadData()
+    }
+
+    private fun renderError(state: CommentUiState) {
+        if (state.errorVersion == handledErrorVersion) {
+            return
+        }
+
+        handledErrorVersion = state.errorVersion
+        if (state.error != null) {
+            Timber.e(state.error, "comment request error %s", state.errorMessage)
+        } else {
+            Timber.e("comment request error %s", state.errorMessage)
+        }
+        state.errorMessage?.takeIf { it.isNotBlank() }?.let(SuperToast::show)
+    }
+
+    private fun clearInputContent() {
+        parentId = null
+        replyHintName = null
+        inputContent = ""
     }
 
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
         viewModel.refresh(sheetId)
-    }
-
-    private fun loadMore() {
-        viewModel.loadMore(sheetId)
     }
 
     companion object {

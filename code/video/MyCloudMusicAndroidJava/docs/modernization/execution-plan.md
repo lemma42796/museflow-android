@@ -55,7 +55,7 @@
 - 歌曲列表通用适配器 `SongAdapter` 已从 Java 迁到 Kotlin，本地/已下载歌曲删除和下载完成状态查询已从直连 `DownloadRepository` 收敛到 `DownloadActionsUseCase`。
 - 歌单详情页 `SheetDetailActivity` 已从 Java 迁到 Kotlin，详情加载、收藏和取消收藏已推进到 `SheetDetailViewModel(StateFlow) -> Sheet UseCase -> SheetRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
 - 评论页 `CommentActivity` 已从 Java 迁到 Kotlin，评论分页加载、创建评论、点赞和取消点赞已推进到 `CommentViewModel(StateFlow) -> Comment UseCase -> CommentRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
-- 评论列表 `CommentAdapter`、评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
+- 评论列表旧 `CommentAdapter` 已在 Compose 迁移中删除；评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
 - 本地音乐扫描链路 `LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicUseCase`、`LocalMusicScanRepository` 和扫描完成 Flow 事件已收口；扫描已从 `AsyncTask` 迁到 coroutine，`component/music` 目录当前不再包含 Java 文件。
 - 动态发布相关位置占位入口、登录占位入口、用户占位入口和桌面 `MusicWidget` 已从 Java 迁到 Kotlin，旧静态启动入口、Manifest 类名和 Widget PendingIntent 行为保持兼容；旧 Rx `ObserverAdapter` 已随 `HttpObserver` 清理删除。
 - 网络层 `DefaultService`、`NetworkModule`、`NetworkSecurityInterceptor` 已从 Java 迁到 Kotlin，继续保留 Retrofit/OkHttp/Hilt 调用面；`DefaultService`/`DefaultRepository` 已改为 suspend API，普通网络 Rx/`RxAwait`/`HttpObserver` 已删除。
@@ -80,7 +80,8 @@
 - 应用入口 `AppContext` 已从 Java 迁到 Kotlin，保留 Manifest 类名、`getInstance()`、`preference`、`chatClient`、`downloadManager`、`orm`、RongCloud 初始化/连接和退出清理行为；Hilt 编译器已切到 kapt。
 - 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留 `CHANNEL_ID_MUSIC`、简单通知、前台 service 通知、桌面歌词解锁通知和聊天消息通知入口。
 - 阶段 8 旧 API 尾巴继续收口：未使用 AutoDispose 依赖已删除，返回键处理已迁到 `OnBackPressedDispatcher`，默认偏好入口已切到 AndroidX `PreferenceManager`，`Song` 和基类页面传参的 Parcelable 读取已补 API 33 typed overload 兼容封装，`ScreenUtil`/`ImageUtil`/`RichUtil` 已移除可替换的 deprecated 调用。
-- 下载管理双 tab 已从旧 `ViewPager + FragmentStatePagerAdapter` 迁到 `ViewPager2 + FragmentStateAdapter`；public slim 后不再加载的旧首页 `activity_main*` 布局已删除；剩余旧 pager 基类已修正空列表不清旧数据的问题，小播放器内层 `ViewPager` 因既有泄漏备注继续作为有意保留边界。
+- 下载管理双 tab 已继续从旧 `ViewPager2 + FragmentStateAdapter` 推进到 Compose `TabRow + LazyColumn`；public slim 后不再加载的旧首页 `activity_main*` 布局已删除；剩余旧 pager 基类已修正空列表不清旧数据的问题，小播放器内层 `ViewPager` 因既有泄漏备注继续作为有意保留边界。
+- Compose UI 第一批已落地：public slim `MainActivity`、下载管理 `DownloadActivity`、会话列表 `ConversationActivity`、动态发布 `PublishFeedActivity`、评论页 `CommentActivity`、歌单详情 `SheetDetailActivity`、发现页 `DiscoveryFragment`、动态列表 `FeedFragment`、聊天详情 `ChatActivity`、本地音乐 `LocalMusicActivity`、本地音乐扫描 `ScanLocalMusicActivity`、自定义发现排序 `CustomDiscoveryActivity` 和选择歌词 `SelectLyricActivity` 已从 XML/ViewBinding/RecyclerView/Adapter 入口迁到 Compose；下载、会话、评论、发现、动态列表、聊天、歌单详情、本地音乐、自定义发现排序和选择歌词的旧专属 Adapter/布局已删除；已无人加载的旧登录布局也已删除。
 
 当前尚未完成：
 
@@ -88,6 +89,7 @@
 - 音乐播放链路仍需继续确认上一首/下一首、多歌曲队列、Widget 控制、桌面歌词开关和歌词进度；真实出声播放以用户观察和 MediaSession/UI 推进为依据，已不再作为当前阻塞项。
 - 聊天 Kotlin 迁移后的设备端发送冒烟、动态多图压缩上传、下载任务操作、发现页网络数据和信息流滚动仍需继续验证。
 - 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；旧通知限流问题需要后续设备端复验是否消失。
+- Compose UI 仍未全量铺开：播放器主页、歌词图片/自定义歌词 View 等部分周边页面仍主要保留 XML/ViewBinding/RecyclerView/自定义 View。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -95,10 +97,57 @@
 
 - 后续继续在当前项目内渐进迁移，不新建 Android Studio 项目搬代码。
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
-- 先把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`。
-- 再逐步替换选中链路里的 RxJava/EventBus，最后在边界稳定后拆分 `core:*` 和 `feature:*` 模块。
+- 继续把当前五条链路从 Repository/ViewModel/兼容桥接推进到真正的 `Compose UI -> ViewModel(uiState) -> UseCase/Repository -> DataSource`，下一批优先处理播放器主页、歌词图片/自定义歌词 View 或剩余周边旧 UI 页面。
+- RxJava/EventBus 主线已收口；后续重点转向剩余 Compose UI、设备端冒烟和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 
 ## 最新执行记录
+
+### 2026-05-23 阶段 8 继续：Compose UI 第一批落地
+
+本轮决策：
+
+- 用户要求完成“Compose UI 还基本没真正铺开”这一项；本轮先选择已有 ViewModel/StateFlow 支撑或逻辑独立、风险可控的下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序和选择歌词作为第一批 Compose 页面。
+- 下载管理直接迁出旧 Fragment/ViewPager2/RecyclerView/Adapter 结构，避免继续保留一层只承载两个列表页的旧容器。
+- 会话列表继续保留点击进聊天、长按清消息、未读角标、头像加载和新消息刷新语义；头像暂时通过 `AndroidView + ImageUtil.showAvatar(...)` 复用现有 Glide 边界。
+
+本轮代码变更：
+
+- 新增 `ui/compose/MuseFlowTheme.kt` 和 `MuseFlowScaffold.kt`，提供 Compose 主题、顶部栏、空态和头像桥接组件。
+- `MainActivity` 改为 Compose public slim shell。
+- `DownloadActivity` 改为 Compose 页面：`TabRow + LazyColumn` 承接已下载/下载中列表，下载中任务保留暂停/继续、单项删除、全部暂停/继续、全部删除和下载监听刷新。
+- 删除下载页旧 `DownloadAdapter`、`DownloadedFragment`、`DownloadingFragment`、`activity_download.xml`、`fragment_downloaded.xml`、`fragment_downloading.xml` 和 `item_downloading.xml`。
+- `ConversationActivity` 改为 Compose 页面：`LazyColumn` 渲染会话行，保留点击进入 `ChatActivity`、长按确认删除会话消息、未读角标和错误日志。
+- 删除会话列表旧 `ConversationAdapter`、`activity_conversation.xml` 和 `item_conversation.xml`。
+- `PublishFeedActivity` 改为 Compose 页面：`OutlinedTextField + LazyVerticalGrid` 承接正文、计数、图片选择/删除和发布按钮，继续复用 PictureSelector、图片压缩和 `FeedPublishViewModel`。
+- 删除动态发布旧 `activity_publish_feed.xml`。
+- `CommentActivity` 改为 Compose 页面：`LazyColumn + OutlinedTextField` 承接评论列表、刷新/加载更多、回复、点赞、复制、富文本 mention 点击和发送评论，继续复用 `CommentViewModel` 与 `CommentMoreDialogFragment`。
+- 删除评论页旧 `CommentAdapter`、`activity_comment.xml`、`item_comment.xml` 和 `input_comment.xml`。
+- `SheetDetailActivity` 改为 Compose 页面：动态调色详情头、歌曲 `LazyColumn`、收藏/取消收藏、播放全部/单曲、用户入口、评论入口和顶部菜单继续保留；底部小播放器用 `FragmentContainerView` 承接旧 `SmallAudioControlPageFragment`，避免本轮扩大到播放器控件重写。
+- 删除歌单详情旧 `activity_sheet_detail.xml` 和 `header_sheet_detail.xml`；通用 `item_song.xml` 仍被本地音乐等列表复用，暂不删除。
+- `DiscoveryFragment` 改为 Compose 页面：Banner、快捷入口、推荐歌单、推荐单曲和底部刷新/自定义入口改由 Compose 渲染，继续复用 `DiscoveryViewModel`、排序变更 Flow 和歌单变更 Flow。
+- 删除发现页旧 `DiscoveryAdapter`、`DiscoverySongAdapter`、`SheetAdapter`、`fragment_discovery.xml`、`item_discovery_*` 和 `item_sheet.xml`。
+- `FeedFragment` 改为 Compose 页面：动态卡片、图片网格、点赞用户、评论区和发布入口改由 Compose 渲染，图片预览继续复用 `PhotoViewer`，用户 span 跳转继续复用 `UserNavigationEvents`。
+- 删除动态列表旧 `FeedAdapter`、`ImageAdapter`、`fragment_feed.xml`、`item_feed.xml`、`item_feed_comment.xml` 和 `item_image.xml`。
+- `ChatActivity` 改为 Compose 页面：消息 `LazyColumn`、文本/图片气泡、加载更多、图片选择、输入框和发送按钮改由 Compose 渲染，继续复用 PictureSelector/Luban 压缩、`ChatViewModel` 和 RongCloud 消息发送/清未读边界。
+- 删除聊天详情旧 `ChatAdapter`、`activity_chat.xml`、`chat_message_avatar.xml` 和 `item_chat_*` 布局。
+- `LocalMusicActivity` 改为 Compose 页面：歌曲 `LazyColumn`、批量编辑、全选/取消全选、批量删除、单曲删除、排序弹窗和扫描入口继续保留；播放入口继续写入 `musicListManager` 并打开播放器。
+- `ScanLocalMusicActivity` 改为 Compose 页面：扫描进度、开始/停止/完成按钮和扫描动画改由 Compose 渲染；MediaStore 扫描、协程取消和扫描完成 Flow 通知继续复用既有 `ScanLocalMusicUseCase`/`NotifyLocalMusicScanCompleteUseCase`。
+- 删除本地音乐旧 `SongAdapter`、`activity_local_music.xml`、`item_song.xml`、`activity_scan_local_music.xml` 和已无人引用的 `menu_local_music.xml`。
+- `CustomDiscoveryActivity` 改为 Compose 页面：自定义发现排序列表、保存、恢复默认排序和拖拽排序句柄改由 Compose 渲染；排序仍写入 `sp.setSort(...)` 并通过 `NotifyDiscoverySortChangedUseCase` 通知发现页刷新。
+- 删除自定义发现排序旧 `CustomDiscoveryAdapter`、`activity_custom_discovery.xml` 和 `item_custom_discovery.xml`。
+- `SelectLyricActivity` 改为 Compose 页面：歌词 `LazyColumn`、选中态、分享歌词文本、分享歌词图片入口和歌词视频占位按钮改由 Compose 渲染；分享文本仍复用 `ShareUtil.shareLyricText(...)`，图片入口仍进入 `ShareLyricImageActivity`。
+- 删除选择歌词旧 `SelectLyricAdapter`、`activity_select_lyric.xml` 和 `item_select_lyric.xml`。
+- 删除已无人加载的旧登录残留布局 `activity_login.xml` 和 `activity_login_home.xml`；当前 `LoginHomeActivity` 仍保持 public slim 占位页启动即 `finish()` 的行为。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过。
+- `git diff --check` 通过。
+
+当前边界：
+
+- 本轮未做设备端打开下载页/会话列表/动态发布页/评论页/歌单详情/发现页/动态列表/聊天详情/本地音乐/本地音乐扫描/自定义发现排序/选择歌词人工冒烟。
+- Compose 页面数已从 0 起步并覆盖 public slim shell、下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序和选择歌词；播放器主页、歌词图片/自定义歌词 View 等复杂页面仍未迁移，layout XML 当前从 75 降到 36。
 
 ### 2026-05-22 阶段 8 继续：public slim 死布局和 warning 收口
 
@@ -3130,12 +3179,25 @@ GitHub 发布策略：
 
 当前最新切片：
 
+- Compose UI 第一批已经落地：新增 `MuseFlowTheme` / `MuseFlowScaffold` 共享组件，`MainActivity`、`DownloadActivity`、`ConversationActivity`、`PublishFeedActivity`、`CommentActivity`、`SheetDetailActivity`、`DiscoveryFragment`、`FeedFragment`、`ChatActivity`、`LocalMusicActivity`、`ScanLocalMusicActivity`、`CustomDiscoveryActivity`、`SelectLyricActivity` 已切到 Compose。
+- 下载管理页已从旧 Fragment/ViewPager2/RecyclerView/Adapter 结构改为 `Compose TabRow + LazyColumn`，并删除旧下载页 Fragment、Adapter 和相关布局。
+- 会话列表页已从 XML/RecyclerView/Adapter 改为 Compose `LazyColumn`，保留点击进聊天、长按确认删除、未读角标和头像加载语义，并删除旧会话列表 Adapter/布局。
+- 动态发布页已从 XML/RecyclerView/ImageAdapter 改为 Compose `OutlinedTextField + LazyVerticalGrid`，保留正文校验、图片选择压缩、删除图片、上传/创建动态和发布完成退出语义，并删除旧 Activity 布局。
+- 评论页已从 XML/SmartRefreshLayout/RecyclerView/Adapter 改为 Compose `LazyColumn + OutlinedTextField`，保留刷新、加载更多、点赞、回复、复制、mention 富文本跳转和发送评论语义，并删除旧评论页 Adapter/布局。
+- 歌单详情页已从 XML/RecyclerView/header binding 改为 Compose 动态调色详情头 + 歌曲 `LazyColumn`，保留播放、收藏、用户入口、评论入口、下载完成标识和底部小播放器承接，并删除旧 `activity_sheet_detail.xml`/`header_sheet_detail.xml`。
+- 发现页已从 XML/SwipeRefreshLayout/RecyclerView/多类型 Adapter 改为 Compose Banner/快捷入口/推荐歌单/推荐单曲/底部入口，保留首页聚合加载、排序变更刷新、歌单变化刷新、点击歌单和点击单曲播放语义，并删除发现页旧 Adapter/布局。
+- 动态列表页已从 XML/RecyclerView/`FeedAdapter` 改为 Compose 动态卡片 + 图片网格 + 点赞/评论区，保留发布入口、用户详情 span 跳转和图片预览入口，并删除动态列表旧 Adapter/布局。
+- 聊天详情页已从 XML/SwipeRefreshLayout/RecyclerView/`ChatAdapter` 改为 Compose 消息列表 + 输入栏，保留历史消息加载、文本/图片发送、图片选择压缩、清未读和新消息追加语义，并删除聊天详情旧 Adapter/布局。
+- 本地音乐页已从 XML/RecyclerView/`SongAdapter` 改为 Compose 歌曲列表 + 批量编辑栏，保留播放、排序、扫描、单曲删除和批量删除语义，并删除本地音乐旧 Adapter/布局。
+- 本地音乐扫描页已从 XML/传统 View 动画改为 Compose 扫描动画 + 状态按钮，保留 MediaStore 扫描协程、进度回调和扫描完成 Flow 通知。
+- 自定义发现排序页已从 XML/RecyclerView/`CustomDiscoveryAdapter` 改为 Compose 排序列表，保留拖拽排序、恢复默认排序、保存后写 `sp.setSort(...)` 并发布排序变更 Flow 语义。
+- 选择歌词页已从 XML/RecyclerView/`SelectLyricAdapter` 改为 Compose 歌词列表，保留多选歌词、分享文本和进入歌词图片页语义。
+- 旧登录 UI 已不在 Manifest/代码中加载，`activity_login.xml` 和 `activity_login_home.xml` 已删除；`LoginHomeActivity` 继续是启动即退出的占位边界。
 - 阶段 8 本轮集中完成主包 Java、EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose 和 BGABadge 旧注解处理器的收口。
 - `AppContext`、`BadgeInit`、`MusicPlayerListener` 已从 Java 迁出或删除；`app/src/main/java/com/ixuea/courses/mymusic` 主包当前不再包含 Java 源文件。
 - `DefaultService`/`DefaultRepository` 已改为 Retrofit suspend API；普通网络 Rx 桥接、`RxJava3CallAdapterFactory`、`adapter-rxjava3`、`rxandroid`、`paging-rxjava3` 等依赖已移除。
 - 发现排序、歌单收藏、本地扫描完成、下载完成、动态刷新、用户跳转、黑胶点击和播放列表变化等 EventBus 事件已迁到 feature-local `SharedFlow`；`org.greenrobot:eventbus` 依赖已移除。
-- 本地音乐扫描已从 `ScanLocalMusicAsyncTask` 迁到 coroutine `ScanLocalMusicUseCase -> LocalMusicScanRepository`，扫描取消通过 coroutine job 处理。
-- 下载管理页已从旧 `ViewPager + FragmentStatePagerAdapter` 迁到 `ViewPager2 + FragmentStateAdapter`；`activity_download.xml`、`DownloadActivity`、`DownloadAdapter` 已同步。
+- 本地音乐扫描已从 `ScanLocalMusicAsyncTask` 迁到 coroutine `ScanLocalMusicUseCase -> LocalMusicScanRepository`，扫描取消通过 coroutine job 处理；扫描 UI 也已迁到 Compose。
 - public slim 后不再加载的旧首页 `activity_main.xml`/`activity_main_content.xml` 已删除，无人引用的 `OnPageChangeListenerAdapter` 已删除。
 - `BGABadgeView-Android` api/compiler 依赖和 `BadgeInit.kt` 已删除；旧非增量 BGA annotation processor 不再参与构建。
 - 旧 API 尾巴已继续收口：返回键迁到 `OnBackPressedDispatcher`，默认偏好入口切到 AndroidX `PreferenceManager`，Parcelable 读取补 API 33 typed overload，`ScreenUtil`/`ImageUtil`/`RichUtil` 移除可替换 deprecated 调用，桌面歌词 overlay type 修正为 API 26+ 使用 `TYPE_APPLICATION_OVERLAY`。
@@ -3147,12 +3209,13 @@ GitHub 发布策略：
 - `./gradlew :app:assembleDevDebug` 通过。
 - 最新构建中 Kotlin 编译无 warning；剩余提示为 `superui` 子包 Java deprecated/unchecked 和 Hilt 生成代码 deprecated。
 - `rg` 扫描确认 app 源码/Gradle 中已无 EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose、BGABadge 依赖/注解入口；旧 ViewPager 命中只剩小播放器保留边界。
+- `@Composable` / `setContent` 扫描确认 Compose 已进入 public slim、下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序和选择歌词；layout XML 数量已从 75 降到 36。
 - 本轮未做设备端人工冒烟。
 
 恢复步骤：
 
 - 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
-- 如果继续纯编码，优先选小而确定的边界：`superui` 子包 Java warning、Hilt 生成 deprecated 的来源评估，或小播放器旧 `ViewPager` 的泄漏原因复核；不要在未复核泄漏备注前强迁小播放器到 ViewPager2。
+- 如果继续纯编码，优先继续 Compose UI 链路：播放器主页、歌词图片/自定义歌词 View 或剩余周边旧 UI；也可以处理 `superui` 子包 Java warning、Hilt 生成 deprecated 的来源评估，或小播放器旧 `ViewPager` 的泄漏原因复核。
 - 如果继续验证，优先做播放链路、聊天发送/收消息、动态多图压缩上传、下载任务操作、发现页网络数据/滚动、本地音乐扫描和桌面歌词/Widget 的设备端冒烟。
 - 每个切片继续保持 `./gradlew :app:assembleDevDebug` 和 `git diff --check` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
 

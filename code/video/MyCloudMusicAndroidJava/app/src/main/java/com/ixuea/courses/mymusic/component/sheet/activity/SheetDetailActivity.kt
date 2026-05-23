@@ -1,159 +1,120 @@
 package com.ixuea.courses.mymusic.component.sheet.activity
 
 import android.content.Intent
-import android.graphics.drawable.Drawable
-import android.net.Uri
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.palette.graphics.Palette
-import com.bumptech.glide.Glide
-import com.github.florent37.glidepalette.BitmapPalette
-import com.github.florent37.glidepalette.GlidePalette
+import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.comment.activity.CommentActivity
+import com.ixuea.courses.mymusic.component.download.domain.DownloadActionsUseCase
 import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity
-import com.ixuea.courses.mymusic.component.sheet.adapter.SongAdapter
 import com.ixuea.courses.mymusic.component.sheet.domain.NotifySheetChangedUseCase
 import com.ixuea.courses.mymusic.component.sheet.model.Sheet
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetCollectOperation
+import com.ixuea.courses.mymusic.component.sheet.ui.SheetDetailScreen
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetDetailUiState
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetDetailViewModel
+import com.ixuea.courses.mymusic.component.sheet.ui.SmallAudioControlHost
+import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
-import com.ixuea.courses.mymusic.databinding.ActivitySheetDetailBinding
-import com.ixuea.courses.mymusic.databinding.HeaderSheetDetailBinding
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
-import com.ixuea.courses.mymusic.util.ImageUtil
-import com.ixuea.courses.mymusic.util.ResourceUtil
+import com.ixuea.courses.mymusic.util.PreferenceUtil
 import com.ixuea.superui.toast.SuperToast
-import com.qmuiteam.qmui.util.QMUIStatusBarHelper
-import kotlinx.coroutines.launch
-import org.apache.commons.lang3.StringUtils
 import timber.log.Timber
 
 /**
  * 歌单详情界面
  */
-class SheetDetailActivity :
-    BaseTitleActivity<ActivitySheetDetailBinding>(),
-    View.OnClickListener {
+class SheetDetailActivity : BaseLogicActivity() {
     private var id: String? = null
-    private var data: Sheet? = null
-    private lateinit var adapter: SongAdapter
-    private lateinit var headerBinding: HeaderSheetDetailBinding
     private lateinit var viewModel: SheetDetailViewModel
-    private var deleteMenuItem: MenuItem? = null
+    private val notifySheetChangedUseCase = NotifySheetChangedUseCase()
+    private val downloadActionsUseCase = DownloadActionsUseCase()
     private var handledDataVersion = 0L
     private var handledErrorVersion = 0L
     private var handledCollectEventVersion = 0L
     private var loadingVisible = false
-    private val notifySheetChangedUseCase = NotifySheetChangedUseCase()
+    private var headerColor by mutableStateOf(0)
+    private var canDelete by mutableStateOf(false)
 
-    override fun initViews() {
-        super.initViews()
-        QMUIStatusBarHelper.setStatusBarDarkMode(this)
-    }
-
-    override fun initDatum() {
-        super.initDatum()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        sp = PreferenceUtil.getInstance(this)
         id = if (Intent.ACTION_VIEW == intent.action) {
             intent.data?.getQueryParameter(Constant.ID)
         } else {
             extraId()
         }
-
         viewModel = ViewModelProvider(this)[SheetDetailViewModel::class.java]
-        adapter = SongAdapter(R.layout.item_song)
-        adapter.addHeaderView(createHeaderView())
-        binding.list.adapter = adapter
+        headerColor = ContextCompat.getColor(this, R.color.primary)
+        setStatusBarColor(headerColor)
 
-        observeSheetState()
+        setContent {
+            val state by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(state.isLoading, state.isCollecting) {
+                renderLoading(state.isLoading || state.isCollecting)
+            }
+            LaunchedEffect(state.dataVersion) {
+                renderData(state)
+            }
+            LaunchedEffect(state.collectEventVersion) {
+                renderCollectEvent(state.collectOperation, state.collectEventVersion)
+            }
+            LaunchedEffect(state.errorVersion) {
+                renderError(state)
+            }
+
+            MuseFlowTheme {
+                SheetDetailScreen(
+                    state = state,
+                    headerColor = headerColor,
+                    canDelete = canDelete,
+                    isDownloaded = ::isDownloaded,
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onHeaderColorResolved = ::applyHeaderColor,
+                    onPlayAll = {
+                        play(0, state.sheet?.songs.orEmpty())
+                    },
+                    onSongClick = { position ->
+                        play(position, state.sheet?.songs.orEmpty())
+                    },
+                    onCollectClick = ::processCollectClick,
+                    onUserClick = { userId ->
+                        startActivityExtraId(UserDetailActivity::class.java, userId)
+                    },
+                    onCommentClick = { sheetId ->
+                        CommentActivity.startWithSheetId(hostActivity, sheetId)
+                    },
+                    onSearchClick = {},
+                    onSortClick = {},
+                    onDeleteClick = ::deleteSheet,
+                    onReportClick = {},
+                    bottomBar = {
+                        SmallAudioControlHost(supportFragmentManager)
+                    },
+                )
+            }
+        }
+    }
+
+    override fun initDatum() {
+        super.initDatum()
         loadData()
-    }
-
-    override fun initListeners() {
-        super.initListeners()
-        headerBinding.collect.setOnClickListener(this)
-        adapter.setOnItemClickListener { _, _, position ->
-            play(position)
-        }
-    }
-
-    private fun createHeaderView(): View {
-        headerBinding = HeaderSheetDetailBinding.inflate(LayoutInflater.from(hostActivity))
-
-        headerBinding.controlContainer.setOnClickListener {
-            play(0)
-        }
-
-        headerBinding.userContainer.setOnClickListener {
-            val userId = data?.user?.id ?: return@setOnClickListener
-            startActivityExtraId(UserDetailActivity::class.java, userId)
-        }
-
-        headerBinding.commentContainer.setOnClickListener {
-            val sheetId = data?.id ?: return@setOnClickListener
-            CommentActivity.startWithSheetId(hostActivity, sheetId)
-        }
-
-        return headerBinding.root
-    }
-
-    private fun play(position: Int) {
-        if (position !in 0 until adapter.itemCount) {
-            return
-        }
-
-        val song = adapter.getItem(position)
-        musicListManager.datum = adapter.data
-        musicListManager.play(song)
-        startMusicPlayerActivity()
     }
 
     override fun loadData(isPlaceholder: Boolean) {
         super.loadData(isPlaceholder)
         viewModel.load(id.orEmpty())
-    }
-
-    private fun observeSheetState() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    render(state)
-                }
-            }
-        }
-    }
-
-    private fun render(state: SheetDetailUiState) {
-        renderLoading(state.isLoading || state.isCollecting)
-
-        if (state.dataVersion != handledDataVersion) {
-            handledDataVersion = state.dataVersion
-            state.sheet?.let(::showData)
-        }
-
-        if (state.collectEventVersion != handledCollectEventVersion) {
-            handledCollectEventVersion = state.collectEventVersion
-            handleCollectEvent(state.collectOperation)
-        }
-
-        if (state.errorVersion != handledErrorVersion) {
-            handledErrorVersion = state.errorVersion
-            if (state.error != null) {
-                Timber.e(state.error, "sheet detail error %s", state.errorMessage)
-            } else {
-                Timber.e("sheet detail error %s", state.errorMessage)
-            }
-            state.errorMessage?.takeIf { it.isNotBlank() }?.let(SuperToast::show)
-        }
     }
 
     private fun renderLoading(show: Boolean) {
@@ -169,140 +130,93 @@ class SheetDetailActivity :
         }
     }
 
-    private fun showData(data: Sheet) {
-        this.data = data
-        adapter.setNewInstance(data.songs ?: arrayListOf())
-
-        val icon = data.icon
-        if (StringUtils.isBlank(icon)) {
-            headerBinding.icon.setImageResource(R.drawable.placeholder)
-            setDefaultColor()
-        } else {
-            loadHeaderIcon(icon.orEmpty())
-        }
-
-        headerBinding.title.text = data.title
-        ImageUtil.showAvatar(hostActivity, headerBinding.avatar, data.user?.icon)
-        headerBinding.nickname.text = data.user?.nickname.orEmpty()
-        headerBinding.commentCount.text = data.commentsCount.toString()
-        headerBinding.count.text = resources.getString(R.string.music_count, data.songs?.size ?: 0)
-
-        showCollectStatus()
-        updateDeleteMenuVisibility()
-    }
-
-    private fun loadHeaderIcon(icon: String) {
-        val uri = ResourceUtil.resourceUri(icon)
-        val glidePalette = GlidePalette
-            .with(uri)
-            .use(BitmapPalette.Profile.VIBRANT)
-            .intoCallBack(
-                object : BitmapPalette.CallBack {
-                    override fun onPaletteLoaded(palette: Palette?) {
-                        val swatch = palette?.vibrantSwatch
-                        if (swatch != null) {
-                            setHeaderBackground(swatch.rgb)
-                        } else {
-                            setDefaultColor()
-                        }
-                    }
-                },
-            )
-            .crossfade(true)
-
-        Glide.with(hostActivity)
-            .load(uri)
-            .listener(glidePalette)
-            .into(headerBinding.icon)
-    }
-
-    private fun showCollectStatus() {
-        val data = data ?: return
-        if (data.isCollect) {
-            headerBinding.collect.text = resources.getString(
-                R.string.cancel_collect,
-                data.collectsCount,
-            )
-            headerBinding.collect.background = null
-            headerBinding.collect.setTextColor(ContextCompat.getColor(this, R.color.black80))
-        } else {
-            headerBinding.collect.text = resources.getString(
-                R.string.collect,
-                data.collectsCount,
-            )
-            headerBinding.collect.setBackgroundColor(ContextCompat.getColor(this, R.color.primary))
-            headerBinding.collect.setTextColor(ContextCompat.getColor(this, R.color.white))
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_sheet_detail, menu)
-        deleteMenuItem = menu.findItem(R.id.delete)
-        updateDeleteMenuVisibility()
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.search,
-            R.id.sort,
-            R.id.report -> true
-
-            R.id.delete -> {
-                deleteSheet()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun deleteSheet() {
-    }
-
-    private fun setDefaultColor() {
-        setHeaderBackground(getColor(R.color.primary))
-    }
-
-    private fun setHeaderBackground(color: Int) {
-        setStatusBarColor(color)
-        toolbar.setBackgroundColor(color)
-        headerBinding.header.setBackgroundColor(color)
-    }
-
-    override fun onClick(v: View) {
-        if (v.id == R.id.collect) {
-            processCollectClick()
-        }
-    }
-
-    private fun processCollectClick() {
-        if (!sp.isLogin) {
-            startActivity(LoginHomeActivity::class.java)
+    private fun renderData(state: SheetDetailUiState) {
+        if (state.dataVersion == handledDataVersion) {
             return
         }
 
-        val sheet = data ?: return
-        viewModel.toggleCollect(sheet)
+        handledDataVersion = state.dataVersion
+        val ownerId = state.sheet?.user?.id
+        canDelete = ownerId != null && ownerId == sp.userId
     }
 
-    private fun handleCollectEvent(operation: SheetCollectOperation) {
+    private fun renderCollectEvent(operation: SheetCollectOperation, version: Long) {
+        if (version == handledCollectEventVersion) {
+            return
+        }
+
+        handledCollectEventVersion = version
         when (operation) {
             SheetCollectOperation.COLLECTED -> SuperToast.success(R.string.collection_success)
             SheetCollectOperation.UNCOLLECTED -> SuperToast.success(R.string.cancel_success)
             SheetCollectOperation.NONE -> return
         }
 
-        showCollectStatus()
         notifySheetChanged()
     }
 
-    private fun updateDeleteMenuVisibility() {
-        val ownerId = data?.user?.id
-        deleteMenuItem?.isVisible = ownerId != null && ownerId == sp.userId
+    private fun renderError(state: SheetDetailUiState) {
+        if (state.errorVersion == handledErrorVersion) {
+            return
+        }
+
+        handledErrorVersion = state.errorVersion
+        if (state.error != null) {
+            Timber.e(state.error, "sheet detail error %s", state.errorMessage)
+        } else {
+            Timber.e("sheet detail error %s", state.errorMessage)
+        }
+        state.errorMessage?.takeIf { it.isNotBlank() }?.let(SuperToast::show)
+    }
+
+    private fun applyHeaderColor(color: Int) {
+        if (color == headerColor) {
+            return
+        }
+
+        headerColor = color
+        setStatusBarColor(color)
+    }
+
+    private fun play(position: Int, songs: List<Song>) {
+        if (position !in songs.indices) {
+            return
+        }
+
+        val song = songs[position]
+        musicListManager.datum = songs
+        musicListManager.play(song)
+        startMusicPlayerActivity()
+    }
+
+    private fun processCollectClick(sheet: Sheet) {
+        if (!sp.isLogin) {
+            startActivity(LoginHomeActivity::class.java)
+            return
+        }
+
+        viewModel.toggleCollect(sheet)
+    }
+
+    private fun isDownloaded(song: Song): Boolean {
+        val downloadInfo = song.id?.let { songId ->
+            downloadActionsUseCase.getDownloadById(songId)
+        }
+        return downloadInfo?.status == DownloadInfo.STATUS_COMPLETED
+    }
+
+    private fun deleteSheet() {
     }
 
     private fun notifySheetChanged() {
         notifySheetChangedUseCase()
+    }
+
+    companion object {
+        fun start(context: android.content.Context, id: String?) {
+            val intent = Intent(context, SheetDetailActivity::class.java)
+            intent.putExtra(Constant.ID, id)
+            context.startActivity(intent)
+        }
     }
 }

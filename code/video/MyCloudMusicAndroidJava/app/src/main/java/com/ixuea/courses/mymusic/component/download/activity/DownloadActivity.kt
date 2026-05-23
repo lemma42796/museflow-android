@@ -1,51 +1,77 @@
 package com.ixuea.courses.mymusic.component.download.activity
 
-import androidx.viewpager2.widget.ViewPager2
-import com.flyco.tablayout.listener.OnTabSelectListener
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModelProvider
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
-import com.ixuea.courses.mymusic.component.download.adapter.DownloadAdapter
-import com.ixuea.courses.mymusic.databinding.ActivityDownloadBinding
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
+import com.ixuea.courses.mymusic.component.download.ui.DownloadScreen
+import com.ixuea.courses.mymusic.component.download.ui.DownloadedViewModel
+import com.ixuea.courses.mymusic.component.download.ui.DownloadingViewModel
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
+import com.ixuea.superui.toast.SuperToast
 
 /**
- * 下载管理界面
+ * Download manager screen backed by Compose.
  */
-class DownloadActivity : BaseTitleActivity<ActivityDownloadBinding>() {
-    private lateinit var adapter: DownloadAdapter
-    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            binding.indicator.currentTab = position
+class DownloadActivity : BaseLogicActivity() {
+    private lateinit var downloadedViewModel: DownloadedViewModel
+    private lateinit var downloadingViewModel: DownloadingViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        downloadedViewModel = ViewModelProvider(this)[DownloadedViewModel::class.java]
+        downloadingViewModel = ViewModelProvider(this)[DownloadingViewModel::class.java]
+
+        setContent {
+            val downloadedState by downloadedViewModel.uiState.collectAsState()
+            val downloadingState by downloadingViewModel.uiState.collectAsState()
+
+            MuseFlowTheme {
+                DownloadScreen(
+                    downloadedState = downloadedState,
+                    downloadingState = downloadingState,
+                    songTitleForDownload = { download ->
+                        orm.querySong(download.id)?.title.orEmpty()
+                    },
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onDownloadedSongClick = { song ->
+                        musicListManager.datum = downloadedState.songs
+                        musicListManager.play(song)
+                        startMusicPlayerActivity()
+                    },
+                    onToggleDownload = downloadingViewModel::toggle,
+                    onDeleteDownload = downloadingViewModel::remove,
+                    onDownloadTerminalState = {
+                        downloadingViewModel.onDownloadTerminalState()
+                    },
+                    onToggleAllDownloads = {
+                        if (downloadingState.downloads.isEmpty()) {
+                            SuperToast.show(R.string.error_not_download)
+                        } else if (downloadingState.isDownloading) {
+                            downloadingViewModel.pauseAll()
+                        } else {
+                            downloadingViewModel.resumeAll()
+                        }
+                    },
+                    onDeleteAllDownloads = {
+                        if (downloadingState.downloads.isEmpty()) {
+                            SuperToast.show(R.string.error_not_download)
+                        } else {
+                            downloadingViewModel.removeAll(downloadingState.downloads)
+                        }
+                    },
+                )
+            }
         }
     }
 
     override fun initDatum() {
         super.initDatum()
-        adapter = DownloadAdapter(hostActivity)
-        binding.list.adapter = adapter
-
-        val indicatorTitles = arrayOf(
-            getString(R.string.download_complete),
-            getString(R.string.downloading),
-        )
-        binding.indicator.setTabData(indicatorTitles)
-    }
-
-    override fun initListeners() {
-        super.initListeners()
-        binding.indicator.setOnTabSelectListener(object : OnTabSelectListener {
-            override fun onTabSelect(position: Int) {
-                binding.list.currentItem = position
-            }
-
-            override fun onTabReselect(position: Int) {
-            }
-        })
-
-        binding.list.registerOnPageChangeCallback(pageChangeCallback)
-    }
-
-    override fun onDestroy() {
-        binding.list.unregisterOnPageChangeCallback(pageChangeCallback)
-        super.onDestroy()
+        downloadedViewModel.observeDownloadedChanges(orm)
+        downloadedViewModel.load(orm)
+        downloadingViewModel.load()
     }
 }

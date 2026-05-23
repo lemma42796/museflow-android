@@ -1,21 +1,27 @@
 package com.ixuea.courses.mymusic.component.feed.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.RecyclerView
-import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.component.feed.activity.PublishFeedActivity
-import com.ixuea.courses.mymusic.component.feed.adapter.FeedAdapter
+import com.ixuea.courses.mymusic.component.feed.ui.FeedScreen
 import com.ixuea.courses.mymusic.component.feed.ui.FeedUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedViewModel
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
 import com.ixuea.courses.mymusic.component.user.domain.ObserveUserDetailRequestsUseCase
-import com.ixuea.courses.mymusic.databinding.FragmentFeedBinding
-import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
+import com.ixuea.courses.mymusic.fragment.BaseLogicFragment
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.ImageUtil
 import com.wanglu.photoviewerlibrary.PhotoViewer
@@ -25,35 +31,61 @@ import timber.log.Timber
 /**
  * 首页-动态界面
  */
-class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.FeedListener {
+class FeedFragment : BaseLogicFragment() {
     private var userId: String? = null
-    private lateinit var adapter: FeedAdapter
+    private lateinit var composeView: ComposeView
     private lateinit var viewModel: FeedViewModel
-    private var handledDataVersion = 0L
     private var handledErrorVersion = 0L
     private val observeUserDetailRequests = ObserveUserDetailRequestsUseCase()
+
+    override fun getLayoutView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        composeView = ComposeView(inflater.context).apply {
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
+            )
+        }
+        return composeView
+    }
 
     override fun initDatum() {
         super.initDatum()
         userId = arguments?.getString(Constant.USER_ID) ?: arguments?.getString(Constant.ID)
         viewModel = ViewModelProvider(this)[FeedViewModel::class.java]
         viewModel.observeChanges(userId)
-
-        adapter = FeedAdapter(R.layout.item_feed)
-        binding.list.adapter = adapter
-        observeFeedState()
+        renderContent()
         observeFeedNavigation()
 
         loadData()
     }
 
-    override fun initListeners() {
-        super.initListeners()
-        adapter.setListener(this)
+    override fun loadData(isPlaceholder: Boolean) {
+        viewModel.load(userId)
+    }
 
-        binding.primary.setOnClickListener {
-            loginAfter {
-                startActivity(PublishFeedActivity::class.java)
+    private fun renderContent() {
+        composeView.setContent {
+            val state by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(state.errorVersion) {
+                renderError(state)
+            }
+
+            MuseFlowTheme {
+                FeedScreen(
+                    state = state,
+                    isLogin = sp.isLogin,
+                    currentUserId = sp.userId,
+                    onCreateClick = {
+                        loginAfter {
+                            startActivity(PublishFeedActivity::class.java)
+                        }
+                    },
+                    onImageClick = ::showImages,
+                )
             }
         }
     }
@@ -68,46 +100,25 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
         }
     }
 
-    override fun loadData(isPlaceholder: Boolean) {
-        viewModel.load(userId)
-    }
+    private fun renderError(state: FeedUiState) {
+        if (state.errorVersion == handledErrorVersion) {
+            return
+        }
 
-    private fun observeFeedState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    render(state)
-                }
-            }
+        handledErrorVersion = state.errorVersion
+        if (state.error != null) {
+            Timber.e(state.error, "feed list error %s", state.errorMessage)
+        } else {
+            Timber.e("feed list error %s", state.errorMessage)
         }
     }
 
-    private fun render(state: FeedUiState) {
-        if (state.dataVersion != handledDataVersion) {
-            handledDataVersion = state.dataVersion
-            adapter.setNewInstance(state.feeds.toMutableList())
-        }
-
-        if (state.errorVersion != handledErrorVersion) {
-            handledErrorVersion = state.errorVersion
-            if (state.error != null) {
-                Timber.e(state.error, "feed list error %s", state.errorMessage)
-            } else {
-                Timber.e("feed list error %s", state.errorMessage)
-            }
-        }
-    }
-
-    /**
-     * 动态图片点击了
-     */
-    override fun onImageClick(rv: RecyclerView, results: List<String>, index: Int) {
+    private fun showImages(results: List<String>, index: Int) {
         val imageUris = ArrayList(results)
 
         PhotoViewer
             .setData(imageUris)
             .setCurrentPage(index)
-            .setImgContainer(rv)
             .setShowImageViewInterface(object : PhotoViewer.ShowImageViewInterface {
                 override fun show(iv: ImageView, url: String) {
                     ImageUtil.show(hostActivity, iv, url)

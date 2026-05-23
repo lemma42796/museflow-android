@@ -1,50 +1,48 @@
 package com.ixuea.courses.mymusic.component.discovery.activity
 
-import android.view.Menu
-import android.view.MenuItem
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.ixuea.courses.mymusic.R
-import com.ixuea.courses.mymusic.activity.BaseTitleActivity
-import com.ixuea.courses.mymusic.component.discovery.adapter.CustomDiscoveryAdapter
+import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.discovery.domain.NotifyDiscoverySortChangedUseCase
 import com.ixuea.courses.mymusic.component.discovery.model.ui.CustomDiscoveryItem
-import com.ixuea.courses.mymusic.databinding.ActivityCustomDiscoveryBinding
+import com.ixuea.courses.mymusic.component.discovery.ui.CustomDiscoveryScreen
+import com.ixuea.courses.mymusic.ui.compose.MuseFlowTheme
 import com.ixuea.courses.mymusic.util.Constant
-import com.ixuea.superui.util.SuperRecyclerViewUtil
 import timber.log.Timber
-import java.util.Collections
 
 /**
  * 自定义发现界面
  */
-class CustomDiscoveryActivity : BaseTitleActivity<ActivityCustomDiscoveryBinding>() {
-    private lateinit var adapter: CustomDiscoveryAdapter
-    private lateinit var touchHelper: ItemTouchHelper
+class CustomDiscoveryActivity : BaseLogicActivity() {
+    private var items by mutableStateOf<List<CustomDiscoveryItem>>(emptyList())
     private var useDefaultSort = false
     private val notifySortChanged = NotifyDiscoverySortChangedUseCase()
 
-    override fun initViews() {
-        super.initViews()
-        SuperRecyclerViewUtil.initVerticalLinearRecyclerView(binding.list, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MuseFlowTheme {
+                CustomDiscoveryScreen(
+                    items = items,
+                    onBack = { onBackPressedDispatcher.onBackPressed() },
+                    onSaveClick = ::saveClick,
+                    onResetDefaultSortClick = {
+                        useDefaultSort = true
+                        loadData()
+                    },
+                    onMove = ::moveItem,
+                )
+            }
+        }
     }
 
     override fun initDatum() {
         super.initDatum()
-        initListDrag()
-
-        adapter = CustomDiscoveryAdapter(hostActivity, touchHelper)
-        binding.list.adapter = adapter
-
         loadData()
-    }
-
-    override fun initListeners() {
-        super.initListeners()
-        binding.resetDefaultSort.setOnClickListener {
-            useDefaultSort = true
-            loadData()
-        }
     }
 
     override fun loadData(isPlaceholder: Boolean) {
@@ -57,7 +55,7 @@ class CustomDiscoveryActivity : BaseTitleActivity<ActivityCustomDiscoveryBinding
         )
 
         datum.sortWith { first, second -> first.compareTo(second) }
-        adapter.setDatum(datum)
+        items = datum
     }
 
     private fun createItem(style: Int, title: Int): CustomDiscoveryItem {
@@ -68,57 +66,20 @@ class CustomDiscoveryActivity : BaseTitleActivity<ActivityCustomDiscoveryBinding
         )
     }
 
-    private fun initListDrag() {
-        touchHelper = ItemTouchHelper(
-            object : ItemTouchHelper.Callback() {
-                override fun getMovementFlags(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                ): Int {
-                    return makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
-                }
-
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder,
-                ): Boolean {
-                    if (viewHolder.itemViewType != target.itemViewType) {
-                        return false
-                    }
-
-                    val sourcePosition = viewHolder.layoutPosition
-                    val targetPosition = target.layoutPosition
-                    Collections.swap(adapter.datum, sourcePosition, targetPosition)
-                    adapter.notifyItemMoved(sourcePosition, targetPosition)
-                    return true
-                }
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                }
-            }
-        )
-        touchHelper.attachToRecyclerView(binding.list)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_save, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.save) {
-            saveClick()
-            return true
+    private fun moveItem(from: Int, to: Int) {
+        if (from !in items.indices || to !in items.indices || from == to) {
+            return
         }
-        return super.onOptionsItemSelected(item)
+
+        items = items.toMutableList().apply {
+            add(to, removeAt(from))
+        }
     }
 
     private fun saveClick() {
         Timber.d("saveClick")
-        for (i in 0 until adapter.datum.size) {
-            val data = adapter.getData(i)
-            sp.setSort(data.style, i)
+        items.forEachIndexed { index, data ->
+            sp.setSort(data.style, index)
         }
 
         finish()
