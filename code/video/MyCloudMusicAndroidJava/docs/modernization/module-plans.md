@@ -2,16 +2,24 @@
 
 本文档只描述本轮允许主动重构的链路。
 
+## 2026-05-24 当前实现状态
+
+- 五条选中链路的主体迁移已完成到可交接状态，旧 Java 源码数为 `0`。
+- 常规 layout XML 已清零；最后一个 Widget RemoteViews layout 已迁到 Jetpack Glance，`res/xml/music_widget.xml` 只作为 AppWidget provider 元数据保留。
+- 下面各节的 `.java` 入口是立项时的历史入口记录；当前对应实现已经迁到 Kotlin/Compose/Flow/Media3/Glance，恢复现场时以源码和 `docs/modernization/execution-plan.md` 的最新执行记录为准。
+- 下一会话的主动任务不是继续拆代码，而是按本地未跟踪任务文档生成 MuseFlow Android 图片和图标资产；`docs/modernization/course-trace-cleanup-task.md` 不提交、不 push。
+
 ## 1. 音乐播放链路
 
 ### 当前入口
 
-- `app/src/main/java/com/ixuea/courses/mymusic/manager/impl/MusicPlayerManagerImpl.java`
-- `app/src/main/java/com/ixuea/courses/mymusic/manager/impl/MusicListManagerImpl.java`
-- `app/src/main/java/com/ixuea/courses/mymusic/service/MusicPlayerService.java`
+- `app/src/main/java/com/ixuea/courses/mymusic/manager/impl/MusicPlayerManagerImpl.kt`
+- `app/src/main/java/com/ixuea/courses/mymusic/manager/impl/MusicListManagerImpl.kt`
+- `app/src/main/java/com/ixuea/courses/mymusic/playback/PlaybackService.kt`
 - `app/src/main/java/com/ixuea/courses/mymusic/component/player/**`
 - `app/src/main/java/com/ixuea/courses/mymusic/component/lyric/**`
-- `app/src/main/java/com/ixuea/courses/mymusic/component/widget/MusicWidget.java`
+- `app/src/main/java/com/ixuea/courses/mymusic/component/widget/MusicWidget.kt`
+- `app/src/main/java/com/ixuea/courses/mymusic/component/widget/MusicWidgetStore.kt`
 
 ### 要移除的问题
 
@@ -34,6 +42,7 @@
   - 全屏播放器
   - 播放列表弹层
   - 歌词视图
+- Jetpack Glance 桌面 Widget，继续复用播放/上一首/下一首/桌面歌词 action 协议。
 - Java 兼容门面，用于旧页面过渡。
 
 ### 性能目标
@@ -218,4 +227,3 @@
 - 信息流能滚动。
 - 图片预览路由可用。
 - 歌单、歌曲、用户、详情等旧点击路由仍能进入。
-

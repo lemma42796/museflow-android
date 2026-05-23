@@ -97,3 +97,20 @@ Next-session rules:
 - Push public README/docs presentation changes only to GitHub with `git push origin HEAD:master`.
 - Do not run any write operation against `upstream`; treat it as read-only backup.
 - Ignore the local untracked full-workspace files/modules unless the user explicitly asks to clean or inspect them.
+
+## 2026-05-24 full-workspace progress branch handoff
+
+Current full workspace branch: `codex/emulator-smoke-progress`.
+
+Latest state in the full workspace:
+
+- Java source cleanup is complete: `app/src/main/java` has no `.java` files.
+- Normal layout XML cleanup is complete: `app/src/main/res/layout` is empty.
+- The last Widget RemoteViews layout was replaced with Jetpack Glance; `res/xml/music_widget.xml` remains only as AppWidget provider metadata.
+- Public-facing text/course trace cleanup has one low-risk pass completed on the progress branch; the next visible gap is bitmap/image assets.
+
+Next public-facing asset work:
+
+- Generate new MuseFlow Android launcher, splash/logo, placeholder/default avatar-cover, and Widget preview assets in a new session.
+- Use the local untracked `docs/modernization/course-trace-cleanup-task.md` as the task note, but do not submit or push that file.
+- Keep Gitee read-only and push only to GitHub `origin`.

@@ -17,6 +17,14 @@
 - 偏好存储：DataStore
 - 性能验证：后续可补 Baseline Profile / Macrobenchmark
 
+## 2026-05-24 落地状态补充
+
+- Kotlin/Compose/Flow/Media3 主线已经落到当前工作分支，`app/src/main/java` 下 Java 源码数为 `0`。
+- 常规 UI layout XML 已清零；桌面 Widget 改用 Jetpack Glance（Compose-style AppWidget），只保留 `res/xml/music_widget.xml` 作为 provider 元数据。
+- Compose 已覆盖 public slim shell、播放器主页/播放列表、下载管理、会话列表、聊天详情、动态发布/动态列表、评论页、歌单详情、发现页、本地音乐、本地音乐扫描、自定义发现排序和选择歌词。
+- 后续图片/图标替换也要按 Android 最新系统风格执行：Material 3 / Material You / Material 3 Expressive、adaptive icon foreground/background/monochrome、themed icon、动态色兼容和系统 mask 安全边距。
+- 下一步不再新增 UI 框架；新会话只处理 MuseFlow Android 视觉资产生成和替换，再做构建与必要设备端冒烟。
+
 ## 官方依据
 
 - Android 架构建议：https://developer.android.com/topic/architecture/recommendations
@@ -32,6 +40,8 @@
 - WorkManager：https://developer.android.com/topic/libraries/architecture/workmanager
 - Paging 3：https://developer.android.com/topic/libraries/architecture/paging/v3-overview
 - Baseline Profiles：https://developer.android.com/baseline-profiles
+- Jetpack Glance：https://developer.android.com/develop/ui/compose/glance
+- Adaptive icons：https://developer.android.com/develop/ui/views/launch/icon_design_adaptive
 
 ## 技术规则
 
@@ -45,7 +55,8 @@
 
 - 新的选中链路 UI 用 Compose。
 - 可以在旧 Activity/Fragment 里嵌 Compose，降低路由改动范围。
-- 冻结页面的 XML 不动。
+- AppWidget 场景使用 Jetpack Glance，不用普通 Compose 硬套桌面 Widget。
+- 冻结页面历史上不主动重写；当前常规 layout 已清零，后续只按真实冒烟问题修复。
 - 不做无功能的占位页面。
 
 ### 状态管理
@@ -104,4 +115,3 @@
 - Coroutines
 
 当前项目是 `targetSdk = 33`，Android Gradle Plugin 是 `8.2.0`。要用最新 AndroidX/Compose，需要先有计划地升级构建基线。
-
