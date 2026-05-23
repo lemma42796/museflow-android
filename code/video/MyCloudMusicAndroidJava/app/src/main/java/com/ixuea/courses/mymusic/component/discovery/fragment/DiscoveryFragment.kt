@@ -14,12 +14,12 @@ import com.ixuea.courses.mymusic.activity.BaseLogicActivity
 import com.ixuea.courses.mymusic.component.ad.model.Ad
 import com.ixuea.courses.mymusic.component.discovery.activity.CustomDiscoveryActivity
 import com.ixuea.courses.mymusic.component.discovery.adapter.DiscoveryAdapter
-import com.ixuea.courses.mymusic.component.discovery.model.event.SortChangedEvent
+import com.ixuea.courses.mymusic.component.discovery.domain.ObserveDiscoverySortChangesUseCase
 import com.ixuea.courses.mymusic.component.discovery.ui.DiscoveryUiState
 import com.ixuea.courses.mymusic.component.discovery.ui.DiscoveryViewModel
 import com.ixuea.courses.mymusic.component.sheet.activity.SheetDetailActivity
+import com.ixuea.courses.mymusic.component.sheet.domain.ObserveSheetChangesUseCase
 import com.ixuea.courses.mymusic.component.sheet.model.Sheet
-import com.ixuea.courses.mymusic.component.sheet.model.event.SheetChangedEvent
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.FragmentDiscoveryBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
@@ -27,8 +27,6 @@ import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity
 import com.ixuea.superui.util.SuperDelayUtil
 import com.youth.banner.listener.OnBannerListener
 import kotlinx.coroutines.launch
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 
 /**
@@ -45,10 +43,8 @@ class DiscoveryFragment :
     private var startTime: Long = 0
     private var handledDataVersion = 0L
     private var handledErrorVersion = 0L
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
+    private val observeDiscoverySortChanges = ObserveDiscoverySortChangesUseCase()
+    private val observeSheetChanges = ObserveSheetChangesUseCase()
 
     override fun initViews() {
         super.initViews()
@@ -75,6 +71,7 @@ class DiscoveryFragment :
         adapter.setDiscoveryAdapterListener(this)
         binding.list.adapter = adapter
         observeDiscoveryState()
+        observeDiscoveryEvents()
 
         loadData()
     }
@@ -102,6 +99,24 @@ class DiscoveryFragment :
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     render(state)
+                }
+            }
+        }
+    }
+
+    private fun observeDiscoveryEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    observeDiscoverySortChanges().collect {
+                        onRefreshClick()
+                    }
+                }
+
+                launch {
+                    observeSheetChanges().collect {
+                        loadData()
+                    }
                 }
             }
         }
@@ -169,26 +184,6 @@ class DiscoveryFragment :
 
     override fun onCustomDiscoveryClick() {
         startActivity(CustomDiscoveryActivity::class.java)
-    }
-
-    /**
-     * 排序改变了事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun sortChangeEvent(event: SortChangedEvent) {
-        onRefreshClick()
-    }
-
-    /**
-     * 歌单改变了事件
-     *
-     * 例如：在歌单详情，收藏或取消了收藏
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun sheetChangedEvent(event: SheetChangedEvent) {
-        loadData()
     }
 
     companion object {

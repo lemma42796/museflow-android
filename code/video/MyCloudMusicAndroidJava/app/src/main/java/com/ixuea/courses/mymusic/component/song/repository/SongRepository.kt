@@ -3,12 +3,11 @@ package com.ixuea.courses.mymusic.component.song.repository
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
-import io.reactivex.rxjava3.core.Observable
 
 class SongRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun songDetail(id: String): Observable<DetailResponse<Song>> {
+    suspend fun songDetail(id: String): DetailResponse<Song> {
         return repository.songDetail(id)
     }
 

@@ -5,6 +5,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.view.View
+import androidx.core.content.ContextCompat
 import com.ixuea.courses.mymusic.R
 import com.ixuea.superui.text.SuperClickableSpan
 import java.util.regex.Pattern
@@ -40,7 +41,6 @@ object RichUtil {
      */
     @JvmStatic
     fun processContent(
-        context: Context,
         data: String,
         onMentionClickListener: OnTagClickListener,
         onHashTagClickListener: OnTagClickListener,
@@ -71,7 +71,7 @@ object RichUtil {
 
         val result = SpannableString(data)
         for (matchResult in mentionsAndHashTags) {
-            val span = ForegroundColorSpan(context.resources.getColor(R.color.text_highlight))
+            val span = ForegroundColorSpan(ContextCompat.getColor(context, R.color.text_highlight))
             result.setSpan(
                 span,
                 matchResult.start,

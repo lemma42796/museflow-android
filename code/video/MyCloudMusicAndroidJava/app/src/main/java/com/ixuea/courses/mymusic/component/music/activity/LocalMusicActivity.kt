@@ -3,17 +3,20 @@ package com.ixuea.courses.mymusic.component.music.activity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.OnBackPressedCallback
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
+import com.ixuea.courses.mymusic.component.music.domain.ObserveLocalMusicScanCompleteUseCase
 import com.ixuea.courses.mymusic.component.music.fragment.MusicSortDialogFragment
-import com.ixuea.courses.mymusic.component.music.model.event.ScanLocalMusicCompleteEvent
 import com.ixuea.courses.mymusic.component.sheet.adapter.SongAdapter
 import com.ixuea.courses.mymusic.databinding.ActivityLocalMusicBinding
 import com.ixuea.superui.toast.SuperToast
 import com.ixuea.superui.util.SuperRecyclerViewUtil
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import kotlinx.coroutines.launch
 
 /**
  * 本地音乐界面
@@ -21,10 +24,7 @@ import org.greenrobot.eventbus.ThreadMode
 class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
     private lateinit var adapter: SongAdapter
     private var editMenuItem: MenuItem? = null
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
+    private val observeScanComplete = ObserveLocalMusicScanCompleteUseCase()
 
     override fun initViews() {
         super.initViews()
@@ -35,6 +35,7 @@ class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
         super.initDatum()
         adapter = SongAdapter(R.layout.item_song, 1, supportFragmentManager)
         binding.list.adapter = adapter
+        observeLocalMusicEvents()
         loadData()
     }
 
@@ -56,6 +57,20 @@ class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
         binding.delete.setOnClickListener {
             deleteClick()
         }
+
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (adapter.isEditing()) {
+                        exitEditMode()
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            },
+        )
     }
 
     private fun selectClick() {
@@ -119,10 +134,14 @@ class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
         startActivity(ScanLocalMusicActivity::class.java)
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun onScanMusicCompleteEvent(event: ScanLocalMusicCompleteEvent) {
-        loadData()
+    private fun observeLocalMusicEvents() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                observeScanComplete().collect {
+                    loadData()
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -178,11 +197,4 @@ class LocalMusicActivity : BaseTitleActivity<ActivityLocalMusicBinding>() {
         }
     }
 
-    override fun onBackPressed() {
-        if (adapter.isEditing()) {
-            exitEditMode()
-            return
-        }
-        super.onBackPressed()
-    }
 }

@@ -3,7 +3,6 @@ package com.ixuea.courses.mymusic.component.feed.repository
 import com.ixuea.courses.mymusic.component.feed.model.Feed
 import com.ixuea.courses.mymusic.model.response.ListResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
-import io.reactivex.rxjava3.core.Observable
 
 /**
  * Repository for feed list refreshes.
@@ -11,7 +10,7 @@ import io.reactivex.rxjava3.core.Observable
 class FeedRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun feeds(userId: String?): Observable<ListResponse<Feed>> {
+    suspend fun feeds(userId: String?): ListResponse<Feed> {
         return repository.feeds(userId)
     }
 

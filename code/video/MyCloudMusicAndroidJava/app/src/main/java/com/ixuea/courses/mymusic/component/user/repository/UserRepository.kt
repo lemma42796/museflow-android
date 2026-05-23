@@ -3,7 +3,6 @@ package com.ixuea.courses.mymusic.component.user.repository
 import com.ixuea.courses.mymusic.component.user.model.User
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
-import io.reactivex.rxjava3.core.Observable
 import java.util.concurrent.ConcurrentHashMap
 
 class UserRepository private constructor(
@@ -15,13 +14,12 @@ class UserRepository private constructor(
         return userCaches[userId]
     }
 
-    fun userDetail(userId: String): Observable<DetailResponse<User>> {
-        return repository.userDetail(userId)
-            .doOnNext { response ->
-                response.data?.let { user ->
-                    userCaches[userId] = user
-                }
-            }
+    suspend fun userDetail(userId: String): DetailResponse<User> {
+        val response = repository.userDetail(userId)
+        response.data?.let { user ->
+            userCaches[userId] = user
+        }
+        return response
     }
 
     companion object {

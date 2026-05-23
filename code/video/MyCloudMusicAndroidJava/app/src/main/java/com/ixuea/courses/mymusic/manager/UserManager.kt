@@ -1,35 +1,35 @@
 package com.ixuea.courses.mymusic.manager
 
 import android.content.Context
+import com.ixuea.courses.mymusic.component.user.domain.LoadUserDetailUseCase
 import com.ixuea.courses.mymusic.component.user.model.User
-import com.ixuea.courses.mymusic.component.user.repository.UserRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * 用户管理器。
  */
 class UserManager @Suppress("UNUSED_PARAMETER") constructor(context: Context) {
-    private val repository = UserRepository.getInstance()
+    private val loadUserDetail = LoadUserDetailUseCase()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     /**
      * 获取用户。
      */
     fun getUser(userId: String, userListener: UserListener) {
-        val cachedUser = repository.cachedUser(userId)
-        if (cachedUser != null) {
-            userListener.onGetUserSuccess(cachedUser)
-            return
-        }
+        scope.launch {
+            when (val result = loadUserDetail(userId)) {
+                is LoadUserDetailUseCase.Result.Success -> {
+                    userListener.onGetUserSuccess(result.user)
+                }
 
-        repository.userDetail(userId)
-            .subscribe(
-                { response ->
-                    val user = response.data ?: return@subscribe
-                    userListener.onGetUserSuccess(user)
-                },
-                {
+                is LoadUserDetailUseCase.Result.Error -> {
                     // Legacy callback API has no error channel.
-                },
-            )
+                }
+            }
+        }
     }
 
     fun interface UserListener {

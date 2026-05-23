@@ -1,35 +1,20 @@
 package com.ixuea.courses.mymusic.component.comment.domain
 
 import com.ixuea.courses.mymusic.component.comment.repository.CommentRepository
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class CancelCommentLikeUseCase(
     private val repository: CommentRepository = CommentRepository.getInstance(),
 ) {
     suspend operator fun invoke(id: String): Result {
-        return suspendCancellableCoroutine { continuation ->
-            val disposable = repository.cancelCommentLike(id).subscribe(
-                { response ->
-                    if (!continuation.isActive) {
-                        return@subscribe
-                    }
-
-                    if (response.isSucceeded()) {
-                        continuation.resume(Result.Success)
-                    } else {
-                        continuation.resume(Result.Error(response.message, null))
-                    }
-                },
-                { error ->
-                    if (continuation.isActive) {
-                        continuation.resume(Result.Error(null, error))
-                    }
-                },
-            )
-            continuation.invokeOnCancellation {
-                disposable.dispose()
+        return try {
+            val response = repository.cancelCommentLike(id)
+            if (response.isSucceeded()) {
+                Result.Success
+            } else {
+                Result.Error(response.message, null)
             }
+        } catch (error: Throwable) {
+            Result.Error(null, error)
         }
     }
 

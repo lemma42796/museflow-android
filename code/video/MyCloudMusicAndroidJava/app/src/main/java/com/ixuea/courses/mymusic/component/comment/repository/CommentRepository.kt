@@ -6,24 +6,23 @@ import com.ixuea.courses.mymusic.model.BaseId
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.model.response.ListResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
-import io.reactivex.rxjava3.core.Observable
 
 class CommentRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun comments(query: Map<String, String>): Observable<ListResponse<Comment>> {
+    suspend fun comments(query: Map<String, String>): ListResponse<Comment> {
         return repository.comments(query)
     }
 
-    fun createComment(data: Comment): Observable<DetailResponse<Comment>> {
+    suspend fun createComment(data: Comment): DetailResponse<Comment> {
         return repository.createComment(data)
     }
 
-    fun commentLike(id: String): Observable<DetailResponse<BaseId>> {
+    suspend fun commentLike(id: String): DetailResponse<BaseId> {
         return repository.commentLike(id)
     }
 
-    fun cancelCommentLike(id: String): Observable<DetailResponse<Base>> {
+    suspend fun cancelCommentLike(id: String): DetailResponse<Base> {
         return repository.cancelCommentLike(id)
     }
 

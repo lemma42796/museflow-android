@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.ixuea.courses.mymusic.component.player.adapter
 
 import android.content.Context

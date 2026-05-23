@@ -12,6 +12,7 @@ class PreviewLocationActivity : AppCompatActivity() {
 
     companion object {
         @JvmStatic
+        @Suppress("UNUSED_PARAMETER")
         fun start(context: Context, data: Any?) {
             // Location preview is intentionally stubbed in the public slim branch.
         }

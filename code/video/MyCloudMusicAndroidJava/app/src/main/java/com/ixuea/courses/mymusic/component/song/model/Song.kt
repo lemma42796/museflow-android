@@ -1,5 +1,6 @@
 package com.ixuea.courses.mymusic.component.song.model
 
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.ixuea.courses.mymusic.component.lyric.model.Lyric
@@ -69,8 +70,8 @@ class Song : Common {
         style = source.readValue(Int::class.java.classLoader) as? Int
         lyric = source.readString()
         isRotate = source.readByte().toInt() != 0
-        user = source.readParcelable(User::class.java.classLoader)
-        singer = source.readParcelable(User::class.java.classLoader)
+        user = source.readParcelableCompat(User::class.java)
+        singer = source.readParcelableCompat(User::class.java)
         duration = source.readLong()
         progress = source.readLong()
         isPlayList = source.readByte().toInt() != 0
@@ -79,7 +80,7 @@ class Song : Common {
         singerNickname = source.readString()
         singerIcon = source.readString()
         path = source.readString()
-        parsedLyric = source.readParcelable(Lyric::class.java.classLoader)
+        parsedLyric = source.readParcelableCompat(Lyric::class.java)
     }
 
     fun localConvert() {
@@ -135,8 +136,8 @@ class Song : Common {
         style = source.readValue(Int::class.java.classLoader) as? Int
         lyric = source.readString()
         isRotate = source.readByte().toInt() != 0
-        user = source.readParcelable(User::class.java.classLoader)
-        singer = source.readParcelable(User::class.java.classLoader)
+        user = source.readParcelableCompat(User::class.java)
+        singer = source.readParcelableCompat(User::class.java)
         duration = source.readLong()
         progress = source.readLong()
         isPlayList = source.readByte().toInt() != 0
@@ -145,7 +146,7 @@ class Song : Common {
         singerNickname = source.readString()
         singerIcon = source.readString()
         path = source.readString()
-        parsedLyric = source.readParcelable(Lyric::class.java.classLoader)
+        parsedLyric = source.readParcelableCompat(Lyric::class.java)
     }
 
     companion object {
@@ -162,4 +163,17 @@ class Song : Common {
             override fun newArray(size: Int): Array<Song?> = arrayOfNulls(size)
         }
     }
+}
+
+private fun <T : Parcelable> Parcel.readParcelableCompat(clazz: Class<T>): T? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        readParcelable(clazz.classLoader, clazz)
+    } else {
+        readLegacyParcelable(clazz)
+    }
+}
+
+@Suppress("DEPRECATION")
+private fun <T : Parcelable> Parcel.readLegacyParcelable(clazz: Class<T>): T? {
+    return readParcelable(clazz.classLoader)
 }

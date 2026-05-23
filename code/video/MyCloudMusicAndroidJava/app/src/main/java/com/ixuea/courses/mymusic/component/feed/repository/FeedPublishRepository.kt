@@ -8,7 +8,6 @@ import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.model.response.ListResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
 import com.luck.picture.lib.entity.LocalMedia
-import io.reactivex.rxjava3.core.Observable
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -21,7 +20,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class FeedPublishRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun uploadImages(data: List<LocalMedia>): Observable<ListResponse<Resource>> {
+    suspend fun uploadImages(data: List<LocalMedia>): ListResponse<Resource> {
         val bodyFiles = data.mapNotNull { media ->
             val path = mediaPath(media).takeIf { it.isNotBlank() } ?: return@mapNotNull null
             val file = File(path)
@@ -33,7 +32,7 @@ class FeedPublishRepository private constructor(
         return repository.uploadFiles(bodyFiles, flavorBody)
     }
 
-    fun createFeed(data: Feed): Observable<DetailResponse<Base>> {
+    suspend fun createFeed(data: Feed): DetailResponse<Base> {
         return repository.createFeed(data)
     }
 

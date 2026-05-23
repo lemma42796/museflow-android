@@ -7,6 +7,9 @@ import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.view.View
 import android.widget.SeekBar
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
@@ -20,13 +23,14 @@ import com.ixuea.courses.mymusic.component.download.domain.DownloadActionsUseCas
 import com.ixuea.courses.mymusic.component.download.listener.MyDownloadListener
 import com.ixuea.courses.mymusic.component.lyric.activity.SelectLyricActivity
 import com.ixuea.courses.mymusic.component.lyric.view.LyricListView
+import com.ixuea.courses.mymusic.component.player.domain.ObserveMusicPlayListChangesUseCase
+import com.ixuea.courses.mymusic.component.player.domain.ObserveRecordClicksUseCase
 import com.ixuea.courses.mymusic.component.player.fragment.MusicPlayListDialogFragment
-import com.ixuea.courses.mymusic.component.player.model.event.RecordClickEvent
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.ActivityMusicPlayerBinding
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
-import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent
+import com.ixuea.courses.mymusic.manager.model.MusicPlayListChange
 import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.FileUtil
 import com.ixuea.courses.mymusic.util.PlayListUtil
@@ -37,9 +41,8 @@ import com.ixuea.courses.mymusic.util.SwitchDrawableUtil
 import com.ixuea.superui.toast.SuperToast
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper
 import jp.wasabeef.glide.transformations.BlurTransformation
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 import java.lang.ref.SoftReference
 
@@ -55,15 +58,13 @@ class MusicPlayerActivity :
     private lateinit var musicPlayerManager: MusicPlayerManager
     private lateinit var downloadActionsUseCase: DownloadActionsUseCase
     private var isSeekTracking = false
+    private val observeRecordClicks = ObserveRecordClicksUseCase()
+    private val observeMusicPlayListChanges = ObserveMusicPlayListChangesUseCase()
 
     /**
      * 下载任务
      */
     private var downloadInfo: DownloadInfo? = null
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
 
     override fun initViews() {
         super.initViews()
@@ -99,18 +100,13 @@ class MusicPlayerActivity :
         }
     }
 
-    private fun currentRecordSong(): Song? {
+    fun currentRecordSong(): Song? {
         val songs = musicListManager.datum
         val currentItem = binding.record.binding.list.currentItem
         return songs.getOrNull(currentItem)
     }
 
-    /**
-     * 黑胶唱片点击事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun onRecordClickEvent(event: RecordClickEvent) {
+    fun showLyricList() {
         binding.lyricList.alpha = 0F
         binding.lyricList.visibility = View.VISIBLE
 
@@ -131,11 +127,7 @@ class MusicPlayerActivity :
         }
     }
 
-    /**
-     * 音乐播放列表改变了事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun musicPlayListChangedEvent(event: MusicPlayListChangedEvent) {
+    fun handleMusicPlayListChange(event: MusicPlayListChange) {
         binding.record.adapter?.let { adapter ->
             if (event.isDeleteAll) {
                 adapter.removeAll()
@@ -149,7 +141,7 @@ class MusicPlayerActivity :
         }
     }
 
-    private fun recordRotate(data: Song, isRotate: Boolean) {
+    fun recordRotate(data: Song, isRotate: Boolean) {
         data.isRotate = isRotate
         binding.record.setPlaying(isRotate)
     }
@@ -161,6 +153,23 @@ class MusicPlayerActivity :
 
         binding.record.initAdapter(hostActivity)
         binding.record.setData(musicListManager.datum)
+        observePlayerEvents()
+    }
+
+    private fun observePlayerEvents() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    observeRecordClicks().collect {
+                        showLyricList()
+                    }
+                }
+
+                launch {
+                    observeMusicPlayListChanges().collect(::handleMusicPlayListChange)
+                }
+            }
+        }
     }
 
     override fun initListeners() {
@@ -197,7 +206,7 @@ class MusicPlayerActivity :
         binding.lyricList.setLyricListListener(this)
     }
 
-    private fun downloadClick() {
+    fun downloadClick() {
         val info = downloadInfo
         if (info != null) {
             if (info.status == DownloadInfo.STATUS_COMPLETED) {
@@ -216,17 +225,17 @@ class MusicPlayerActivity :
         }
     }
 
-    private fun playPrevious() {
+    fun playPrevious() {
         val data = resolveAdjacentSong(isPrevious = true) ?: return
         musicListManager.play(data)
     }
 
-    private fun playNext() {
+    fun playNext() {
         val data = resolveAdjacentSong(isPrevious = false) ?: return
         musicListManager.play(data)
     }
 
-    private fun resolveAdjacentSong(isPrevious: Boolean): Song? {
+    fun resolveAdjacentSong(isPrevious: Boolean): Song? {
         val songs = musicListManager.datum
         if (songs.isEmpty()) {
             return null
@@ -249,7 +258,7 @@ class MusicPlayerActivity :
     /**
      * 创建下载任务
      */
-    private fun createDownload() {
+    fun createDownload() {
         val data = currentSong() ?: return
         val urlString = ResourceUtil.resourceUri(data.uri)
         val path = StorageUtil.getExternalPath(
@@ -293,7 +302,7 @@ class MusicPlayerActivity :
         )
     }
 
-    private fun refresh() {
+    fun refresh() {
         val info = downloadInfo
         if (info != null) {
             when (info.status) {
@@ -319,7 +328,7 @@ class MusicPlayerActivity :
         binding.download.setImageResource(R.drawable.ic_download)
     }
 
-    private fun showLoopModel() {
+    fun showLoopModel() {
         binding.loopModel.setImageResource(
             PlayListUtil.getLoopModelIcon(musicListManager.loopModel)
         )
@@ -328,7 +337,7 @@ class MusicPlayerActivity :
     /**
      * 播放或暂停
      */
-    private fun playOrPause() {
+    fun playOrPause() {
         if (musicPlayerManager.isPlaying) {
             musicListManager.pause()
         } else {

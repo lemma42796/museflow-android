@@ -6,14 +6,15 @@ import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.TranslateAnimation
+import androidx.lifecycle.lifecycleScope
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
-import com.ixuea.courses.mymusic.component.music.model.event.ScanLocalMusicCompleteEvent
-import com.ixuea.courses.mymusic.component.music.task.ScanLocalMusicAsyncTask
-import com.ixuea.courses.mymusic.component.song.model.Song
+import com.ixuea.courses.mymusic.component.music.domain.NotifyLocalMusicScanCompleteUseCase
+import com.ixuea.courses.mymusic.component.music.domain.ScanLocalMusicUseCase
 import com.ixuea.courses.mymusic.databinding.ActivityScanLocalMusicBinding
 import com.ixuea.courses.mymusic.util.Constant
-import org.greenrobot.eventbus.EventBus
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * 扫描本地音乐界面
@@ -21,10 +22,12 @@ import org.greenrobot.eventbus.EventBus
 class ScanLocalMusicActivity : BaseTitleActivity<ActivityScanLocalMusicBinding>() {
     private var isScanComplete = false
     private var isScanning = false
-    private var scanLocalMusicAsyncTask: ScanLocalMusicAsyncTask? = null
+    private var scanJob: Job? = null
     private var hasFoundMusic = false
     private var lineAnimation: TranslateAnimation? = null
     private var zoomValueAnimator: ValueAnimator? = null
+    private val scanLocalMusic = ScanLocalMusicUseCase()
+    private val notifyScanComplete = NotifyLocalMusicScanCompleteUseCase()
 
     override fun initListeners() {
         super.initListeners()
@@ -115,30 +118,25 @@ class ScanLocalMusicActivity : BaseTitleActivity<ActivityScanLocalMusicBinding>(
     }
 
     private fun startScanMusic() {
-        scanLocalMusicAsyncTask = object : ScanLocalMusicAsyncTask(applicationContext) {
-            override fun onPostExecute(songs: List<Song>) {
-                super.onPostExecute(songs)
-                scanLocalMusicAsyncTask = null
-                isScanComplete = true
-                hasFoundMusic = songs.isNotEmpty()
-                stopScan()
-                binding.progress.text = resources.getString(R.string.found_music_count, songs.size)
-                binding.primary.backgroundTintList = getColorStateList(R.color.primary)
-                binding.primary.setText(R.string.to_my_music)
+        scanJob?.cancel()
+        scanJob = lifecycleScope.launch {
+            val songs = scanLocalMusic(applicationContext) { path ->
+                binding.progress.text = path
             }
-
-            override fun onProgressUpdate(vararg values: String) {
-                super.onProgressUpdate(*values)
-                binding.progress.text = values.firstOrNull().orEmpty()
-            }
+            scanJob = null
+            isScanComplete = true
+            isScanning = false
+            hasFoundMusic = songs.isNotEmpty()
+            stopScan()
+            binding.progress.text = resources.getString(R.string.found_music_count, songs.size)
+            binding.primary.backgroundTintList = getColorStateList(R.color.primary)
+            binding.primary.setText(R.string.to_my_music)
         }
-
-        scanLocalMusicAsyncTask?.execute()
     }
 
     private fun stopScan() {
-        scanLocalMusicAsyncTask?.cancel(true)
-        scanLocalMusicAsyncTask = null
+        scanJob?.cancel()
+        scanJob = null
 
         binding.scanMusicLine.clearAnimation()
         binding.scanMusicLine.visibility = View.GONE
@@ -153,7 +151,7 @@ class ScanLocalMusicActivity : BaseTitleActivity<ActivityScanLocalMusicBinding>(
 
     override fun onDestroy() {
         if (hasFoundMusic) {
-            EventBus.getDefault().post(ScanLocalMusicCompleteEvent())
+            notifyScanComplete()
         }
 
         stopScan()

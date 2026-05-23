@@ -4,8 +4,6 @@ import com.ixuea.courses.mymusic.component.comment.model.Comment
 import com.ixuea.courses.mymusic.component.comment.repository.CommentRepository
 import com.ixuea.courses.mymusic.model.response.Meta
 import com.ixuea.courses.mymusic.util.Constant
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class LoadCommentsUseCase(
     private val repository: CommentRepository = CommentRepository.getInstance(),
@@ -17,34 +15,19 @@ class LoadCommentsUseCase(
         }
         query[Constant.PAGE] = Meta.nextPage(pageMeta).toString()
 
-        return suspendCancellableCoroutine { continuation ->
-            val disposable = repository.comments(query).subscribe(
-                { response ->
-                    if (!continuation.isActive) {
-                        return@subscribe
-                    }
-
-                    if (response.isSucceeded()) {
-                        val meta = response.data
-                        continuation.resume(
-                            Result.Success(
-                                meta = meta,
-                                comments = meta?.data.orEmpty(),
-                            )
-                        )
-                    } else {
-                        continuation.resume(Result.Error(response.message, null))
-                    }
-                },
-                { error ->
-                    if (continuation.isActive) {
-                        continuation.resume(Result.Error(null, error))
-                    }
-                },
-            )
-            continuation.invokeOnCancellation {
-                disposable.dispose()
+        return try {
+            val response = repository.comments(query)
+            if (response.isSucceeded()) {
+                val meta = response.data
+                Result.Success(
+                    meta = meta,
+                    comments = meta?.data.orEmpty(),
+                )
+            } else {
+                Result.Error(response.message, null)
             }
+        } catch (error: Throwable) {
+            Result.Error(null, error)
         }
     }
 

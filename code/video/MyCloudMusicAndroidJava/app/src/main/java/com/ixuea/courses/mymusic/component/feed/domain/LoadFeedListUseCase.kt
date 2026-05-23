@@ -2,36 +2,20 @@ package com.ixuea.courses.mymusic.component.feed.domain
 
 import com.ixuea.courses.mymusic.component.feed.model.Feed
 import com.ixuea.courses.mymusic.component.feed.repository.FeedRepository
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class LoadFeedListUseCase(
     private val repository: FeedRepository = FeedRepository.getInstance(),
 ) {
     suspend operator fun invoke(userId: String?): Result {
-        return suspendCancellableCoroutine { continuation ->
-            val disposable = repository.feeds(userId).subscribe(
-                { response ->
-                    if (!continuation.isActive) {
-                        return@subscribe
-                    }
-
-                    if (response.isSucceeded()) {
-                        val feeds = response.data?.data.orEmpty()
-                        continuation.resume(Result.Success(feeds))
-                    } else {
-                        continuation.resume(Result.Error(response.message, null))
-                    }
-                },
-                { error ->
-                    if (continuation.isActive) {
-                        continuation.resume(Result.Error(null, error))
-                    }
-                }
-            )
-            continuation.invokeOnCancellation {
-                disposable.dispose()
+        return try {
+            val response = repository.feeds(userId)
+            if (response.isSucceeded()) {
+                Result.Success(response.data?.data.orEmpty())
+            } else {
+                Result.Error(response.message, null)
             }
+        } catch (error: Throwable) {
+            Result.Error(null, error)
         }
     }
 

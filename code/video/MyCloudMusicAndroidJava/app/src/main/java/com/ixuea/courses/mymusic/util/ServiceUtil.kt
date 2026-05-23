@@ -36,6 +36,7 @@ object ServiceUtil {
      * service是否在运行
      */
     @JvmStatic
+    @Suppress("DEPRECATION")
     fun isServiceRunning(context: Context, clazz: Class<*>): Boolean {
         val activityManager =
             context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

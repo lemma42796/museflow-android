@@ -13,15 +13,13 @@ import com.ixuea.courses.mymusic.component.feed.adapter.FeedAdapter
 import com.ixuea.courses.mymusic.component.feed.ui.FeedUiState
 import com.ixuea.courses.mymusic.component.feed.ui.FeedViewModel
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
-import com.ixuea.courses.mymusic.component.user.model.event.UserDetailEvent
+import com.ixuea.courses.mymusic.component.user.domain.ObserveUserDetailRequestsUseCase
 import com.ixuea.courses.mymusic.databinding.FragmentFeedBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.ImageUtil
 import com.wanglu.photoviewerlibrary.PhotoViewer
 import kotlinx.coroutines.launch
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 
 /**
@@ -33,10 +31,7 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
     private lateinit var viewModel: FeedViewModel
     private var handledDataVersion = 0L
     private var handledErrorVersion = 0L
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
+    private val observeUserDetailRequests = ObserveUserDetailRequestsUseCase()
 
     override fun initDatum() {
         super.initDatum()
@@ -47,6 +42,7 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
         adapter = FeedAdapter(R.layout.item_feed)
         binding.list.adapter = adapter
         observeFeedState()
+        observeFeedNavigation()
 
         loadData()
     }
@@ -58,6 +54,16 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
         binding.primary.setOnClickListener {
             loginAfter {
                 startActivity(PublishFeedActivity::class.java)
+            }
+        }
+    }
+
+    private fun observeFeedNavigation() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                observeUserDetailRequests().collect { userId ->
+                    UserDetailActivity.startWithId(hostActivity, userId)
+                }
             }
         }
     }
@@ -108,14 +114,6 @@ class FeedFragment : BaseViewModelFragment<FragmentFeedBinding>(), FeedAdapter.F
                 }
             })
             .start(this)
-    }
-
-    /**
-     * 点赞，评论，里面的用户点击事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun userDetailEvent(event: UserDetailEvent) {
-        UserDetailActivity.startWithId(hostActivity, event.data)
     }
 
     companion object {

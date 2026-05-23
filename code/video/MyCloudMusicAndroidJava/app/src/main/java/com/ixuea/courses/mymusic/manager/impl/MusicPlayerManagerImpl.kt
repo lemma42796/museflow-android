@@ -166,7 +166,7 @@ class MusicPlayerManagerImpl private constructor(context: Context) : MusicPlayer
     }
 
     private fun onLyricReady() {
-        val currentData = data
+        val currentData = data ?: return
         playbackRepository.updateLyric(currentData, true)
         listeners.forEach { it.onLyricReady(currentData) }
     }

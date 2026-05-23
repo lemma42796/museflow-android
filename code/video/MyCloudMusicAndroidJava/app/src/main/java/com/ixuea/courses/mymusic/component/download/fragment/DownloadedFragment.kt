@@ -34,6 +34,7 @@ class DownloadedFragment : BaseViewModelFragment<FragmentDownloadedBinding>() {
         adapter = SongAdapter(R.layout.item_song, 1, childFragmentManager)
         binding.list.adapter = adapter
         observeDownloadedState()
+        viewModel.observeDownloadedChanges(orm)
 
         loadData()
     }

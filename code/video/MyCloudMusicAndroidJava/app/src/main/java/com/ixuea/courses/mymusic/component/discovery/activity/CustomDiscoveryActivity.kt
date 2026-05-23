@@ -7,12 +7,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.component.discovery.adapter.CustomDiscoveryAdapter
-import com.ixuea.courses.mymusic.component.discovery.model.event.SortChangedEvent
+import com.ixuea.courses.mymusic.component.discovery.domain.NotifyDiscoverySortChangedUseCase
 import com.ixuea.courses.mymusic.component.discovery.model.ui.CustomDiscoveryItem
 import com.ixuea.courses.mymusic.databinding.ActivityCustomDiscoveryBinding
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.superui.util.SuperRecyclerViewUtil
-import org.greenrobot.eventbus.EventBus
 import timber.log.Timber
 import java.util.Collections
 
@@ -23,6 +22,7 @@ class CustomDiscoveryActivity : BaseTitleActivity<ActivityCustomDiscoveryBinding
     private lateinit var adapter: CustomDiscoveryAdapter
     private lateinit var touchHelper: ItemTouchHelper
     private var useDefaultSort = false
+    private val notifySortChanged = NotifyDiscoverySortChangedUseCase()
 
     override fun initViews() {
         super.initViews()
@@ -122,6 +122,6 @@ class CustomDiscoveryActivity : BaseTitleActivity<ActivityCustomDiscoveryBinding
         }
 
         finish()
-        EventBus.getDefault().post(SortChangedEvent())
+        notifySortChanged()
     }
 }

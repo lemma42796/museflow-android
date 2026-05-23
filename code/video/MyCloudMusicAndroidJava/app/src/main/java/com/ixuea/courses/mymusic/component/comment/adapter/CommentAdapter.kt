@@ -60,7 +60,6 @@ class CommentAdapter(layoutResId: Int) : BaseQuickAdapter<Comment, BaseViewHolde
 
     private fun processContent(content: String): SpannableString {
         return RichUtil.processContent(
-            context,
             content,
             { data, _ ->
                 val clickText = RichUtil.removePlaceholderString(data)

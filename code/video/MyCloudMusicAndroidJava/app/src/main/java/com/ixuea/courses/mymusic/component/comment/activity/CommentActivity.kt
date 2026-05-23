@@ -17,10 +17,8 @@ import com.ixuea.courses.mymusic.component.comment.model.Comment
 import com.ixuea.courses.mymusic.component.comment.ui.CommentLoadOperation
 import com.ixuea.courses.mymusic.component.comment.ui.CommentUiState
 import com.ixuea.courses.mymusic.component.comment.ui.CommentViewModel
-import com.ixuea.courses.mymusic.component.login.model.event.LoginStatusChangedEvent
 import com.ixuea.courses.mymusic.component.user.activity.UserActivity
 import com.ixuea.courses.mymusic.component.user.activity.UserDetailActivity
-import com.ixuea.courses.mymusic.component.user.model.event.SelectedFriendEvent
 import com.ixuea.courses.mymusic.databinding.ActivityCommentBinding
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.RichUtil
@@ -30,8 +28,6 @@ import com.ixuea.superui.util.SuperClipboardUtil
 import com.ixuea.superui.util.SuperRecyclerViewUtil
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 import kotlin.math.abs
 
@@ -47,10 +43,6 @@ class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
     private var handledCreateCompleteVersion = 0L
     private var handledLikeUpdateVersion = 0L
     private var handledErrorVersion = 0L
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
-    }
 
     override fun initViews() {
         super.initViews()
@@ -255,29 +247,6 @@ class CommentActivity : BaseTitleActivity<ActivityCommentBinding>() {
 
     private fun loadMore() {
         viewModel.loadMore(sheetId)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun loginStatusChangedEvent(event: LoginStatusChangedEvent) {
-        loadData()
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun selectedFriendEvent(event: SelectedFriendEvent) {
-        binding.input.content.append(event.data?.nickname.orEmpty())
-        binding.input.content.append(" ")
-        highlightText()
-    }
-
-    private fun highlightText() {
-        binding.input.content.setText(
-            RichUtil.processHighlight(
-                hostActivity,
-                binding.input.content.text.toString(),
-            ),
-        )
-        binding.input.content.setSelection(binding.input.content.text.toString().length)
     }
 
     companion object {

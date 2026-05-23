@@ -14,7 +14,6 @@ import com.ixuea.courses.mymusic.view.PlaceholderView
 import com.ixuea.superui.loading.SuperRoundLoadingDialogFragment
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper
 import java.lang.ref.WeakReference
-import org.greenrobot.eventbus.EventBus
 
 open class BaseLogicActivity : BaseCommonActivity() {
     protected lateinit var sp: PreferenceUtil
@@ -34,10 +33,6 @@ open class BaseLogicActivity : BaseCommonActivity() {
     override fun initDatum() {
         super.initDatum()
         globalLyricManager = GlobalLyricManagerImpl.getInstance(applicationContext)
-
-        if (isRegisterEventBus()) {
-            EventBus.getDefault().register(this)
-        }
 
         sp = PreferenceUtil.getInstance(hostActivity)
     }
@@ -98,13 +93,6 @@ open class BaseLogicActivity : BaseCommonActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (isRegisterEventBus()) {
-            EventBus.getDefault().unregister(this)
-        }
-    }
-
-    protected open fun isRegisterEventBus(): Boolean {
-        return false
     }
 
     protected val orm: LiteORMUtil

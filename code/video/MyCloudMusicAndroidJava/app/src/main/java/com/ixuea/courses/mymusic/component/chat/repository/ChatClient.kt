@@ -204,7 +204,7 @@ class ChatClient private constructor() {
     }
 
     private fun client(): RongIMClient {
-        return AppContext.getInstance().chatClient ?: RongIMClient.getInstance()
+        return AppContext.getInstance().chatClient
     }
 
     companion object {

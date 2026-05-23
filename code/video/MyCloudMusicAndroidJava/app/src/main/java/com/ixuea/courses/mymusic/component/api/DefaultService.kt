@@ -12,7 +12,6 @@ import com.ixuea.courses.mymusic.model.BaseId
 import com.ixuea.courses.mymusic.model.Resource
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.model.response.ListResponse
-import io.reactivex.rxjava3.core.Observable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Body
@@ -32,106 +31,106 @@ import retrofit2.http.QueryMap
  */
 interface DefaultService {
     @GET("v1/sheets")
-    fun sheets(
+    suspend fun sheets(
         @Query("category") category: String?,
         @Query("size") size: Int,
-    ): Observable<ListResponse<Sheet>>
+    ): ListResponse<Sheet>
 
     @GET("v1/sheets/{id}")
-    fun sheetDetail(
+    suspend fun sheetDetail(
         @Header("testHeader") testHeader: String,
         @Path("id") id: String,
-    ): Observable<DetailResponse<Sheet>>
+    ): DetailResponse<Sheet>
 
     @GET("v1/users/{userId}/create")
-    fun createSheets(@Path("userId") userId: String): Observable<ListResponse<Sheet>>
+    suspend fun createSheets(@Path("userId") userId: String): ListResponse<Sheet>
 
     @GET("v1/users/{userId}/collect")
-    fun collectSheets(@Path("userId") userId: String): Observable<ListResponse<Sheet>>
+    suspend fun collectSheets(@Path("userId") userId: String): ListResponse<Sheet>
 
     @POST("v1/sheets")
-    fun createSheet(@Body data: Sheet): Observable<DetailResponse<Sheet>>
+    suspend fun createSheet(@Body data: Sheet): DetailResponse<Sheet>
 
     @GET("v1/comments")
-    fun comments(): Observable<ListResponse<Comment>>
+    suspend fun comments(): ListResponse<Comment>
 
     @GET("v1/ads")
-    fun ads(@Query("position") position: Int): Observable<ListResponse<Ad>>
+    suspend fun ads(@Query("position") position: Int): ListResponse<Ad>
 
     @GET("v1/songs")
-    fun songs(): Observable<ListResponse<Song>>
+    suspend fun songs(): ListResponse<Song>
 
     @GET("v1/songs/{id}")
-    fun songDetail(@Path("id") id: String): Observable<DetailResponse<Song>>
+    suspend fun songDetail(@Path("id") id: String): DetailResponse<Song>
 
     @POST("v1/sessions")
-    fun login(@Body data: User): Observable<DetailResponse<Session>>
+    suspend fun login(@Body data: User): DetailResponse<Session>
 
     @GET("v1/users/{id}")
-    fun userDetail(
+    suspend fun userDetail(
         @Path("id") id: String,
         @QueryMap data: Map<String, String>,
-    ): Observable<DetailResponse<User>>
+    ): DetailResponse<User>
 
     @GET("v1/users/{id}/following")
-    fun friends(@Path("id") id: String): Observable<ListResponse<User>>
+    suspend fun friends(@Path("id") id: String): ListResponse<User>
 
     @GET("v1/users/{id}/followers")
-    fun fans(@Path("id") id: String): Observable<ListResponse<User>>
+    suspend fun fans(@Path("id") id: String): ListResponse<User>
 
     @PATCH("v1/users/{id}")
-    fun updateUser(
+    suspend fun updateUser(
         @Path("id") id: String,
         @Body data: User,
-    ): Observable<DetailResponse<Base>>
+    ): DetailResponse<Base>
 
     @POST("v1/friends")
-    fun follow(@Body data: Map<String, String>): Observable<DetailResponse<BaseId>>
+    suspend fun follow(@Body data: Map<String, String>): DetailResponse<BaseId>
 
     @DELETE("v1/friends/{userId}")
-    fun deleteFollow(@Path("userId") userId: String): Observable<DetailResponse<BaseId>>
+    suspend fun deleteFollow(@Path("userId") userId: String): DetailResponse<BaseId>
 
     @POST("v1/users")
-    fun register(@Body data: User): Observable<DetailResponse<BaseId>>
+    suspend fun register(@Body data: User): DetailResponse<BaseId>
 
     @POST("v1/collects")
-    fun collect(@Body data: Map<String, String>): Observable<DetailResponse<Base>>
+    suspend fun collect(@Body data: Map<String, String>): DetailResponse<Base>
 
     @DELETE("v1/collects/{id}")
-    fun deleteCollect(@Path("id") id: String): Observable<DetailResponse<Base>>
+    suspend fun deleteCollect(@Path("id") id: String): DetailResponse<Base>
 
     @GET("v1/comments")
-    fun comments(@QueryMap data: Map<String, String>): Observable<ListResponse<Comment>>
+    suspend fun comments(@QueryMap data: Map<String, String>): ListResponse<Comment>
 
     @POST("v1/likes")
-    fun like(@Body data: Map<String, String>): Observable<DetailResponse<BaseId>>
+    suspend fun like(@Body data: Map<String, String>): DetailResponse<BaseId>
 
     @DELETE("v1/likes/{id}")
-    fun cancelLike(
+    suspend fun cancelLike(
         @Path("id") id: String,
         @Query("style") style: Int,
-    ): Observable<DetailResponse<Base>>
+    ): DetailResponse<Base>
 
     @POST("v1/comments")
-    fun createComment(@Body data: Comment): Observable<DetailResponse<Comment>>
+    suspend fun createComment(@Body data: Comment): DetailResponse<Comment>
 
     @GET("v1/feeds")
-    fun feeds(@QueryMap data: Map<String, String>): Observable<ListResponse<Feed>>
+    suspend fun feeds(@QueryMap data: Map<String, String>): ListResponse<Feed>
 
     @POST("v1/feeds")
-    fun createFeed(@Body data: Feed): Observable<DetailResponse<Base>>
+    suspend fun createFeed(@Body data: Feed): DetailResponse<Base>
 
     @Multipart
     @POST("v1/files")
-    fun uploadFile(
+    suspend fun uploadFile(
         @Part file: MultipartBody.Part,
         @Part("flavor") flavor: RequestBody,
-    ): Observable<DetailResponse<Resource>>
+    ): DetailResponse<Resource>
 
     @Multipart
     @POST("v1/files/multi")
-    fun uploadFiles(
+    suspend fun uploadFiles(
         @Part file: List<@JvmSuppressWildcards MultipartBody.Part>,
         @Part("flavor") flavor: RequestBody,
-    ): Observable<ListResponse<Resource>>
+    ): ListResponse<Resource>
 }

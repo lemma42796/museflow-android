@@ -8,7 +8,6 @@ import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.LiteORMUtil
 import com.ixuea.courses.mymusic.util.PreferenceUtil
 import com.ixuea.courses.mymusic.view.PlaceholderView
-import org.greenrobot.eventbus.EventBus
 
 abstract class BaseLogicFragment : BaseCommonFragment() {
     private var cachedPlaceholderView: PlaceholderView? = null
@@ -16,9 +15,6 @@ abstract class BaseLogicFragment : BaseCommonFragment() {
 
     override fun initDatum() {
         super.initDatum()
-        if (isRegisterEventBus()) {
-            EventBus.getDefault().register(this)
-        }
 
         sp = PreferenceUtil.getInstance(hostActivity)
     }
@@ -42,17 +38,6 @@ abstract class BaseLogicFragment : BaseCommonFragment() {
 
     protected val musicListManager: MusicListManager
         get() = PlaybackService.getListManager(hostActivity.applicationContext)
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isRegisterEventBus()) {
-            EventBus.getDefault().unregister(this)
-        }
-    }
-
-    protected open fun isRegisterEventBus(): Boolean {
-        return false
-    }
 
     protected val orm: LiteORMUtil
         get() = LiteORMUtil.getInstance(hostActivity.applicationContext)

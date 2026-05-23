@@ -16,7 +16,6 @@ import java.io.FileNotFoundException
 /**
  * 图片相关工具类
  */
-@Suppress("DEPRECATION")
 object ImageUtil {
     /**
      * 显示相对路径图片。
@@ -88,7 +87,11 @@ object ImageUtil {
      */
     @JvmStatic
     fun showCircleFull(activity: Activity, view: ImageView, uri: String?) {
-        Glide.with(activity)
+        if (!activity.canLoadImage()) {
+            return
+        }
+
+        Glide.with(view)
             .load(uri)
             .apply(getCircleCommonRequestOptions())
             .into(view)
@@ -99,7 +102,11 @@ object ImageUtil {
      */
     @JvmStatic
     fun show(activity: Activity, view: ImageView, @RawRes @DrawableRes resourceId: Int) {
-        Glide.with(activity)
+        if (!activity.canLoadImage()) {
+            return
+        }
+
+        Glide.with(view)
             .load(resourceId)
             .apply(getCommonRequestOptions())
             .into(view)
@@ -110,7 +117,11 @@ object ImageUtil {
      */
     @JvmStatic
     fun showCircle(activity: Activity, view: ImageView, @RawRes @DrawableRes resourceId: Int) {
-        Glide.with(activity)
+        if (!activity.canLoadImage()) {
+            return
+        }
+
+        Glide.with(view)
             .load(resourceId)
             .apply(getCircleCommonRequestOptions())
             .into(view)
@@ -148,5 +159,9 @@ object ImageUtil {
 
     private fun getCircleCommonRequestOptions(): RequestOptions {
         return getCommonRequestOptions().circleCrop()
+    }
+
+    private fun Activity.canLoadImage(): Boolean {
+        return !isFinishing && !isDestroyed
     }
 }

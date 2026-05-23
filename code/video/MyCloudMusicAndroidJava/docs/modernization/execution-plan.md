@@ -56,26 +56,31 @@
 - 歌单详情页 `SheetDetailActivity` 已从 Java 迁到 Kotlin，详情加载、收藏和取消收藏已推进到 `SheetDetailViewModel(StateFlow) -> Sheet UseCase -> SheetRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
 - 评论页 `CommentActivity` 已从 Java 迁到 Kotlin，评论分页加载、创建评论、点赞和取消点赞已推进到 `CommentViewModel(StateFlow) -> Comment UseCase -> CommentRepository`，Activity 不再直接使用 `DefaultRepository`/`HttpObserver`/AutoDispose。
 - 评论列表 `CommentAdapter`、评论更多弹窗 `CommentMoreDialogFragment` 和评论模型 `Comment` 已从 Java 迁到 Kotlin，`component/comment` 目录当前不再包含 Java 文件。
-- 本地音乐扫描链路 `LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicAsyncTask`、`ScanLocalMusicCompleteEvent` 已从 Java 迁到 Kotlin，`component/music` 目录当前不再包含 Java 文件。
-- 动态发布相关位置占位入口、登录占位入口、用户占位入口、桌面 `MusicWidget` 和 Rx `ObserverAdapter` 已从 Java 迁到 Kotlin，旧静态启动入口、Manifest 类名和 Widget PendingIntent 行为保持兼容。
-- 网络层 `DefaultService`、`HttpObserver`、`NetworkModule`、`NetworkSecurityInterceptor` 已从 Java 迁到 Kotlin，继续保留 Retrofit/Rx/OkHttp/Hilt 调用面。
+- 本地音乐扫描链路 `LocalMusicActivity`、`ScanLocalMusicActivity`、`MusicSortDialogFragment`、`ScanLocalMusicUseCase`、`LocalMusicScanRepository` 和扫描完成 Flow 事件已收口；扫描已从 `AsyncTask` 迁到 coroutine，`component/music` 目录当前不再包含 Java 文件。
+- 动态发布相关位置占位入口、登录占位入口、用户占位入口和桌面 `MusicWidget` 已从 Java 迁到 Kotlin，旧静态启动入口、Manifest 类名和 Widget PendingIntent 行为保持兼容；旧 Rx `ObserverAdapter` 已随 `HttpObserver` 清理删除。
+- 网络层 `DefaultService`、`NetworkModule`、`NetworkSecurityInterceptor` 已从 Java 迁到 Kotlin，继续保留 Retrofit/OkHttp/Hilt 调用面；`DefaultService`/`DefaultRepository` 已改为 suspend API，普通网络 Rx/`RxAwait`/`HttpObserver` 已删除。
 - 歌词自定义 View `LyricLineView`、`LyricListView`、`GlobalLyricView` 已从 Java 迁到 Kotlin，播放器歌词列表和桌面歌词监听接口继续保持兼容；`component` 目录当前不再包含 Java 文件。
 - 公共模型 `Base`/`BaseId`/`Common`/`Resource`、response 包 `BaseResponse`/`DetailResponse`/`ListResponse`/`Meta`、response exception 和 `BaseMultiItemEntity` 已从 Java 迁到 Kotlin，继续保留旧 getter/setter/bean 调用面。
-- 播放列表/歌词 manager 接口 `GlobalLyricManager`、`MusicListManager`、`MusicPlayerManager` 和播放列表事件已从 Java 迁到 Kotlin；`MusicPlayerListener` 暂留 Java 以保留默认方法对 Java 实现类的兼容性。
-- 公共 adapter/view/config 边界 `TextWatcherAdapter`、`OnPageChangeListenerAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已从 Java 迁到 Kotlin；`BadgeInit` 暂留 Java，因为 `BGABadgeView-Android` 旧注解处理器需要 Java 源生成 `BGABadgeImageView/TextView`。
+- 播放列表/歌词 manager 接口 `GlobalLyricManager`、`MusicListManager`、`MusicPlayerManager`、`MusicPlayerListener` 和播放列表事件已从 Java 迁到 Kotlin；`app/src/main/java/com/ixuea/courses/mymusic` 主包当前不再包含 Java 源文件。
+- 公共 adapter/view/config 边界 `TextWatcherAdapter`、`BaseFragmentStateAdapter`、`BaseFragmentStatePagerAdapter`、`PlaceholderView`、`Config` 已从 Java 迁到 Kotlin；无人引用的 `OnPageChangeListenerAdapter` 已删除；public slim 旧布局移除后不再需要 `BadgeInit`，`BGABadgeView-Android` 依赖和旧注解处理器已删除。
 - Activity/Fragment 基类族 `Base*Activity`、`Base*Fragment`、`Base*DialogFragment` 已从 Java 迁到 Kotlin，保留 `binding`、`hostActivity`、`sp`、`placeholderView`、`musicListManager`、`loadData(...)` 等旧调用面。
-- 默认网络仓库 `DefaultRepository` 已从 Java 迁到 Kotlin，保留 `getInstance()`、Rx `Observable` 返回值、旧重载方法和 `subscribeOn/observeOn` 调度行为。
+- 默认网络仓库 `DefaultRepository` 已从 Java 迁到 Kotlin，保留 `getInstance()` 和旧重载方法；对外返回 suspend 响应对象，并直接调用 Retrofit suspend `DefaultService`。
 - 播放链路歌词详情补全已从 `MusicPlayerManagerImpl` 直连 `DefaultRepository` 收敛到 `LoadSongDetailUseCase -> SongRepository -> DefaultRepository`。
 - 播放链路歌词详情补全的 Rx 订阅已继续从 `MusicPlayerManagerImpl` 下沉到 `LoadSongDetailUseCase`；manager 现在用 coroutine job 编排远程歌词补全，并在切歌时取消旧请求。
 - 聊天/会话用户资料补齐已从两个 feature-local user use case 和 `UserManager` callback 收敛到共用 `LoadUserDetailUseCase -> UserRepository -> DefaultRepository`；`ChatViewModel`/`ConversationListViewModel` 不再为了用户资料依赖 Android `Context`。
 - 聊天新消息分发已开始从 EventBus 迁到 `ChatClient.messages(SharedFlow)`；`ChatActivity` 和 `ConversationActivity` 不再订阅 `NewMessageEvent`，由各自 ViewModel 收集新消息 Flow 后追加消息或刷新会话列表。
 - 聊天清未读后的会话列表刷新已从 `MessageUnreadCountChangedEvent` EventBus 空转事件迁到 `ChatClient.unreadChanged(SharedFlow)`；旧 `MessageUnreadCountChangedEvent` 已删除。
 - 聊天新消息分发已彻底移除旧 `NewMessageEvent` EventBus 发布；`AppContext` 收到 RongCloud 消息后只写入 `ChatClient.messages(SharedFlow)`。
-- 动态发布成功后的动态列表刷新已从 `FeedChangedEvent` EventBus 迁到 `FeedEvents.changed(SharedFlow)`；`FeedFragment` 仍只保留用户详情点击的 `UserDetailEvent` 订阅。
+- 动态发布成功后的动态列表刷新已从 `FeedChangedEvent` EventBus 迁到 `FeedEvents.changed(SharedFlow)`；动态正文用户点击跳转也已从 `UserDetailEvent` EventBus 迁到 `UserNavigationEvents.detailRequested(SharedFlow)`。
+- 发现页排序保存、歌单收藏状态变化、本地音乐扫描完成和下载完成刷新已从 `SortChangedEvent`/`SheetChangedEvent`/`ScanLocalMusicCompleteEvent`/`DownloadChangedEvent` EventBus 迁到 feature-local `SharedFlow` 事件源；旧事件类已删除。
+- 播放页黑胶点击、播放列表变化、评论页/小播放条残留空订阅和基类 EventBus 注册入口已清理；`org.greenrobot:eventbus` 依赖已从 `app/build.gradle` 删除，主源码当前不再引用 EventBus。
 - 小型工具类 `TextUtil`、`Base64Util`、`SaltUtil`、`SHAUtil`、`ListUtil`、`SizeUtil`、`ScreenUtil`、`SuperTextUtil` 已从 Java 迁到 Kotlin，并通过 `@JvmStatic`/`fun interface` 保持 Java 静态调用和 lambda 调用兼容。
 - 工具类 `MessageUtil`、`LyricUtil`、`WidgetUtil`、`ExceptionHandlerUtil`、`LiteORMUtil`、`SuperDateUtil`、`ImageUtil`、`ImageCompressor` 已从 Java 迁到 Kotlin，保留旧静态调用面、LiteORM 单例入口、Widget 更新入口、图片压缩回调接口和 Glide 图片加载入口。
 - 公共常量/偏好/轻量 manager 和 public slim 入口 `Constant`、`PreferenceUtil`、`MyActivityManager`、`SuperAudioManager`、`UserManager`、`GlideEngine`、`MainActivity` 已从 Java 迁到 Kotlin，保留 Java 静态常量、`getInstance(...)` 单例入口、PictureSelector `ImageEngine` 工厂入口和 Manifest Activity 类名。
+- 应用入口 `AppContext` 已从 Java 迁到 Kotlin，保留 Manifest 类名、`getInstance()`、`preference`、`chatClient`、`downloadManager`、`orm`、RongCloud 初始化/连接和退出清理行为；Hilt 编译器已切到 kapt。
 - 通知工具 `NotificationUtil` 已从 Java 迁到 Kotlin，保留 `CHANNEL_ID_MUSIC`、简单通知、前台 service 通知、桌面歌词解锁通知和聊天消息通知入口。
+- 阶段 8 旧 API 尾巴继续收口：未使用 AutoDispose 依赖已删除，返回键处理已迁到 `OnBackPressedDispatcher`，默认偏好入口已切到 AndroidX `PreferenceManager`，`Song` 和基类页面传参的 Parcelable 读取已补 API 33 typed overload 兼容封装，`ScreenUtil`/`ImageUtil`/`RichUtil` 已移除可替换的 deprecated 调用。
+- 下载管理双 tab 已从旧 `ViewPager + FragmentStatePagerAdapter` 迁到 `ViewPager2 + FragmentStateAdapter`；public slim 后不再加载的旧首页 `activity_main*` 布局已删除；剩余旧 pager 基类已修正空列表不清旧数据的问题，小播放器内层 `ViewPager` 因既有泄漏备注继续作为有意保留边界。
 
 当前尚未完成：
 
@@ -95,6 +100,268 @@
 
 ## 最新执行记录
 
+### 2026-05-22 阶段 8 继续：public slim 死布局和 warning 收口
+
+本轮决策：
+
+- 用户要求继续编码；在确认 `MainActivity` 当前是 public slim `TextView` 壳后，清理不再加载的旧首页 XML，而不是迁移一套死布局里的旧 `ViewPager`。
+- 小播放器内层 `ViewPager` 仍按既有泄漏备注保留，不做强迁。
+- 对没有现代等价的旧 SDK/API 调用，只做最小范围 suppress；对可替换调用直接迁到现代 API。
+
+本轮代码变更：
+
+- 删除未被代码加载的 `activity_main.xml` 和 `activity_main_content.xml`，移除旧首页布局里的 `androidx.viewpager.widget.ViewPager` 残留。
+- 删除无人引用的 `OnPageChangeListenerAdapter.kt`。
+- `RichUtil.processHighlight(...)` 改用 `ContextCompat.getColor(...)`，`processContent(...)` 移除未使用的 `Context` 参数并同步更新评论适配器调用。
+- `GlobalLyricManagerImpl` 悬浮窗 type 修正为 API 26+ 使用 `TYPE_APPLICATION_OVERLAY`，旧系统才使用 `TYPE_SYSTEM_ALERT`，并将 legacy suppress 收到单独方法。
+- `AppContext.initIM()`、`ServiceUtil.isServiceRunning(...)` 和 public slim 的 `PreviewLocationActivity.start(...)` 将旧 SDK/兼容壳 warning 收敛到局部 suppress。
+- 删除无人引用的 `BadgeInit.kt`，并从 `app/build.gradle` 移除 `BGABadgeView-Android` api/compiler 依赖；旧非增量 BGA annotation processor 不再参与构建。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；Kotlin 编译已无 warning，BGABadge 非增量处理器提示已消失，剩余提示为 `superui` 子包 Java deprecated/unchecked 和 Hilt 生成代码 deprecated 提示。
+- `git diff --check` 通过。
+
+当前边界：
+
+- 本轮未做设备端启动/桌面歌词悬浮窗/评论富文本点击人工冒烟。
+- 源码里仍有小播放器内层旧 `ViewPager` 和 `BaseFragmentStatePagerAdapter`，这是当前明确保留边界。
+
+### 2026-05-22 阶段 8 继续：下载页 ViewPager2 收口
+
+本轮决策：
+
+- 继续处理已构建通过后的旧分页边界，优先选择下载管理页这个简单双 tab 场景。
+- 不迁小播放器内层分页：`fragment_small_audio_control_page.xml` 已明确记录 ViewPager2 在该处有内存泄漏，因此继续保留旧 `ViewPager` 作为有意边界。
+- 不改下载中/已下载 Fragment 的业务状态链路，只替换页面容器和分页 adapter。
+
+本轮代码变更：
+
+- `activity_download.xml` 的下载列表容器从 `androidx.viewpager.widget.ViewPager` 改为 `androidx.viewpager2.widget.ViewPager2`。
+- `DownloadAdapter` 从 `BaseFragmentStatePagerAdapter<Int>` 改为 `FragmentStateAdapter`，固定创建已下载/下载中两个页面。
+- `DownloadActivity` 改用 `ViewPager2.OnPageChangeCallback` 同步 `SegmentTabLayout`，并在 `onDestroy()` 取消注册回调。
+- `BaseFragmentStateAdapter` 和 `BaseFragmentStatePagerAdapter` 的 `setDatum(emptyList())` 现在会清空旧页面数据并通知刷新，避免播放队列或分页数据清空后残留旧页。
+- 剩余旧 `FragmentStatePagerAdapter` warning 已限制在小播放器保留边界，并改用 `BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT` 构造器。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；本轮清理后无 Kotlin deprecated warning，剩余提示为既有 BGABadge 非增量处理器提示。
+
+当前边界：
+
+- 本轮未做设备端下载页左右滑动/Tab 点击冒烟。
+- 小播放器内层 ViewPager 仍是旧控件；小播放器当前不建议强迁。
+
+### 2026-05-22 阶段 8 继续：旧 API 和依赖尾巴清理
+
+本轮决策：
+
+- EventBus、RxJava 和主包 Java 清零后，继续清理不再需要的依赖和编译期 deprecated 噪音。
+- 只处理可由编译验证兜底的小尾巴，不改业务流程或页面结构。
+
+本轮代码变更：
+
+- 从 `app/build.gradle` 移除未使用的 AutoDispose 依赖。
+- `BaseTitleActivity` 和 `LocalMusicActivity` 的返回键处理切到 `OnBackPressedDispatcher`。
+- `DefaultPreferenceUtil` 从平台 `android.preference.PreferenceManager` 切到 AndroidX `PreferenceManager`。
+- `Song` 增加 `Parcel.readParcelableCompat(clazz)`，优先使用 API 33 typed overload，旧系统 fallback 集中封装并局部 suppress deprecated。
+- 新增 `ParcelableCompat`，让 `BaseCommonActivity.extraData()` 和 `BaseCommonFragment.extraData()` 通过 API 33 typed Parcelable extra 读取页面参数，移除基类里的泛型强转和 deprecated suppress。
+- `ScreenUtil` 从 `WindowManager.defaultDisplay.getMetrics(...)` 切到 `resources.displayMetrics`。
+- `ImageUtil` 移除对象级 deprecated suppress，资源/圆形图片加载从 `Glide.with(Activity)` 改为先检查 Activity 存活、再使用 `Glide.with(view)`。
+
+本轮验证：
+
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量处理器提示。
+
+当前边界：
+
+- 本轮未做本地音乐编辑模式返回、偏好读写、播放队列 Parcelable 往返的设备端人工冒烟。
+- 旧 Fragment pager 相关 deprecated 边界仍有意保留在小播放器附近，后续按页面逐个评估。
+
+### 2026-05-22 阶段 8 继续：本地音乐扫描移除 AsyncTask
+
+本轮决策：
+
+- 主包 Java 清零后，继续处理构建警告和旧异步边界里仍有真实业务价值的本地音乐扫描链路。
+- 不改扫描 UI、MediaStore 查询条件、LiteORM 保存或扫描完成 Flow 通知，只替换 `AsyncTask` 编排方式。
+- 保留扫描进度逐条展示本地音频路径的旧体验，取消扫描时取消 coroutine job。
+
+本轮代码变更：
+
+- 新增 `LocalMusicScanRepository`，封装 MediaStore 音频查询、专辑图保存、LiteORM 保存和逐条进度回调。
+- 新增 `ScanLocalMusicUseCase`，作为 `ScanLocalMusicActivity` 到扫描仓库的 suspend 入口。
+- `ScanLocalMusicActivity` 从 `ScanLocalMusicAsyncTask` 改为 `lifecycleScope.launch` + `Job`，开始/停止扫描直接启动或取消 coroutine。
+- 删除旧 `ScanLocalMusicAsyncTask.kt`。
+
+本轮验证：
+
+- `rg "ScanLocalMusicAsyncTask|AsyncTask|android\\.os\\.AsyncTask" app/src/main/java/com/ixuea/courses/mymusic` 无命中。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量处理器提示。
+
+当前边界：
+
+- 本轮未做设备端本地音乐扫描人工冒烟，未验证真实媒体库权限/扫描进度/扫描后本地列表刷新。
+- 扫描链路仍保留旧 XML 页面和逐条 500ms 节流展示；后续如继续现代化，可再拆 UI state 或替换扫描动画状态管理。
+
+### 2026-05-22 阶段 8 继续：MusicPlayerListener Kotlin 化并清零主包 Java
+
+本轮决策：
+
+- `AppContext` 和 `BadgeInit` 迁移验证通过后，继续处理主包最后一个 Java 文件 `MusicPlayerListener.java`。
+- 代码盘点确认当前 `MusicPlayerListener` 的实现方都已是 Kotlin，原先为了 Java 默认方法兼容而保留 Java 的理由已消失。
+- 保留旧回调方法名和 `MediaPlayer?` 参数形态，不在本轮改播放回调协议；`onError(...)` 继续允许 `Song?`，因为播放控制层可能在无当前歌曲时报告错误。
+
+本轮代码变更：
+
+- 新增 `MusicPlayerListener.kt` 并删除 `MusicPlayerListener.java`，保留 `onPaused`、`onPlaying`、`onPrepared`、`onProgress`、`onCompletion`、`onLyricReady`、`onError` 默认空实现。
+- `GlobalLyricManagerImpl`、`MusicListManagerImpl` 的播放回调参数从 Java platform type 遗留的可空形态收紧到非空。
+- `MusicPlayerManagerImpl.onLyricReady()` 在分发前显式处理 `data == null`，匹配 Kotlin 接口的非空歌词回调。
+- `MusicPlayerActivity` 中被匿名对象/协程 lambda 调用的一组小方法从 `private` 放宽为类内普通方法，绕开 Kotlin IR 在 synthetic accessor 生成时对继承层级的误判。
+
+本轮验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print` 无输出，主包 Java 源清零。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 deprecated 提示和 BGABadge 非增量处理器提示。
+
+当前边界：
+
+- 本轮未做设备端播放/歌词/Widget 人工冒烟；构建层已确认播放器回调接口迁移可编译。
+- 主包 Java 已清零，但工程内依然可能包含第三方/子模块 Java 源；本记录只描述 `app/src/main/java/com/ixuea/courses/mymusic` 主包。
+
+### 2026-05-22 阶段 8 继续：AppContext 和 BGA 注解边界 Kotlin 化
+
+本轮决策：
+
+- 普通网络 Rx 和 EventBus 清零后，继续处理主包剩余 Java 边界；`MusicPlayerListener` 仍保留 Java，因为它承担旧默认方法兼容。
+- `AppContext` 带 `@HiltAndroidApp`，迁 Kotlin 时同步补齐 `org.jetbrains.kotlin.kapt`，让 Hilt 处理 Kotlin 注解。
+- `BadgeInit` 原先因 `BGABadgeView-Android` 旧注解处理器保留 Java；本轮验证其可在 kapt 下继续生成 `BGABadgeImageView/TextView`，因此迁为 Kotlin。
+
+本轮代码变更：
+
+- 新增 `AppContext.kt` 并删除 `AppContext.java`，保留 `getInstance()`、`preference`、`chatClient`、`downloadManager`、`orm` 等旧调用面，RongCloud 收消息仍进入 `ChatClient.messages(SharedFlow)`。
+- `app/build.gradle` 增加 `org.jetbrains.kotlin.kapt`，Hilt compiler 改为 `kapt`；BGA compiler 也改为 `kapt`。
+- 新增 `BadgeInit.kt` 并删除 `BadgeInit.java`；移除未使用的 Glide compiler annotation processor。
+- `ChatClient.client()` 简化为直接使用 `AppContext.getInstance().chatClient`，去掉迁移后无意义的兜底 Elvis。
+
+本轮验证：
+
+- `find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print` 只剩 `app/src/main/java/com/ixuea/courses/mymusic/manager/MusicPlayerListener.java`。
+- `./gradlew :app:assembleDevDebug` 通过；BGA kapt 继续生成 2 个 badge view 类，剩余提示为既有 deprecated/unchecked 和 BGABadge 非增量处理器提示。
+- `git diff --check` 通过。
+
+当前边界：
+
+- 本轮未做设备端启动/登录/聊天收消息/主界面角标人工冒烟。
+- 主包 Java 已基本收口，只剩 `MusicPlayerListener.java`；如后续要迁它，需要先确认旧 Java 实现类和 Media3 桥接对默认方法的兼容替代。
+
+### 2026-05-22 阶段 8 继续：Retrofit 网络层 suspend 化并移除 RxJava
+
+本轮决策：
+
+- `DefaultRepository` 对外 suspend 化并验证通过后，继续把普通网络 Rx 边界再往 Retrofit service 层推进。
+- 不保留 `RxAwait` 作为空桥接；既然 `DefaultService` 已是 suspend API，普通网络订阅桥接可以直接删除。
+- `paging-rxjava3` 在源码中无引用，且项目已引入 `paging-runtime-ktx`/`paging-compose`，本轮一并移除直接 RxJava 依赖，避免 Gradle 继续把 RxJava 留作假边界。
+
+本轮代码变更：
+
+- `DefaultService` 所有普通网络接口从 `Observable<...>` 改为 Retrofit `suspend fun ...: ResponseModel`。
+- `DefaultRepository` 删除 `awaitResponse()`、`Schedulers`、`AndroidSchedulers`、`Observable` 和 `RxAwait` 依赖，直接返回 `DefaultService` suspend 调用结果。
+- `NetworkModule` 删除 `RxJava3CallAdapterFactory`，Retrofit 只保留 Gson converter。
+- 删除 `RxAwait.kt`，并从 `app/build.gradle` 移除 `retrofit2:adapter-rxjava3`、`rxandroid` 和未使用的 `paging-rxjava3`。
+
+本轮验证：
+
+- `rg "rxjava|rxandroid|adapter-rxjava|RxJava3|Observable|AndroidSchedulers|Schedulers|awaitValue|subscribe\\(" app/build.gradle build.gradle app/src/main/java/com/ixuea/courses/mymusic` 无命中。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器、旧 Java deprecated/unchecked 提示和 Hilt 生成代码 deprecated 提示。
+
+当前边界：
+
+- 普通网络层已不再直接依赖 RxJava；聊天/会话里的 RongCloud callback suspend bridge 仍保留，因为它不是 Rx 网络订阅。
+- 本轮未启动模拟器/真机，未人工验证发现页、歌单详情、评论、动态发布、用户资料等网络请求运行时行为。
+
+### 2026-05-22 阶段 8 继续：DefaultRepository 对外 suspend 化
+
+本轮决策：
+
+- 用户继续要求编码；`HttpObserver` 删除后，继续把普通网络 Rx 边界从 feature repository/use case 往 `DefaultRepository` 内收。
+- 不一次性改 Retrofit `DefaultService` 的 Rx 签名，先保持服务接口稳定，把对外仓库调用面改成 suspend 响应对象。
+- 发现页首页三路数据仍需并发加载；本轮用 coroutine `async` 取代 `Observable.zip`，不改变 section 构建和排序逻辑。
+
+本轮代码变更：
+
+- `DefaultRepository` 的公开网络方法改为 `suspend fun`，内部通过 `awaitResponse()` 统一执行 `subscribeOn(Schedulers.io())`、`observeOn(AndroidSchedulers.mainThread())` 和 `RxAwait.awaitValue()`。
+- `SongRepository`、`SheetRepository`、`UserRepository`、`FeedRepository`、`FeedPublishRepository`、`CommentRepository` 删除对 `RxAwait.awaitValue()` 的直接依赖，改为调用 suspend `DefaultRepository` API。
+- `DiscoveryRepository.homeSections(...)` 从 `Observable.zip(...)` 改为 `coroutineScope { async { ... } }` 并发请求 banner、歌单和歌曲数据。
+
+本轮验证：
+
+- `rg "awaitValue|Observable|Function3|subscribe\\(" app/src/main/java/com/ixuea/courses/mymusic` 显示普通业务层已无 Rx 聚合/订阅残留，Rx 只剩 `DefaultService`、`DefaultRepository` 和 `RxAwait` 网络边界。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- `DefaultService` 仍保留 Retrofit/Rx `Observable` 接口，后续若继续网络层现代化，可再评估是否改 Retrofit suspend service。
+- RongCloud 聊天/会话里的 callback suspend bridge 仍保留；本轮只处理普通网络 Rx。
+
+### 2026-05-22 阶段 8 继续：Rx 桥接集中并删除 HttpObserver
+
+本轮决策：
+
+- 用户继续要求编码；EventBus 清零后，转向仍残留在 UI/manager 层或分散 use case 里的 Rx/`HttpObserver` 边界。
+- 不把 Retrofit/Rx 仓库一次性改成 suspend API，先保留既有仓库返回 `Observable` 的兼容面，把订阅取消逻辑集中到一个明确桥接点。
+- RongCloud 聊天/会话 use case 里的 `suspendCancellableCoroutine` 是 SDK callback 桥，不属于本轮 Rx 网络订阅清理。
+
+本轮代码变更：
+
+- 新增 `RxAwait.awaitValue()`，统一封装 `Observable.subscribe(...)` 到 cancellable suspend bridge，并在协程取消时 dispose。
+- `LoadSongDetailUseCase`、`LoadDiscoveryPageUseCase`、`LoadUserDetailUseCase`、歌单 use case、动态 use case、评论 use case 改为 `awaitValue()` + `try/catch`，不再各自手写 `suspendCancellableCoroutine + subscribe`。
+- `UserManager` 复用 `LoadUserDetailUseCase` 和 manager 级 coroutine scope，保留旧 `getUser(userId, listener)` callback API 给 `NotificationUtil`，但 manager 层不再直接 subscribe。
+- 删除已无引用的 `HttpObserver.kt` 和 `ObserverAdapter.kt`。
+
+本轮验证：
+
+- `rg "HttpObserver|ObserverAdapter|autoDisposable" app/src/main/java/com/ixuea/courses/mymusic` 无命中。
+- `rg "subscribe\\(" app/src/main/java/com/ixuea/courses/mymusic` 只剩 `RxAwait.kt` 里的统一桥接订阅。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器。
+
+当前边界：
+
+- 普通网络请求仍由 Retrofit/Rx 仓库承接；本轮只是把订阅桥接从各 use case 集中到 `RxAwait`。
+- 聊天/会话里的 RongCloud callback suspend bridge 仍保留；后续若继续编码，可优先处理更深的仓库 API suspend 化、Compose surface，或做一轮窄冒烟验证 EventBus/Flow 改动。
+
+### 2026-05-22 阶段 8 继续：多组页面/播放事件 Flow 化并移除 EventBus
+
+本轮决策：
+
+- 用户反馈进度太慢，本轮不再只收口单个事件，而是批量处理仍有真实页面刷新意义、风险相近的 EventBus 边界。
+- 本轮覆盖发现页排序刷新、歌单收藏后发现页刷新、本地音乐扫描完成刷新、下载完成后已下载列表刷新、动态正文用户点击跳转、播放页黑胶点击和播放列表变化。
+- 代码盘点确认主源码已无 `EventBus.post(...)` 发布端后，顺手删除评论页/小播放条的残留空订阅和基类注册钩子，不改变旧 XML/RecyclerView UI。
+
+本轮代码变更：
+
+- 新增 `DiscoveryEvents`、`SheetEvents`、`LocalMusicEvents`、`DownloadEvents` 和 `UserNavigationEvents`，均用 `MutableSharedFlow` 承接跨页面轻量通知。
+- `CustomDiscoveryActivity` 保存排序后改为 `NotifyDiscoverySortChangedUseCase`；`DiscoveryFragment` 收集排序 Flow 后保留原有滚到顶部并刷新行为。
+- `SheetDetailActivity` 收藏/取消收藏成功后改为 `NotifySheetChangedUseCase`；`DiscoveryFragment` 收集歌单变化 Flow 后刷新首页数据。
+- `ScanLocalMusicActivity` 扫描到音乐后改为 `NotifyLocalMusicScanCompleteUseCase`；`LocalMusicActivity` 收集扫描完成 Flow 后刷新本地音乐列表。
+- `DownloadingFragment` 下载进入终态后改走 `DownloadingViewModel.onDownloadTerminalState()`；`DownloadedViewModel` 观察下载完成 Flow 并刷新已下载歌曲列表。
+- `SpannableStringBuilderUtil` 的用户点击 span 改为 `NotifyUserDetailRequestedUseCase`；`FeedFragment` 收集用户详情 Flow 后打开 `UserDetailActivity`。
+- 新增 `PlayerEvents`，黑胶点击由 `NotifyRecordClickedUseCase`/`ObserveRecordClicksUseCase` 承接，播放列表变化由 `NotifyMusicPlayListChangedUseCase`/`ObserveMusicPlayListChangesUseCase` 承接。
+- `MusicPlayerActivity` 不再注册 EventBus；`RecordFragment` 点击黑胶改为 Flow 通知；`MusicListManagerImpl` 删除/清空播放列表后改为 Flow 通知；`SmallAudioControlPageFragment` 观察播放列表 Flow 刷新底部播放条。
+- 删除旧 `SortChangedEvent`、`SheetChangedEvent`、`ScanLocalMusicCompleteEvent`、`DownloadChangedEvent`、`UserDetailEvent`、`RecordClickEvent`、`MusicPlayListChangedEvent`、`LoginStatusChangedEvent`、`SelectedFriendEvent`。
+- 删除 `BaseLogicActivity`/`BaseLogicFragment` 的 EventBus 注册/反注册入口，并从 `app/build.gradle` 移除 `org.greenrobot:eventbus` 依赖。
+
+本轮验证：
+
+- `rg "eventbus|EventBus|@Subscribe|org.greenrobot" app/src/main/java/com/ixuea/courses/mymusic app/build.gradle` 无命中。
+- `rg "SortChangedEvent|SheetChangedEvent|ScanLocalMusicCompleteEvent|DownloadChangedEvent|UserDetailEvent|RecordClickEvent|MusicPlayListChangedEvent|LoginStatusChangedEvent|SelectedFriendEvent" app/src/main/java/com/ixuea/courses/mymusic` 无旧事件类/引用命中。
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过；剩余提示为既有 BGABadge 非增量注解处理器、`AsyncTask`/旧 Fragment pager/Parcelable 等 deprecated 提示。
+
+当前边界：
+
+- 本轮未启动模拟器/真机，未做人手验证排序保存后发现页刷新、歌单收藏后发现页刷新、扫描后本地列表刷新、下载完成后已下载列表刷新、动态正文用户跳转、黑胶点击切歌词页和删除播放列表后的 UI 刷新。
+- 主源码 EventBus 已清零；此记录之后，UI/manager 层残留 Rx/`HttpObserver` 编排点已继续收口到 `RxAwait`，`HttpObserver`/`ObserverAdapter` 已删除。
+
 ### 2026-05-22 交接：Phase 8 Kotlin/Flow 收口批次准备推送
 
 本次交接状态：
@@ -112,8 +379,8 @@
 当前边界：
 
 - 本批未启动模拟器/真机，未做在线收消息、清未读角标刷新、动态发布后列表刷新、播放歌词补全、Activity/Fragment 生命周期或基类行为人工冒烟。
-- 动态链路仍保留 `UserDetailEvent` EventBus 用户跳转入口；其他仍可继续收口的页面级事件包括 `DownloadChangedEvent`、`SortChangedEvent`、播放页相关事件和本地音乐扫描事件。
-- 下一次继续编码时，优先在“仍有真实订阅者”的 EventBus/Rx 边界里选切片；若转验证，则优先覆盖聊天收消息/清未读、动态发布刷新、下载列表刷新和播放歌词补全。
+- 此记录之后，`UserDetailEvent`、`DownloadChangedEvent`、`SortChangedEvent`、本地音乐扫描事件、播放页事件以及残留空订阅已在后一刀迁到 feature-local `SharedFlow` 或删除；主源码 EventBus 已清零。
+- 下一次继续编码时，优先在仍残留的 Rx/`HttpObserver` UI/manager 编排点里选切片；若转验证，则优先覆盖聊天收消息/清未读、动态发布刷新、下载列表刷新、发现页刷新、播放列表刷新和播放歌词补全。
 
 ### 2026-05-21 阶段 8 继续：动态发布刷新迁到 Flow
 
@@ -2859,32 +3126,39 @@ GitHub 发布策略：
 
 当前分支：`codex/emulator-smoke-progress`。
 
-当前策略：用户要求更新交接、提交并 push；下一会话从本文档、Git 历史和 `git status --short` 恢复即可。
+当前策略：用户要求更新交接、提交并 push；本节为 2026-05-23 收尾交接，下一会话从本文档、Git 历史和 `git status --short` 恢复即可。
 
 当前最新切片：
 
-- 已继续清理公共 Java 边界。
-- `Constant`、`PreferenceUtil`、`MyActivityManager`、`SuperAudioManager`、`UserManager`、`GlideEngine`、`MainActivity`、`NotificationUtil`、`MusicPlayerManagerImpl`、`MusicListManagerImpl`、`GlobalLyricManagerImpl` 已迁到 Kotlin。
-- 保留旧静态常量访问、偏好 getter/setter、manager `getInstance(...)`、PictureSelector `ImageEngine` 工厂入口、通知工具静态入口、Manifest Activity 类名、播放 manager 兼容 API、播放队列同步逻辑和桌面歌词悬浮窗控制入口。
-- `NetworkModule` 已补齐 nullable session 的 header 兜底。
+- 阶段 8 本轮集中完成主包 Java、EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose 和 BGABadge 旧注解处理器的收口。
+- `AppContext`、`BadgeInit`、`MusicPlayerListener` 已从 Java 迁出或删除；`app/src/main/java/com/ixuea/courses/mymusic` 主包当前不再包含 Java 源文件。
+- `DefaultService`/`DefaultRepository` 已改为 Retrofit suspend API；普通网络 Rx 桥接、`RxJava3CallAdapterFactory`、`adapter-rxjava3`、`rxandroid`、`paging-rxjava3` 等依赖已移除。
+- 发现排序、歌单收藏、本地扫描完成、下载完成、动态刷新、用户跳转、黑胶点击和播放列表变化等 EventBus 事件已迁到 feature-local `SharedFlow`；`org.greenrobot:eventbus` 依赖已移除。
+- 本地音乐扫描已从 `ScanLocalMusicAsyncTask` 迁到 coroutine `ScanLocalMusicUseCase -> LocalMusicScanRepository`，扫描取消通过 coroutine job 处理。
+- 下载管理页已从旧 `ViewPager + FragmentStatePagerAdapter` 迁到 `ViewPager2 + FragmentStateAdapter`；`activity_download.xml`、`DownloadActivity`、`DownloadAdapter` 已同步。
+- public slim 后不再加载的旧首页 `activity_main.xml`/`activity_main_content.xml` 已删除，无人引用的 `OnPageChangeListenerAdapter` 已删除。
+- `BGABadgeView-Android` api/compiler 依赖和 `BadgeInit.kt` 已删除；旧非增量 BGA annotation processor 不再参与构建。
+- 旧 API 尾巴已继续收口：返回键迁到 `OnBackPressedDispatcher`，默认偏好入口切到 AndroidX `PreferenceManager`，Parcelable 读取补 API 33 typed overload，`ScreenUtil`/`ImageUtil`/`RichUtil` 移除可替换 deprecated 调用，桌面歌词 overlay type 修正为 API 26+ 使用 `TYPE_APPLICATION_OVERLAY`。
+- 小播放器内层旧 `ViewPager` 仍保留，因为 `fragment_small_audio_control_page.xml` 里已有 ViewPager2 内存泄漏备注；这不是漏改，而是当前有意边界。
 
 当前验证：
 
 - `git diff --check` 通过。
 - `./gradlew :app:assembleDevDebug` 通过。
-- 未做设备端冒烟。
+- 最新构建中 Kotlin 编译无 warning；剩余提示为 `superui` 子包 Java deprecated/unchecked 和 Hilt 生成代码 deprecated。
+- `rg` 扫描确认 app 源码/Gradle 中已无 EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose、BGABadge 依赖/注解入口；旧 ViewPager 命中只剩小播放器保留边界。
+- 本轮未做设备端人工冒烟。
 
 恢复步骤：
 
 - 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
-- 如继续纯编码，剩余主包 Java 已进入大边界区：`DefaultRepository`、`Base*Activity/Fragment`、`AppContext` 需要单独评估；`BadgeInit` 和 `MusicPlayerListener` 暂留 Java。
-- `AppContext` 带 `@HiltAndroidApp`，迁 Kotlin 前要先评估 Hilt/KAPT 风险。
-- 如继续验证，优先做偏好读写、PictureSelector 图片加载、通知/桌面歌词解锁、IM 用户缓存、播放队列/上一首/下一首/删除当前歌曲/音频焦点，以及图片压缩/动态发布、Widget 刷新、歌词逐字、本地音乐数据库读写的快速设备端冒烟。
-- 每个切片保持 `./gradlew :app:assembleDevDebug` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
+- 如果继续纯编码，优先选小而确定的边界：`superui` 子包 Java warning、Hilt 生成 deprecated 的来源评估，或小播放器旧 `ViewPager` 的泄漏原因复核；不要在未复核泄漏备注前强迁小播放器到 ViewPager2。
+- 如果继续验证，优先做播放链路、聊天发送/收消息、动态多图压缩上传、下载任务操作、发现页网络数据/滚动、本地音乐扫描和桌面歌词/Widget 的设备端冒烟。
+- 每个切片继续保持 `./gradlew :app:assembleDevDebug` 和 `git diff --check` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
 
-当前剩余 Java 数：`17`。
+当前主包剩余 Java 数：`0`。
 
-剩余 Java 清单以当前仓库为准，可用：
+主包 Java 清单可用以下命令复核：
 
 ```bash
 find app/src/main/java/com/ixuea/courses/mymusic -name '*.java' -print | sort

@@ -4,20 +4,19 @@ import com.ixuea.courses.mymusic.component.sheet.model.Sheet
 import com.ixuea.courses.mymusic.model.Base
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.repository.DefaultRepository
-import io.reactivex.rxjava3.core.Observable
 
 class SheetRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun sheetDetail(id: String): Observable<DetailResponse<Sheet>> {
+    suspend fun sheetDetail(id: String): DetailResponse<Sheet> {
         return repository.sheetDetail(id)
     }
 
-    fun collect(id: String): Observable<DetailResponse<Base>> {
+    suspend fun collect(id: String): DetailResponse<Base> {
         return repository.collect(id)
     }
 
-    fun deleteCollect(id: String): Observable<DetailResponse<Base>> {
+    suspend fun deleteCollect(id: String): DetailResponse<Base> {
         return repository.deleteCollect(id)
     }
 

@@ -1,9 +1,9 @@
 package com.ixuea.courses.mymusic.component.download.activity
 
+import androidx.viewpager2.widget.ViewPager2
 import com.flyco.tablayout.listener.OnTabSelectListener
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseTitleActivity
-import com.ixuea.courses.mymusic.adapter.OnPageChangeListenerAdapter
 import com.ixuea.courses.mymusic.component.download.adapter.DownloadAdapter
 import com.ixuea.courses.mymusic.databinding.ActivityDownloadBinding
 
@@ -12,12 +12,16 @@ import com.ixuea.courses.mymusic.databinding.ActivityDownloadBinding
  */
 class DownloadActivity : BaseTitleActivity<ActivityDownloadBinding>() {
     private lateinit var adapter: DownloadAdapter
+    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+        override fun onPageSelected(position: Int) {
+            binding.indicator.currentTab = position
+        }
+    }
 
     override fun initDatum() {
         super.initDatum()
-        adapter = DownloadAdapter(hostActivity, supportFragmentManager)
+        adapter = DownloadAdapter(hostActivity)
         binding.list.adapter = adapter
-        adapter.setDatum(listOf(0, 1))
 
         val indicatorTitles = arrayOf(
             getString(R.string.download_complete),
@@ -37,10 +41,11 @@ class DownloadActivity : BaseTitleActivity<ActivityDownloadBinding>() {
             }
         })
 
-        binding.list.addOnPageChangeListener(object : OnPageChangeListenerAdapter() {
-            override fun onPageSelected(position: Int) {
-                binding.indicator.currentTab = position
-            }
-        })
+        binding.list.registerOnPageChangeCallback(pageChangeCallback)
+    }
+
+    override fun onDestroy() {
+        binding.list.unregisterOnPageChangeCallback(pageChangeCallback)
+        super.onDestroy()
     }
 }

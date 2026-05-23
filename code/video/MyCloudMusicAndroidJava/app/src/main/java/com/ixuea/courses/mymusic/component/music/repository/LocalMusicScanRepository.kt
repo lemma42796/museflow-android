@@ -1,4 +1,4 @@
-package com.ixuea.courses.mymusic.component.music.task
+package com.ixuea.courses.mymusic.component.music.repository
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
@@ -6,9 +6,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Environment
-import android.os.SystemClock
 import android.provider.BaseColumns
 import android.provider.MediaStore
 import com.ixuea.courses.mymusic.component.song.model.Song
@@ -16,19 +14,25 @@ import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.LiteORMUtil
 import com.ixuea.courses.mymusic.util.StorageUtil
 import com.ixuea.superui.util.BitmapUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
-/**
- * 扫描本地音乐异步任务
- */
-open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, List<Song>>() {
-    private val appContext = context.applicationContext
-
+class LocalMusicScanRepository private constructor() {
     @SuppressLint("Range")
-    override fun doInBackground(vararg params: Void?): List<Song> {
-        val datum = ArrayList<Song>()
+    suspend fun scan(
+        context: Context,
+        onProgress: suspend (String) -> Unit,
+    ): List<Song> = withContext(Dispatchers.IO) {
+        val appContext = context.applicationContext
+        val songs = ArrayList<Song>()
         val contentResolver = appContext.contentResolver
+        val orm = LiteORMUtil.getInstance(appContext)
+        val coroutineContext = currentCoroutineContext()
 
         contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -50,7 +54,9 @@ open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, L
             ),
             MediaStore.Audio.Media.DEFAULT_SORT_ORDER,
         )?.use { cursor ->
-            while (!isCancelled && cursor.moveToNext()) {
+            while (cursor.moveToNext()) {
+                coroutineContext.ensureActive()
+
                 val id = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID))
                 val title = cursor.getString(
                     cursor.getColumnIndex(MediaStore.Audio.AudioColumns.TITLE),
@@ -73,9 +79,9 @@ open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, L
 
                 Timber.d("scan local music %d,%s,%s,%s", id, title, artist, album)
 
-                val data = Song().apply {
+                val song = Song().apply {
                     this.id = id.toString()
-                    icon = getAndSaveAlbum(contentResolver, albumId)
+                    icon = getAndSaveAlbum(appContext, contentResolver, albumId)
                     this.title = title
                     singerNickname = artist
                     this.duration = duration
@@ -83,17 +89,23 @@ open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, L
                     source = Song.SOURCE_LOCAL
                 }
 
-                datum += data
-                LiteORMUtil.getInstance(appContext).saveSong(data)
-                publishProgress(path.orEmpty())
-                SystemClock.sleep(500)
+                songs += song
+                orm.saveSong(song)
+                withContext(Dispatchers.Main.immediate) {
+                    onProgress(path.orEmpty())
+                }
+                delay(SCAN_ITEM_DELAY_MS)
             }
         }
 
-        return datum
+        songs
     }
 
-    private fun getAndSaveAlbum(contentResolver: ContentResolver, data: Long): String? {
+    private fun getAndSaveAlbum(
+        context: Context,
+        contentResolver: ContentResolver,
+        data: Long,
+    ): String? {
         if (data <= 0) {
             return null
         }
@@ -102,7 +114,7 @@ open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, L
         return try {
             contentResolver.openInputStream(uri)?.use { input ->
                 val bitmap = BitmapFactory.decodeStream(input) ?: return null
-                val file = File(appContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC), data.toString())
+                val file = File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), data.toString())
                 BitmapUtil.saveToFile(bitmap, file)
                 file.absolutePath
             }
@@ -113,6 +125,19 @@ open class ScanLocalMusicAsyncTask(context: Context) : AsyncTask<Void, String, L
     }
 
     companion object {
+        private const val SCAN_ITEM_DELAY_MS = 500L
         private val URI_ARTWORK: Uri = Uri.parse("content://media/external/audio/albumart")
+
+        @Volatile
+        private var instance: LocalMusicScanRepository? = null
+
+        @JvmStatic
+        fun getInstance(): LocalMusicScanRepository {
+            return instance ?: synchronized(this) {
+                instance ?: LocalMusicScanRepository().also {
+                    instance = it
+                }
+            }
+        }
     }
 }

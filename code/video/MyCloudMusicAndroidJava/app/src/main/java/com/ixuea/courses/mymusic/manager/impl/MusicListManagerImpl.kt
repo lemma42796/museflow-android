@@ -4,11 +4,11 @@ import android.content.Context
 import android.media.MediaPlayer
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.AppContext
+import com.ixuea.courses.mymusic.component.player.domain.NotifyMusicPlayListChangedUseCase
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.manager.MusicListManager
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
-import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent
 import com.ixuea.courses.mymusic.playback.PlaybackRepository
 import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
@@ -19,7 +19,6 @@ import com.ixuea.courses.mymusic.util.ResourceUtil
 import java.util.LinkedList
 import java.util.Random
 import org.apache.commons.lang3.StringUtils
-import org.greenrobot.eventbus.EventBus
 import timber.log.Timber
 
 /**
@@ -35,6 +34,7 @@ class MusicListManagerImpl private constructor(context: Context) : MusicListMana
     private var model = MusicListManager.MODEL_LOOP_LIST
     private val sp: PreferenceUtil = PreferenceUtil.getInstance(this.context)
     private var lastTime: Long = 0
+    private val notifyMusicPlayListChanged = NotifyMusicPlayListChangedUseCase()
 
     init {
         musicPlayerManager.addMusicPlayerListener(this)
@@ -241,7 +241,7 @@ class MusicListManagerImpl private constructor(context: Context) : MusicListMana
     }
 
     private fun sendPlayListChangedEvent(position: Int) {
-        EventBus.getDefault().post(MusicPlayListChangedEvent(position))
+        notifyMusicPlayListChanged(position)
     }
 
     /**
@@ -256,11 +256,10 @@ class MusicListManagerImpl private constructor(context: Context) : MusicListMana
         }
     }
 
-    override fun onProgress(data: Song?) {
-        val song = data ?: return
+    override fun onProgress(data: Song) {
         val currentTimeMillis = System.currentTimeMillis()
         if (currentTimeMillis - lastTime > Constant.SAVE_PROGRESS_TIME) {
-            orm.saveSong(song)
+            orm.saveSong(data)
             lastTime = currentTimeMillis
         }
     }

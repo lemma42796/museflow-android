@@ -129,11 +129,7 @@ class GlobalLyricManagerImpl private constructor(context: Context) :
     private fun initWindowManager() {
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         layoutParams = WindowManager.LayoutParams().apply {
-            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            } else {
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
-            }
+            type = overlayWindowType()
             format = PixelFormat.RGBA_8888
             gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
             width = ScreenUtil.getScreenWith(context)
@@ -141,6 +137,19 @@ class GlobalLyricManagerImpl private constructor(context: Context) :
             y = sp.globalLyricViewY
         }
         setGlobalLyricStatus()
+    }
+
+    private fun overlayWindowType(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            legacySystemAlertType()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun legacySystemAlertType(): Int {
+        return WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
     }
 
     private fun setGlobalLyricStatus() {
@@ -196,27 +205,27 @@ class GlobalLyricManagerImpl private constructor(context: Context) :
     protected val musicListManager: MusicListManager
         get() = PlaybackService.getListManager(context)
 
-    override fun onPaused(data: Song?) {
+    override fun onPaused(data: Song) {
         if (hasGlobalLyricView()) {
             globalLyricView?.setPlay(false)
         }
     }
 
-    override fun onPlaying(data: Song?) {
+    override fun onPlaying(data: Song) {
         if (hasGlobalLyricView()) {
             globalLyricView?.setPlay(true)
         }
     }
 
-    override fun onProgress(data: Song?) {
-        if (data?.parsedLyric == null || !hasGlobalLyricView()) {
+    override fun onProgress(data: Song) {
+        if (data.parsedLyric == null || !hasGlobalLyricView()) {
             return
         }
 
         globalLyricView?.onProgress(data)
     }
 
-    override fun onLyricReady(data: Song?) {
+    override fun onLyricReady(data: Song) {
         showLyricData()
     }
 

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.kapt'
 
     //hilt注入框架
     id 'dagger.hilt.android.plugin'
@@ -250,16 +251,6 @@ dependencies {
     //版本要和retrofit一样
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
-    //适配retrofit支持rxjava
-    implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
-
-    //使用了Android响应式编程
-    //RxJava和RxAndroid区别？
-    //简单来说：就是RxAndroid在RxJava的基础上
-    //优化了一些功能
-    //增强了Android特有的功能
-    //https://github.com/ReactiveX/RxAndroid
-    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     //endregion
 
     //apache common lang3工具包
@@ -290,10 +281,6 @@ dependencies {
     //https://github.com/CymChad/BaseRecyclerViewAdapterHelper
     implementation 'io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.9'
 
-    //自动释放RxJava相关资源
-    //https://github.com/uber/AutoDispose
-    implementation "com.uber.autodispose2:autodispose-androidx-lifecycle:2.1.1"
-
     //banner轮播图框架
     //https://github.com/youth5201314/banner
     implementation 'io.github.youth5201314:banner:2.2.2'
@@ -301,23 +288,14 @@ dependencies {
     //图片加载框架，还引用他目的是，coil有些功能不好实现
     //https://github.com/bumptech/glide
     implementation 'com.github.bumptech.glide:glide:4.13.1'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.13.1'
 
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
-
-    //给控件添加未读消息数红点
-    //https://github.com/bingoogolapple/BGABadgeView-Android
-    implementation 'com.github.bingoogolapple.BGABadgeView-Android:api:1.2.0'
-    annotationProcessor 'com.github.bingoogolapple.BGABadgeView-Android:compiler:1.2.0'
 
     //日志框架
     //https://github.com/JakeWharton/timber
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
     //跨界面通信框架
-    //https://github.com/greenrobot/EventBus
-    implementation 'org.greenrobot:eventbus:3.3.1'
-
     //输入框右侧有清空按钮，类似iOS
     //https://github.com/Cielsk/clearable-edittext
     implementation 'com.github.Cielsk:clearable-edittext:0.0.8'
@@ -403,14 +381,11 @@ dependencies {
 
     //https://developer.android.google.cn/training/dependency-injection/hilt-android
     implementation "com.google.dagger:hilt-android:$hilt_version"
-    annotationProcessor "com.google.dagger:hilt-compiler:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     //Jetpack中的分页组件
     //https://developer.android.google.cn/topic/libraries/architecture/paging/v3-overview
     implementation "androidx.paging:paging-runtime-ktx:$paging_version"
-
-    //Paging RxJava3支持，因为我们项目用的Java，所以无法使用Kotlin，所以就用RxJava
-    implementation "androidx.paging:paging-rxjava3:$paging_version"
 
     //Paging Compose支持，后续聊天、信息流等选中链路使用
     implementation "androidx.paging:paging-compose:$paging_version"

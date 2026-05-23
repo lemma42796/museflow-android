@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Parcelable
 import com.ixuea.courses.mymusic.util.Constant
+import com.ixuea.courses.mymusic.util.getParcelableExtraCompat
 
 open class BaseCommonActivity : BaseActivity() {
     protected fun startActivity(clazz: Class<out Activity>) {
@@ -38,9 +39,8 @@ open class BaseCommonActivity : BaseActivity() {
         return intent.getIntExtra(key, -1)
     }
 
-    @Suppress("DEPRECATION", "UNCHECKED_CAST")
-    protected fun <T> extraData(): T {
-        return requireNotNull(intent.getParcelableExtra<Parcelable>(Constant.DATA) as? T)
+    protected inline fun <reified T : Parcelable> extraData(): T {
+        return requireNotNull(intent.getParcelableExtraCompat<T>(Constant.DATA))
     }
 
     protected fun extraId(): String? {

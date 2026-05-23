@@ -2,19 +2,20 @@ package com.ixuea.courses.mymusic.component.player.fragment
 
 import android.media.MediaPlayer
 import android.view.View
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager.widget.ViewPager
 import com.ixuea.courses.mymusic.AppContext
-import com.ixuea.courses.mymusic.component.login.model.event.LoginStatusChangedEvent
 import com.ixuea.courses.mymusic.component.player.adapter.SmallAudioControlAdapter
+import com.ixuea.courses.mymusic.component.player.domain.ObserveMusicPlayListChangesUseCase
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.FragmentSmallAudioControlPageBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
 import com.ixuea.courses.mymusic.manager.MusicPlayerListener
 import com.ixuea.courses.mymusic.manager.MusicPlayerManager
-import com.ixuea.courses.mymusic.manager.model.event.MusicPlayListChangedEvent
 import com.ixuea.courses.mymusic.playback.PlaybackService
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import kotlinx.coroutines.launch
 
 /**
  * 小的音频播放控制fragment
@@ -26,6 +27,7 @@ class SmallAudioControlPageFragment :
 
     private lateinit var adapter: SmallAudioControlAdapter
     private lateinit var musicPlayerManager: MusicPlayerManager
+    private val observeMusicPlayListChanges = ObserveMusicPlayListChangesUseCase()
 
     /**
      * 歌曲滚动监听器
@@ -82,6 +84,17 @@ class SmallAudioControlPageFragment :
 
         adapter = SmallAudioControlAdapter(hostActivity, childFragmentManager)
         binding.list.adapter = adapter
+        observePlayerEvents()
+    }
+
+    private fun observePlayerEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                observeMusicPlayListChanges().collect {
+                    showMusicInfo()
+                }
+            }
+        }
     }
 
     override fun initListeners() {
@@ -97,10 +110,6 @@ class SmallAudioControlPageFragment :
         binding.listButton.setOnClickListener {
             MusicPlayListDialogFragment.show(childFragmentManager)
         }
-    }
-
-    override fun isRegisterEventBus(): Boolean {
-        return true
     }
 
     override fun onResume() {
@@ -120,7 +129,7 @@ class SmallAudioControlPageFragment :
         binding.list.removeOnPageChangeListener(onPageChangeListener)
     }
 
-    private fun showMusicInfo() {
+    fun showMusicInfo() {
         val songs = musicListManager.datum
         adapter.setDatum(songs)
 
@@ -206,21 +215,4 @@ class SmallAudioControlPageFragment :
         binding.progress.progress = data.progress.toInt()
     }
 
-    /**
-     * 登录状态改变了事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun loginStatusChangedEvent(event: LoginStatusChangedEvent) {
-        showMusicInfo()
-    }
-
-    /**
-     * 播放列表改变了事件
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    @Suppress("UNUSED_PARAMETER")
-    fun musicPlayListChangedEvent(event: MusicPlayListChangedEvent) {
-        showMusicInfo()
-    }
 }

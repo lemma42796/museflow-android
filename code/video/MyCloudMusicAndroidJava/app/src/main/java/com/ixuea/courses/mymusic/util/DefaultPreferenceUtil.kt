@@ -2,7 +2,7 @@ package com.ixuea.courses.mymusic.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 
 /**
  * 偏好设置工具类

@@ -21,8 +21,8 @@ import com.ixuea.courses.mymusic.activity.BaseTitleActivity
 import com.ixuea.courses.mymusic.component.comment.activity.CommentActivity
 import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity
 import com.ixuea.courses.mymusic.component.sheet.adapter.SongAdapter
+import com.ixuea.courses.mymusic.component.sheet.domain.NotifySheetChangedUseCase
 import com.ixuea.courses.mymusic.component.sheet.model.Sheet
-import com.ixuea.courses.mymusic.component.sheet.model.event.SheetChangedEvent
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetCollectOperation
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetDetailUiState
 import com.ixuea.courses.mymusic.component.sheet.ui.SheetDetailViewModel
@@ -36,7 +36,6 @@ import com.ixuea.superui.toast.SuperToast
 import com.qmuiteam.qmui.util.QMUIStatusBarHelper
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
-import org.greenrobot.eventbus.EventBus
 import timber.log.Timber
 
 /**
@@ -55,6 +54,7 @@ class SheetDetailActivity :
     private var handledErrorVersion = 0L
     private var handledCollectEventVersion = 0L
     private var loadingVisible = false
+    private val notifySheetChangedUseCase = NotifySheetChangedUseCase()
 
     override fun initViews() {
         super.initViews()
@@ -294,7 +294,7 @@ class SheetDetailActivity :
         }
 
         showCollectStatus()
-        publishSheetChangedEvent()
+        notifySheetChanged()
     }
 
     private fun updateDeleteMenuVisibility() {
@@ -302,7 +302,7 @@ class SheetDetailActivity :
         deleteMenuItem?.isVisible = ownerId != null && ownerId == sp.userId
     }
 
-    private fun publishSheetChangedEvent() {
-        EventBus.getDefault().post(SheetChangedEvent())
+    private fun notifySheetChanged() {
+        notifySheetChangedUseCase()
     }
 }

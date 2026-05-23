@@ -15,9 +15,6 @@ import com.ixuea.courses.mymusic.model.Resource
 import com.ixuea.courses.mymusic.model.response.DetailResponse
 import com.ixuea.courses.mymusic.model.response.ListResponse
 import com.ixuea.courses.mymusic.util.Constant
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 
@@ -30,149 +27,144 @@ class DefaultRepository {
         NetworkModule.provideRetrofit(NetworkModule.provideOkHttpClient())
             .create(DefaultService::class.java)
 
-    fun ads(position: Int): Observable<ListResponse<Ad>> {
-        return service.ads(position).applySchedulers()
+    suspend fun ads(position: Int): ListResponse<Ad> {
+        return service.ads(position)
     }
 
-    fun bannerAd(): Observable<ListResponse<Ad>> {
+    suspend fun bannerAd(): ListResponse<Ad> {
         return ads(Constant.VALUE0)
     }
 
-    fun splashAd(): Observable<ListResponse<Ad>> {
+    suspend fun splashAd(): ListResponse<Ad> {
         return ads(Constant.VALUE10)
     }
 
-    fun sheets(category: String?): Observable<ListResponse<Sheet>> {
+    suspend fun sheets(category: String?): ListResponse<Sheet> {
         return sheets(category, Constant.SIZE10)
     }
 
-    fun sheets(size: Int): Observable<ListResponse<Sheet>> {
+    suspend fun sheets(size: Int): ListResponse<Sheet> {
         return sheets(null, size)
     }
 
-    fun sheets(category: String?, size: Int): Observable<ListResponse<Sheet>> {
-        return service.sheets(category, size).applySchedulers()
+    suspend fun sheets(category: String?, size: Int): ListResponse<Sheet> {
+        return service.sheets(category, size)
     }
 
-    fun sheetDetail(id: String): Observable<DetailResponse<Sheet>> {
-        return service.sheetDetail("testHeader", id).applySchedulers()
+    suspend fun sheetDetail(id: String): DetailResponse<Sheet> {
+        return service.sheetDetail("testHeader", id)
     }
 
-    fun createSheets(userId: String): Observable<ListResponse<Sheet>> {
-        return service.createSheets(userId).applySchedulers()
+    suspend fun createSheets(userId: String): ListResponse<Sheet> {
+        return service.createSheets(userId)
     }
 
-    fun collectSheets(userId: String): Observable<ListResponse<Sheet>> {
-        return service.collectSheets(userId).applySchedulers()
+    suspend fun collectSheets(userId: String): ListResponse<Sheet> {
+        return service.collectSheets(userId)
     }
 
-    fun createSheet(data: Sheet): Observable<DetailResponse<Sheet>> {
-        return service.createSheet(data).applySchedulers()
+    suspend fun createSheet(data: Sheet): DetailResponse<Sheet> {
+        return service.createSheet(data)
     }
 
-    fun songs(): Observable<ListResponse<Song>> {
-        return service.songs().applySchedulers()
+    suspend fun songs(): ListResponse<Song> {
+        return service.songs()
     }
 
-    fun songDetail(id: String): Observable<DetailResponse<Song>> {
-        return service.songDetail(id).applySchedulers()
+    suspend fun songDetail(id: String): DetailResponse<Song> {
+        return service.songDetail(id)
     }
 
-    fun login(data: User): Observable<DetailResponse<Session>> {
-        return service.login(data).applySchedulers()
+    suspend fun login(data: User): DetailResponse<Session> {
+        return service.login(data)
     }
 
-    fun userDetail(id: String, nickname: String?): Observable<DetailResponse<User>> {
+    suspend fun userDetail(id: String, nickname: String?): DetailResponse<User> {
         val data = hashMapOf<String, String>()
         if (!nickname.isNullOrBlank()) {
             data[Constant.NICKNAME] = nickname
         }
 
-        return service.userDetail(id, data).applySchedulers()
+        return service.userDetail(id, data)
     }
 
-    fun userDetail(id: String): Observable<DetailResponse<User>> {
+    suspend fun userDetail(id: String): DetailResponse<User> {
         return userDetail(id, null)
     }
 
-    fun friends(id: String): Observable<ListResponse<User>> {
-        return service.friends(id).applySchedulers()
+    suspend fun friends(id: String): ListResponse<User> {
+        return service.friends(id)
     }
 
-    fun fans(id: String): Observable<ListResponse<User>> {
-        return service.fans(id).applySchedulers()
+    suspend fun fans(id: String): ListResponse<User> {
+        return service.fans(id)
     }
 
-    fun updateUser(id: String, data: User): Observable<DetailResponse<Base>> {
-        return service.updateUser(id, data).applySchedulers()
+    suspend fun updateUser(id: String, data: User): DetailResponse<Base> {
+        return service.updateUser(id, data)
     }
 
-    fun follow(userId: String): Observable<DetailResponse<BaseId>> {
-        return service.follow(mapOf("id" to userId)).applySchedulers()
+    suspend fun follow(userId: String): DetailResponse<BaseId> {
+        return service.follow(mapOf("id" to userId))
     }
 
-    fun deleteFollow(userId: String): Observable<DetailResponse<BaseId>> {
-        return service.deleteFollow(userId).applySchedulers()
+    suspend fun deleteFollow(userId: String): DetailResponse<BaseId> {
+        return service.deleteFollow(userId)
     }
 
-    fun register(data: User): Observable<DetailResponse<BaseId>> {
-        return service.register(data).applySchedulers()
+    suspend fun register(data: User): DetailResponse<BaseId> {
+        return service.register(data)
     }
 
-    fun collect(id: String): Observable<DetailResponse<Base>> {
-        return service.collect(mapOf("sheet_id" to id)).applySchedulers()
+    suspend fun collect(id: String): DetailResponse<Base> {
+        return service.collect(mapOf("sheet_id" to id))
     }
 
-    fun deleteCollect(id: String): Observable<DetailResponse<Base>> {
-        return service.deleteCollect(id).applySchedulers()
+    suspend fun deleteCollect(id: String): DetailResponse<Base> {
+        return service.deleteCollect(id)
     }
 
-    fun comments(data: Map<String, String>): Observable<ListResponse<Comment>> {
-        return service.comments(data).applySchedulers()
+    suspend fun comments(data: Map<String, String>): ListResponse<Comment> {
+        return service.comments(data)
     }
 
-    fun commentLike(data: String): Observable<DetailResponse<BaseId>> {
-        return service.like(mapOf("comment_id" to data)).applySchedulers()
+    suspend fun commentLike(data: String): DetailResponse<BaseId> {
+        return service.like(mapOf("comment_id" to data))
     }
 
-    fun cancelCommentLike(data: String): Observable<DetailResponse<Base>> {
-        return service.cancelLike(data, Constant.VALUE0).applySchedulers()
+    suspend fun cancelCommentLike(data: String): DetailResponse<Base> {
+        return service.cancelLike(data, Constant.VALUE0)
     }
 
-    fun createComment(data: Comment): Observable<DetailResponse<Comment>> {
-        return service.createComment(data).applySchedulers()
+    suspend fun createComment(data: Comment): DetailResponse<Comment> {
+        return service.createComment(data)
     }
 
-    fun feeds(userId: String?): Observable<ListResponse<Feed>> {
+    suspend fun feeds(userId: String?): ListResponse<Feed> {
         val datum = hashMapOf<String, String>()
         if (!userId.isNullOrBlank()) {
             datum[Constant.USER_ID] = userId
         }
 
-        return service.feeds(datum).applySchedulers()
+        return service.feeds(datum)
     }
 
-    fun createFeed(data: Feed): Observable<DetailResponse<Base>> {
-        return service.createFeed(data).applySchedulers()
+    suspend fun createFeed(data: Feed): DetailResponse<Base> {
+        return service.createFeed(data)
     }
 
-    fun uploadFile(
+    suspend fun uploadFile(
         data: MultipartBody.Part,
         flavor: RequestBody
-    ): Observable<DetailResponse<Resource>> {
-        return service.uploadFile(data, flavor).applySchedulers()
+    ): DetailResponse<Resource> {
+        return service.uploadFile(data, flavor)
     }
 
-    fun uploadFiles(
+    suspend fun uploadFiles(
         data: List<MultipartBody.Part>,
         flavor: RequestBody
-    ): Observable<ListResponse<Resource>> {
-        return service.uploadFiles(data, flavor).applySchedulers()
-    }
-
-    private fun <T : Any> Observable<T>.applySchedulers(): Observable<T> {
-        return subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+    ): ListResponse<Resource> {
+        return service.uploadFiles(data, flavor)
     }
 
     companion object {

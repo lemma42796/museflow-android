@@ -43,11 +43,11 @@ abstract class BaseFragmentStateAdapter<T> : FragmentStateAdapter {
      * 设置数据
      */
     fun setDatum(datum: List<T>?) {
+        this.datum.clear()
         if (!datum.isNullOrEmpty()) {
-            this.datum.clear()
             this.datum.addAll(datum)
-            notifyDataSetChanged()
         }
+        notifyDataSetChanged()
     }
 
     /**

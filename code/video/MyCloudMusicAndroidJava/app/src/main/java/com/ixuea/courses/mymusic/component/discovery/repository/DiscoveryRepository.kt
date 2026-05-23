@@ -15,8 +15,8 @@ import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity
 import com.ixuea.courses.mymusic.repository.DefaultRepository
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.PreferenceUtil
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.functions.Function3
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Builds typed immutable sections for the discovery page.
@@ -24,14 +24,18 @@ import io.reactivex.rxjava3.functions.Function3
 class DiscoveryRepository private constructor(
     private val repository: DefaultRepository,
 ) {
-    fun homeSections(sp: PreferenceUtil): Observable<DiscoveryPage> {
-        return Observable.zip(
-            repository.bannerAd(),
-            repository.sheets(Constant.SIZE12),
-            repository.songs(),
-            Function3<ListResponse<Ad>, ListResponse<Sheet>, ListResponse<Song>, DiscoveryPage> { ads, sheets, songs ->
-                DiscoveryPage(buildSections(sp, ads, sheets, songs))
-            },
+    suspend fun homeSections(sp: PreferenceUtil): DiscoveryPage = coroutineScope {
+        val ads = async { repository.bannerAd() }
+        val sheets = async { repository.sheets(Constant.SIZE12) }
+        val songs = async { repository.songs() }
+
+        DiscoveryPage(
+            buildSections(
+                sp,
+                ads.await(),
+                sheets.await(),
+                songs.await(),
+            )
         )
     }
 

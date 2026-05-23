@@ -1,7 +1,7 @@
 package com.ixuea.courses.mymusic.component.player.fragment
 
 import android.os.Bundle
-import com.ixuea.courses.mymusic.component.player.model.event.RecordClickEvent
+import com.ixuea.courses.mymusic.component.player.domain.NotifyRecordClickedUseCase
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.databinding.FragmentRecordBinding
 import com.ixuea.courses.mymusic.fragment.BaseViewModelFragment
@@ -10,13 +10,13 @@ import com.ixuea.courses.mymusic.manager.MusicPlayerManager
 import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.ImageUtil
-import org.greenrobot.eventbus.EventBus
 
 /**
  * 音乐黑胶唱片界面
  */
 class RecordFragment : BaseViewModelFragment<FragmentRecordBinding>(), MusicPlayerListener {
     private lateinit var musicPlayerManager: MusicPlayerManager
+    private val notifyRecordClicked = NotifyRecordClickedUseCase()
 
     override fun initDatum() {
         super.initDatum()
@@ -32,7 +32,7 @@ class RecordFragment : BaseViewModelFragment<FragmentRecordBinding>(), MusicPlay
     override fun initListeners() {
         super.initListeners()
         binding.container.setOnClickListener {
-            EventBus.getDefault().post(RecordClickEvent())
+            notifyRecordClicked()
         }
     }
 

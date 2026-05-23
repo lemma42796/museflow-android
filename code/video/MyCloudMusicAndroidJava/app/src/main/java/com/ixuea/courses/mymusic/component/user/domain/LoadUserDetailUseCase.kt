@@ -2,8 +2,6 @@ package com.ixuea.courses.mymusic.component.user.domain
 
 import com.ixuea.courses.mymusic.component.user.model.User
 import com.ixuea.courses.mymusic.component.user.repository.UserRepository
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class LoadUserDetailUseCase(
     private val repository: UserRepository = UserRepository.getInstance(),
@@ -17,29 +15,16 @@ class LoadUserDetailUseCase(
             return Result.Success(cachedUser)
         }
 
-        return suspendCancellableCoroutine { continuation ->
-            val disposable = repository.userDetail(userId).subscribe(
-                { response ->
-                    if (!continuation.isActive) {
-                        return@subscribe
-                    }
-
-                    val user = response.data
-                    if (response.isSucceeded() && user != null) {
-                        continuation.resume(Result.Success(user))
-                    } else {
-                        continuation.resume(Result.Error(response.message, null))
-                    }
-                },
-                { error ->
-                    if (continuation.isActive) {
-                        continuation.resume(Result.Error(null, error))
-                    }
-                },
-            )
-            continuation.invokeOnCancellation {
-                disposable.dispose()
+        return try {
+            val response = repository.userDetail(userId)
+            val user = response.data
+            if (response.isSucceeded() && user != null) {
+                Result.Success(user)
+            } else {
+                Result.Error(response.message, null)
             }
+        } catch (error: Throwable) {
+            Result.Error(null, error)
         }
     }
 

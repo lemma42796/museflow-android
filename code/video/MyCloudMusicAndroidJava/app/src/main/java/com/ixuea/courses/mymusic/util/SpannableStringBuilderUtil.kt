@@ -3,11 +3,12 @@ package com.ixuea.courses.mymusic.util
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.view.View
-import com.ixuea.courses.mymusic.component.user.model.event.UserDetailEvent
+import com.ixuea.courses.mymusic.component.user.domain.NotifyUserDetailRequestedUseCase
 import com.ixuea.superui.text.SuperClickableSpan
-import org.greenrobot.eventbus.EventBus
 
 object SpannableStringBuilderUtil {
+    private val notifyUserDetailRequested = NotifyUserDetailRequestedUseCase()
+
     /**
      * 向SpannableStringBuilder扩展用户点击方法
      *
@@ -20,7 +21,7 @@ object SpannableStringBuilderUtil {
         builder.setSpan(
             object : SuperClickableSpan() {
                 override fun onClick(widget: View) {
-                    EventBus.getDefault().post(UserDetailEvent(data))
+                    notifyUserDetailRequested(data)
                 }
             },
             start,
