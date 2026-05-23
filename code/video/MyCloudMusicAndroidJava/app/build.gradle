@@ -129,9 +129,6 @@ android {
             //API端点
             buildConfigField('String', "ENDPOINT", '"http://192.168.2.98:8080/"')
 
-            //资源端点
-//            buildConfigField 'String', 'RESOURCE_ENDPOINT', '"http://course-music-dev.ixuea.com/%s"'
-
             //新资源地址
             buildConfigField 'String', 'RESOURCE_ENDPOINT', '"https://rs.ixuea.com/music/%s"'
 
@@ -327,9 +324,8 @@ dependencies {
     implementation 'joda-time:joda-time:2.12.2'
 
     //emoji支持库，Android官方提供的Emoji兼容库，用来兼容低版本，高版本不需要使用该兼容库也可以
-    //官方提供的Eemoji组件是基于Unicode，也就是字体，所以在不同系统版本，以及不同平台显示的样式可能不一样
-    //如果要想实现类似微信，QQ，钉钉等主流软件的Emoji实现可以学习我们【商业级微聊项目】课程（http://www.ixuea.com/courses/19）
-    //其实就是使用图片实现emoji，就是图文混排效果，类似商品详情描述那样实现
+    //官方提供的Emoji组件是基于Unicode，也就是字体，所以在不同系统版本，以及不同平台显示的样式可能不一样
+    //如果需要主流聊天应用那类自定义图片表情，可在业务层扩展图文混排能力。
     implementation 'androidx.emoji:emoji-appcompat:1.2.0-alpha03'
 
     //emoji控件

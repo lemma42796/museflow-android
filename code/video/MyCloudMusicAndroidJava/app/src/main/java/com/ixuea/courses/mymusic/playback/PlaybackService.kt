@@ -72,7 +72,7 @@ class PlaybackService : MediaSessionService() {
         musicPlayerManager = getMusicPlayerManager(applicationContext)
         val sessionPlayer = LegacyMusicSessionPlayer(repository.player, musicListManager)
         mediaSession = MediaSession.Builder(this, sessionPlayer)
-            .setId("MyCloudMusicPlayback")
+            .setId("MuseFlowPlayback")
             .setSessionActivity(
                 IntentUtil.createMainActivityPendingIntent(
                     applicationContext,

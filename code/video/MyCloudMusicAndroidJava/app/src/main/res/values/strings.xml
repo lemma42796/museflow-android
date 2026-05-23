@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">我的云音乐</string>
+    <string name="app_name">MuseFlow</string>
 
-    <string name="empty_song_tip">我的云音乐，听你想听</string>
+    <string name="empty_song_tip">MuseFlow，听你想听</string>
 
     <!--activity标题-->
     <string name="activity_forget_password">找回密码</string>
@@ -19,7 +19,7 @@
     <string name="activity_publish_feed">发动态</string>
 
     <!--版权文本-->
-    <string name="copyright" translatable="false">Copyright © %1$d Ixuea. All Rights Reserved</string>
+    <string name="copyright" translatable="false">Copyright © %1$d MuseFlow. All Rights Reserved</string>
     <string name="ad_click_tip">点击跳转详情页面查看更多</string>
     <string name="skip_ad_count">跳过广告%1$d</string>
     <string name="not_found_activity">找不到对应的应用</string>
@@ -260,7 +260,7 @@
     <string name="add">添加</string>
 
     <!--二维码-->
-    <string name="hint_scan_my_code">使用我的云音乐扫描即可关注我</string>
+    <string name="hint_scan_my_code">使用 MuseFlow 扫描即可关注我</string>
     <string name="hint_scan_code">将二维码放入框内即可扫描</string>
     <string name="error_not_support_qrcode_format">不支持该格式</string>
 
@@ -401,7 +401,7 @@
     <string name="count_second">%1$ds</string>
     <string name="user_agreement">
         <Data><![CDATA[
-        登录即表示你同意《<a href="http://www.ixuea.com/articles/4449">用户协议</a>》和《<a href="http://www.ixuea.com/articles/4467">隐私政策</a>》
+        登录即表示你同意《用户协议》和《隐私政策》
         ]]> </Data>
     </string>
     <string name="hint_force_logout">您的帐号在另一设备登录，您已被迫退出登录</string>
@@ -442,7 +442,7 @@
     <string name="music_alarm_clock">音乐闹钟</string>
 
     <string name="my_customer_service">我的客服</string>
-    <string name="share_app">分享我的云音乐</string>
+    <string name="share_app">分享 MuseFlow</string>
     <string name="about">关于</string>
     <string name="about_code">关于（纯代码布局）</string>
     <string name="not_open">未开启</string>
@@ -566,7 +566,7 @@
 
     <string name="term_service_privacy_content">
         <Data><![CDATA[
-        <p>&nbsp;&nbsp;&nbsp;&nbsp;本软件尊重并保护所有使用服务用户的个人隐私权。为了给您提供更准确、更有个性化的服务，本软件会按照本隐私权政策的规定使用和披露您的个人信息。但本软件将以高度的勤勉、审慎义务对待这些信息。除本隐私权政策另有规定外，在未征得您事先许可的情况下，本软件不会将这些信息对外披露或向第三方提供。本软件会不时更新本隐私权政策。请你认真阅读并了解《<a href="http://www.ixuea.com/articles/4449">服务条款</a>》和《<a href="http://www.ixuea.com/articles/4467">隐私政策</a>》，您在同意本软件服务使用协议之时，即视为您已经同意本隐私权政策全部内容。本隐私权政策属于本软件服务使用协议不可分割的一部分。</p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;本软件尊重并保护所有使用服务用户的个人隐私权。为了给您提供更准确、更有个性化的服务，本软件会按照本隐私权政策的规定使用和披露您的个人信息。但本软件将以高度的勤勉、审慎义务对待这些信息。除本隐私权政策另有规定外，在未征得您事先许可的情况下，本软件不会将这些信息对外披露或向第三方提供。本软件会不时更新本隐私权政策。请你认真阅读并了解服务条款和隐私政策，您在同意本软件服务使用协议之时，即视为您已经同意本隐私权政策全部内容。本隐私权政策属于本软件服务使用协议不可分割的一部分。</p>
 
         <p>1.适用范围</p>
 
@@ -627,8 +627,8 @@
     <string name="play_mobile_network_alert">当前处于移动网络，是否自动播放</string>
     <string name="download_mobile_network">使用移动网络下载</string>
     <string name="play_mobile_network_summary">这是更多描述</string>
-    <string name="about_music">关于我的云音乐（可视化布局）</string>
-    <string name="about_code_music">关于我的云音乐（代码布局）</string>
+    <string name="about_music">关于 MuseFlow（可视化布局）</string>
+    <string name="about_code_music">关于 MuseFlow（代码布局）</string>
     <string name="hint_network_play_disable">已经禁用移动网络播放，可以设置界面打开</string>
     <string name="current_version">当前版本</string>
     <string name="version_value">V%1$s-%2$d</string>
@@ -650,7 +650,7 @@
     <string name="experience_now">立即体验</string>
 
     <string name="function_introduction">功能介绍</string>
-    <string name="about_us">关于爱学啊</string>
+    <string name="about_us">关于 MuseFlow</string>
     <string name="create_exception">触发一个异常</string>
     <string name="report_exception">手动上报异常</string>
     <string name="refund">退款</string>

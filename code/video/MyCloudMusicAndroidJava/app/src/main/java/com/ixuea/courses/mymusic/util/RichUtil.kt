@@ -26,7 +26,7 @@ object RichUtil {
 
     /**
      * 匹配mention的正则表达式
-     * 详细的请参考《详解正则表达式》课程
+     * 详细用法可参考正则表达式相关资料
      */
     private const val REG_MENTION = "(@[\\u4e00-\\u9fa5a-zA-Z0-9_-]{1,30})"
 

@@ -9,8 +9,7 @@
        showAsAction：显示方式
        always：不折叠，始终显示；显示图标
        collapseActionView：折叠到更多；折叠的只显示标题
-       由于这是项目课程
-       其他值就不讲解了-->
+       其他值在当前界面不使用-->
     <item
         android:id="@+id/search"
         android:icon="@drawable/search"

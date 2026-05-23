@@ -28,7 +28,7 @@ object StorageUtil {
     @JvmStatic
     fun getExternalPath(context: Context, userId: String, title: String?, suffix: String): File {
         val dir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-        val path = String.format("MyCloudMusic/%s/%s/%s.%s", userId, suffix, title, suffix)
+        val path = String.format("MuseFlow/%s/%s/%s.%s", userId, suffix, title, suffix)
         val file = File(dir, path)
 
         if (!file.parentFile!!.exists()) {
@@ -56,7 +56,7 @@ object StorageUtil {
     fun savePicture(context: Context, data: Bitmap): Uri? {
         val uri = insertPictureMediaStore(
             context,
-            String.format("ixuea_code_%s.jpg", SuperDateUtil.nowyyyyMMddHHmmss())
+            String.format("museflow_code_%s.jpg", SuperDateUtil.nowyyyyMMddHHmmss())
         ) ?: return null
 
         return saveFile(context, data, uri)

@@ -155,7 +155,7 @@ private class ShareLyricImageContentView(context: Context) : LinearLayout(contex
             )
             addView(
                 TextView(context).apply {
-                    text = "来自我的云音乐•歌词分享"
+                    text = "来自 MuseFlow•歌词分享"
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
                     layoutParams = LayoutParams(
                         0,

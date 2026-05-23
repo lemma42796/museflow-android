@@ -29,7 +29,7 @@ dependencyResolutionManagement {
         maven {url  "https://maven.rongcloud.cn/repository/maven-releases/"}
     }
 }
-rootProject.name = "MyCloudMusicAndroidJava"
+rootProject.name = "MuseFlowAndroid"
 include ':app'
 include ':super-j'
 include ':glidepalette'
