@@ -1,7 +1,9 @@
 package com.ixuea.courses.mymusic.macrobenchmark
 
+import android.content.ComponentName
 import android.content.Intent
 import androidx.benchmark.macro.MacrobenchmarkScope
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
@@ -11,7 +13,17 @@ import androidx.test.uiautomator.Until
 internal const val TARGET_PACKAGE = "com.ixuea.courses.mymusic"
 private const val MAIN_ACTIVITY = "$TARGET_PACKAGE.MainActivity"
 private const val BENCHMARK_PLAYER_ENTRY_ACTIVITY = "$TARGET_PACKAGE.benchmark.BenchmarkPlayerEntryActivity"
+private const val BENCHMARK_PLAYBACK_ACTION_RECEIVER = "$TARGET_PACKAGE.benchmark.BenchmarkPlaybackActionReceiver"
+private const val BENCHMARK_PLAYBACK_ACTION = "$TARGET_PACKAGE.benchmark.PLAYBACK_ACTION"
+private const val EXTRA_COMMAND = "command"
+private const val EXTRA_POSITION_MS = "position_ms"
+private const val COMMAND_PLAY = "play"
+private const val COMMAND_PAUSE = "pause"
+private const val COMMAND_RESUME = "resume"
+private const val COMMAND_SEEK = "seek"
+private const val COMMAND_SHOW_LYRIC = "show_lyric"
 private const val PLAYER_SCREEN_MARKER = "MuseFlowMusicPlayerScreen"
+private const val PLAYER_LYRIC_MARKER = "MuseFlowMusicPlayerLyricPanel"
 
 internal fun MacrobenchmarkScope.waitForHome() {
     check(device.wait(Until.hasObject(By.pkg(TARGET_PACKAGE)), 5_000)) {
@@ -65,11 +77,64 @@ internal fun MacrobenchmarkScope.openPlayerFromBenchmarkEntryWithoutInput() {
     waitForPlayerScreen()
 }
 
+internal fun MacrobenchmarkScope.startBenchmarkPlaybackWithoutInput() {
+    sendPlaybackCommand(COMMAND_PLAY)
+    waitForPlayerMarker(800)
+}
+
+internal fun MacrobenchmarkScope.runPlaybackTransportControlsWithoutInput() {
+    sendPlaybackCommand(COMMAND_PAUSE)
+    waitForPlayerWork()
+    sendPlaybackCommand(COMMAND_RESUME)
+    waitForPlayerWork()
+    sendPlaybackCommand(COMMAND_SEEK, positionMs = 1_500)
+    waitForPlayerWork()
+    sendPlaybackCommand(COMMAND_PAUSE)
+    waitForPlayerWork()
+}
+
+internal fun MacrobenchmarkScope.runPlaybackLyricPanelWithoutInput() {
+    sendPlaybackCommand(COMMAND_SHOW_LYRIC)
+    waitForLyricPanel()
+    sendPlaybackCommand(COMMAND_SEEK, positionMs = 3_200)
+    waitForPlayerWork()
+}
+
 internal fun MacrobenchmarkScope.waitForPlayerScreen() {
     check(device.wait(Until.hasObject(By.res(PLAYER_SCREEN_MARKER)), 5_000)) {
         "Music player screen marker did not appear."
     }
     device.waitForIdle()
+}
+
+private fun MacrobenchmarkScope.waitForLyricPanel() {
+    check(device.wait(Until.hasObject(By.res(PLAYER_LYRIC_MARKER)), 5_000)) {
+        "Music player lyric marker did not appear."
+    }
+    waitForPlayerMarker()
+}
+
+private fun MacrobenchmarkScope.waitForPlayerWork(delayMs: Long = 300) {
+    Thread.sleep(delayMs)
+    waitForPlayerMarker()
+}
+
+private fun MacrobenchmarkScope.waitForPlayerMarker(delayMs: Long = 300) {
+    Thread.sleep(delayMs)
+    check(device.wait(Until.hasObject(By.res(PLAYER_SCREEN_MARKER)), 2_000)) {
+        "Music player screen marker did not appear."
+    }
+}
+
+private fun sendPlaybackCommand(command: String, positionMs: Int? = null) {
+    val context = InstrumentationRegistry.getInstrumentation().context
+    val intent = Intent(BENCHMARK_PLAYBACK_ACTION)
+        .setComponent(ComponentName(TARGET_PACKAGE, BENCHMARK_PLAYBACK_ACTION_RECEIVER))
+        .putExtra(EXTRA_COMMAND, command)
+    if (positionMs != null) {
+        intent.putExtra(EXTRA_POSITION_MS, positionMs)
+    }
+    context.sendBroadcast(intent)
 }
 
 private fun UiDevice.findScrollableRoot(): UiObject2? {

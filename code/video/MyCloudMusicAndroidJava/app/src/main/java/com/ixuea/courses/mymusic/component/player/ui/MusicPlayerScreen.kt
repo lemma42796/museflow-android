@@ -39,6 +39,7 @@ import com.ixuea.courses.mymusic.util.PlayListUtil
 import com.ixuea.courses.mymusic.util.SuperDateUtil
 
 private const val MUSIC_PLAYER_SCREEN_MARKER = "MuseFlowMusicPlayerScreen"
+private const val MUSIC_PLAYER_LYRIC_MARKER = "MuseFlowMusicPlayerLyricPanel"
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -113,14 +114,20 @@ fun MusicPlayerScreen(
                     },
                 )
                 if (isLyricVisible) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = { context -> LyricListView(context) },
-                        update = { view ->
-                            onLyricReady(view)
-                            view.setProgress(progress)
-                        },
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(MUSIC_PLAYER_LYRIC_MARKER),
+                    ) {
+                        AndroidView(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = { context -> LyricListView(context) },
+                            update = { view ->
+                                onLyricReady(view)
+                                view.setProgress(progress)
+                            },
+                        )
+                    }
                 }
             }
 

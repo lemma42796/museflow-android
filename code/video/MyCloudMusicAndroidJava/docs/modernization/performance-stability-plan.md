@@ -15,15 +15,16 @@
 - 2026-05-24 已在 API 36 模拟器上跑通第一轮性能基线和 Baseline Profile 生成，具体数据见下方“第一轮基线记录”。
 - 2026-05-24 已在 Redmi `25060RK16C` 真机上取得有效冷启动基线；此前 no-input “打开播放器”结果只证明触发过 action/包仍可见，未证明播放器页面可见，已更正为无效记录。
 - 2026-05-24 已给播放器 Compose 根节点补稳定 UI marker，并新增 benchmark-only 入口显式准备播放队列后打开真实 `MusicPlayerActivity`；marker 版 no-input 播放器 benchmark 和 Baseline Profile 生成已在 Redmi 真机通过。
+- 2026-05-24 已将 marker 版 Baseline Profile 固化到 `app/src/main/baseline-prof.txt`，过滤 benchmark-only profile 条目后由 `devBenchmark` 构建打包进 `assets/dexopt/baseline.prof`/`baseline.profm`，并完成同设备 no-input benchmark 前后对比。
+- 2026-05-24 已继续扩展 app-internal/no-input benchmark hook：用 benchmark-only receiver、静音本地 WAV 和真实 `PlaybackService` 控制链路覆盖播放/暂停/恢复/seek，并以 1 次迭代覆盖歌词面板显示 marker。
 
 尚未完成的部分：
 
 - 真机已有有效冷启动基线和 marker 版 no-input 播放器首屏基线，但原始滚动/点击版用例被当前真机系统的 `INJECT_EVENTS` 权限限制拦截，尚未形成完整交互型真机基线。
-- Baseline Profile 已经在 marker 版真机 no-input 路径上生成 23,799 行产物，但尚未固化到 app source set，也尚未复测 profile 固化前后差异。
-- 尚未覆盖播放页播放/暂停、seek、歌词页拖拽、下载列表刷新等更细场景。
-- 尚未用优化前后对比数据证明 jank、启动耗时、帧耗时或核心页面首帧有改善。
+- 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，但歌词拖拽、下载列表刷新等更细场景尚未覆盖。
+- 已有 marker/no-input 路径上的 Baseline Profile 固化前后对比，但尚未用更多交互型场景和优化前后多轮数据证明首页滚动、播放控制、歌词拖拽或下载列表刷新有稳定改善。
 
-因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，并完成模拟器基线、真机冷启动基线和可信播放器首屏基线”，但仍不能描述为“已完成系统化性能治理”。
+因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、播放控制 no-input 基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比”，但仍不能描述为“已完成系统化性能治理”。
 
 ## 目标定位
 
@@ -179,8 +180,83 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 下一步：
 
-- 暂不直接固化 profile；下一步应确认 app source set 的 baseline profile 放置位置，再复制产物并做固化前后 benchmark 对比。
+- 已完成 marker 版 profile 固化和同设备前后对比；下一步转向补齐原始输入型或 app-internal/no-input 扩展场景。
 - 真机原始输入型首页滚动/首页点歌仍被 `INJECT_EVENTS` 限制，后续继续作为设备策略问题单独处理。
+
+## 第五轮 播放控制与歌词面板 no-input 扩展记录
+
+日期：2026-05-24
+
+已完成：
+
+- 新增 benchmark-only `BenchmarkPlayerFixture`，准备真实 `PlaybackService` 播放队列、5 秒静音本地 WAV 和短歌词，避免依赖网络、真实音频文件或首页点击。
+- 新增 benchmark-only `BenchmarkPlaybackActionReceiver`，支持 `play`、`pause`、`resume`、`seek`、`show_lyric` 命令。
+- `BenchmarkPlayerEntryActivity` 改为复用同一 fixture；播放器歌词面板新增 `MuseFlowMusicPlayerLyricPanel` marker。
+- 新增 `PlaybackControlsNoInputBenchmark`，拆为 3 次迭代的 `playbackTransportControlsNoInput` 主基线和 1 次迭代的 `playbackLyricPanelNoInput` 覆盖用例。
+
+验证：
+
+```bash
+./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin
+adb install -r -t app/build/outputs/apk/dev/benchmark/app-dev-benchmark.apk
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.PlaybackControlsNoInputBenchmark#playbackTransportControlsNoInput
+adb install -r -t app/build/outputs/apk/dev/benchmark/app-dev-benchmark.apk
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.PlaybackControlsNoInputBenchmark#playbackLyricPanelNoInput
+```
+
+结果：
+
+- Kotlin 编译通过。
+- `playbackTransportControlsNoInput` 真机通过：1 个用例成功，耗时约 3m25s；`frameCount` median 504；`frameDurationCpuMs` P50 4.9 ms / P90 8.4 ms / P95 9.4 ms / P99 11.7 ms；`frameOverrunMs` P50 -1.1 ms / P90 1.0 ms / P95 3.1 ms / P99 8.0 ms。
+- `playbackLyricPanelNoInput` 真机通过：1 个用例成功，耗时约 2m33s；`frameCount` 1092；`frameDurationCpuMs` P50 11.9 ms / P90 19.7 ms / P95 20.7 ms / P99 22.8 ms；`frameOverrunMs` P50 7.9 ms / P90 15.2 ms / P95 16.3 ms / P99 18.5 ms。
+
+边界：
+
+- 当前 MIUI 真机偶发出现 UTP 自动安装后目标包查不到的问题；成功运行前用 `adb install -r -t app/build/outputs/apk/dev/benchmark/app-dev-benchmark.apk` 手动重装目标 APK。
+- Transport controls 是 3 次迭代的可复测主基线；歌词面板当前只有 1 次迭代，只证明 marker 与显示路径可被 no-input 覆盖，暂不作为稳定性能改善结论。
+- 仍未覆盖真实输入型首页滚动/点击、歌词拖拽和下载列表刷新。
+
+下一步：
+
+- 继续补下载列表刷新 no-input 场景，或在设备策略允许后复跑原始输入型 benchmark。
+- 若继续优化播放器，优先用 transport controls 和播放器首屏两条已通过路径做前后对比。
+
+## 第四轮 Baseline Profile 固化与前后对比记录
+
+日期：2026-05-24
+
+已完成：
+
+- 将 `BaselineProfileNoInputGenerator.generateNoInput` 生成的 marker 版 profile 固化到 `app/src/main/baseline-prof.txt`。
+- 过滤掉 8 行仅存在于 `app/src/benchmark` 的 `BenchmarkPlayerEntryActivity` profile 条目，避免把 benchmark-only 入口写入 main source set；最终 source profile 为 23,791 行。
+- `:app:mergeDevBenchmarkArtProfile` 和 `:app:compileDevBenchmarkArtProfile` 已确认消费该文件，合并后的 `devBenchmark` profile 为 27,237 行。
+- `app-dev-benchmark.apk` 已确认包含 `assets/dexopt/baseline.prof` 和 `assets/dexopt/baseline.profm`。
+
+验证：
+
+```bash
+./gradlew :app:compileDevBenchmarkArtProfile :app:mergeDevBenchmarkArtProfile
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerNoInputBenchmark
+```
+
+结果：
+
+- Profile 编译/合并任务通过。
+- `StartupAndPlayerNoInputBenchmark` 真机通过：2 个用例全部成功。
+- 固化前 marker 版基线：冷启动 `timeToInitialDisplayMs` min 307.7 ms / median 329.2 ms / max 382.5 ms；播放器首屏 `frameDurationCpuMs` P99 26.9 ms，`frameOverrunMs` P99 27.1 ms。
+- 固化后复测：冷启动 `timeToInitialDisplayMs` min 289.9 ms / median 302.5 ms / max 319.5 ms；播放器首屏 `frameCount` median 38；`frameDurationCpuMs` P50 3.1 ms / P90 4.6 ms / P95 5.0 ms / P99 18.7 ms；`frameOverrunMs` P50 -4.3 ms / P90 -1.6 ms / P95 -0.8 ms / P99 15.1 ms。
+
+对比判断：
+
+- 冷启动 median 从 329.2 ms 到 302.5 ms，约改善 8.1%。
+- 播放器首屏 `frameDurationCpuMs` P99 从 26.9 ms 到 18.7 ms，约改善 30.5%。
+- 播放器首屏 `frameOverrunMs` P99 从 27.1 ms 到 15.1 ms，约改善 44.3%。
+- 该结论只覆盖 Redmi `25060RK16C`、`devBenchmark`、marker 版 no-input 路径和 5 次迭代；它证明 profile 固化链路有效并给出第一组收益证据，但不能替代完整交互型 benchmark 或人工播放链路冒烟。
+
+下一步：
+
+- 继续处理真机 `INJECT_EVENTS` 限制，争取复跑原始输入型首页滚动/首页点歌 benchmark。
+- 若设备策略仍不放行，继续扩展 app-internal/no-input benchmark hook，覆盖播放/暂停、seek、歌词页拖拽和下载列表刷新。
 
 ## 第二阶段：播放链路稳定性
 
@@ -239,7 +315,7 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 优先级：
 
-1. 确认 AGP 8.5.2 下 app source set 的 Baseline Profile 放置位置，固化 marker 版 profile 后复测冷启动/播放器入口前后差异。
-2. 处理当前真机 `INJECT_EVENTS` 限制：优先复跑原始输入型 benchmark；如设备仍不放行，就继续扩展 no-input/app-internal 替代场景。
-3. 围绕“首页进播放器”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
-4. 扩展播放页播放/暂停、seek、歌词页拖拽和下载列表刷新场景，再做代码级优化。
+1. 处理当前真机 `INJECT_EVENTS` 限制：优先复跑原始输入型 benchmark；如设备仍不放行，就继续扩展 no-input/app-internal 替代场景。
+2. 扩展下载列表刷新和歌词拖拽场景，形成更完整的可复测性能证据。
+3. 围绕“播放器首屏”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
+4. 基于已通过的播放器首屏和 transport controls 场景做代码级优化，并用同一命令复测前后差异。

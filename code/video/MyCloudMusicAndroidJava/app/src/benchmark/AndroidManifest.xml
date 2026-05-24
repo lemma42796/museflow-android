@@ -6,5 +6,8 @@
             android:name=".benchmark.BenchmarkPlayerEntryActivity"
             android:exported="true"
             android:theme="@style/SuperUI.NoActionBar.Light" />
+        <receiver
+            android:name=".benchmark.BenchmarkPlaybackActionReceiver"
+            android:exported="true" />
     </application>
 </manifest>
