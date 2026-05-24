@@ -120,6 +120,55 @@
 
 ## 最新执行记录
 
+### 2026-05-24 首页歌单视觉设备收尾
+
+本轮目标：
+
+- 保存首页推荐歌单标题/卡片尺寸调整后的设备安装和运行状态，并推送当前分支。
+
+已完成：
+
+- 真机 `25060RK16C` 上旧包与当前 debug 包签名不一致，覆盖安装失败：`INSTALL_FAILED_UPDATE_INCOMPATIBLE`；经用户确认后卸载旧包、安装最新 `app-dev-debug.apk` 并启动成功。
+- 电脑模拟器 `emulator-5554` 已重新构建、覆盖安装最新 `app-dev-debug.apk`；普通 launcher 先进入 debug 包的 LeakCanary 页面，随后直接启动 `com.ixuea.courses.mymusic/.MainActivity`。
+
+验证：
+
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 5s`。
+- 真机和模拟器均确认进程启动，前台焦点为 `com.ixuea.courses.mymusic/.MainActivity`。
+- 模拟器最近 `AndroidRuntime:E` fatal 日志为空。
+
+### 2026-05-24 推荐歌单卡片尺寸统一
+
+本轮目标：
+
+- 用户截图指出推荐歌单横向列表第一张封面比后续卡片更大，视觉不够统一。
+
+已完成：
+
+- `DiscoveryScreen` 移除推荐歌单首项 `176.dp` 的特殊宽度，所有推荐歌单卡片统一为 `148.dp`。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 3s`。
+
+### 2026-05-24 推荐歌单标题重写
+
+本轮目标：
+
+- 用户截图指出首页推荐歌单标题仍显示服务端测试串，需要改成更像正式音乐产品的短标题。
+
+已完成：
+
+- `DiscoveryVisualAssets` 在替换推荐歌单本地封面时同步重写首页展示标题，当前标题池包括“晨光通勤电台”“周末轻盈律动”“夜色城市漫游”等 12 个短标题。
+- 保持推荐歌单原始 id 和点击详情链路不变，只在发现页首页展示数据进入 UI 前做标题映射。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 4s`。
+- 已安装到 API 36 模拟器并打开首页，UI 层级和截图确认推荐歌单显示新标题，旧 `zheshishangtestios` / `woxiang` 等测试串不再出现在当前首页可视区域；最近 `AndroidRuntime:E` fatal 日志为空。
+
 ### 2026-05-24 歌词显示美化
 
 本轮目标：

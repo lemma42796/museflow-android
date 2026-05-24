@@ -365,11 +365,11 @@ private fun DiscoverySheetSection(
         itemsIndexed(
             items = sheets,
             key = { index, sheet -> sheet.id ?: "sheet-$index" },
-        ) { index, sheet ->
+        ) { _, sheet ->
             SheetCard(
                 sheet = sheet,
                 onClick = { onSheetClick(sheet) },
-                modifier = Modifier.width(if (index == 0) 176.dp else 148.dp),
+                modifier = Modifier.width(148.dp),
             )
         }
     }

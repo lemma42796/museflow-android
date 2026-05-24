@@ -28,6 +28,21 @@ internal object DiscoveryVisualAssets {
         localDrawableUri("discovery_cover_android16_3"),
     )
 
+    private val sheetTitles = listOf(
+        "晨光通勤电台",
+        "周末轻盈律动",
+        "夜色城市漫游",
+        "专注时刻白噪",
+        "微醺独立流行",
+        "治愈系晚安曲",
+        "新鲜电子心跳",
+        "雨天柔软民谣",
+        "午后咖啡旋律",
+        "运动能量补给",
+        "深夜灵感采样",
+        "清爽夏日合辑",
+    )
+
     fun applyTo(
         ads: MutableList<Ad>,
         sheets: MutableList<Sheet>,
@@ -38,6 +53,7 @@ internal object DiscoveryVisualAssets {
         }
         sheets.forEachIndexed { index, sheet ->
             sheet.icon = coverImages[index % coverImages.size]
+            sheet.title = sheetTitles[index % sheetTitles.size]
         }
         songs.forEachIndexed { index, song ->
             song.icon = songCoverImages[index % songCoverImages.size]
