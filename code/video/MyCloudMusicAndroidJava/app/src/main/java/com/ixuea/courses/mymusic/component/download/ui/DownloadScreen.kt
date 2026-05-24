@@ -31,8 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,6 +48,13 @@ import com.ixuea.courses.mymusic.ui.compose.EmptyContent
 import com.ixuea.courses.mymusic.ui.compose.MuseFlowScaffold
 import com.ixuea.courses.mymusic.util.FileUtil
 
+const val DOWNLOAD_INITIAL_TAB_EXTRA = "com.ixuea.courses.mymusic.DOWNLOAD_INITIAL_TAB"
+
+private const val DOWNLOAD_SCREEN_MARKER = "MuseFlowDownloadScreen"
+private const val DOWNLOADED_LIST_MARKER = "MuseFlowDownloadedList"
+private const val DOWNLOADING_LIST_MARKER = "MuseFlowDownloadingList"
+
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun DownloadScreen(
     downloadedState: DownloadedUiState,
@@ -56,8 +67,9 @@ fun DownloadScreen(
     onDownloadTerminalState: (DownloadInfo) -> Unit,
     onToggleAllDownloads: () -> Unit,
     onDeleteAllDownloads: () -> Unit,
+    initialTab: Int = 0,
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableStateOf(initialTab.coerceIn(0, 1)) }
     var pendingDelete by remember { mutableStateOf<DownloadInfo?>(null) }
     val tabs = listOf(
         stringResource(R.string.download_complete),
@@ -80,6 +92,8 @@ fun DownloadScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .semantics { testTagsAsResourceId = true }
+                .testTag(DOWNLOAD_SCREEN_MARKER)
                 .padding(padding),
         ) {
             TabRow(selectedTabIndex = selectedTab) {
@@ -143,7 +157,9 @@ private fun DownloadedList(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(DOWNLOADED_LIST_MARKER),
         contentPadding = PaddingValues(vertical = 8.dp),
     ) {
         itemsIndexed(
@@ -174,7 +190,9 @@ private fun DownloadingList(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(DOWNLOADING_LIST_MARKER),
         contentPadding = PaddingValues(vertical = 8.dp),
     ) {
         itemsIndexed(

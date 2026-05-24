@@ -18,14 +18,15 @@
 - 2026-05-24 已将 marker 版 Baseline Profile 固化到 `app/src/main/baseline-prof.txt`，过滤 benchmark-only profile 条目后由 `devBenchmark` 构建打包进 `assets/dexopt/baseline.prof`/`baseline.profm`，并完成同设备 no-input benchmark 前后对比。
 - 2026-05-24 已继续扩展 app-internal/no-input benchmark hook：用 benchmark-only receiver、静音本地 WAV 和真实 `PlaybackService` 控制链路覆盖播放/暂停/恢复/seek，并以 1 次迭代覆盖歌词面板显示 marker。
 - 2026-05-24 已重新验证真机输入注入：`adb shell input keyevent HOME` 和 `adb shell input swipe ...` 均成功；原始输入型 `StartupAndPlayerBenchmark` 已恢复可跑，冷启动、首页点歌进播放器和修复后的首页滚动均有同设备通过证据。
+- 2026-05-24 已新增下载列表刷新 no-input benchmark：benchmark-only 内存下载 manager 预置 18 条下载中任务，通过 broadcast 推进进度并触发行级刷新；`DownloadListNoInputBenchmark.downloadingListRefreshNoInput` 已在 Redmi 真机通过。
 
 尚未完成的部分：
 
 - 真机已有有效冷启动基线、marker 版 no-input 播放器首屏基线和原始输入型首页滚动/首页点歌证据；修复后完整原始输入型 3 用例套件已全绿，仍需继续扩展更多交互型场景。
-- 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，但歌词拖拽、下载列表刷新等更细场景尚未覆盖。
+- 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，下载列表刷新也已有 no-input 初始基线，但歌词拖拽仍未覆盖。
 - 已有 marker/no-input 路径上的 Baseline Profile 固化前后对比，但尚未用更多交互型场景和优化前后多轮数据证明首页滚动、播放控制、歌词拖拽或下载列表刷新有稳定改善。
 
-因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、原始输入型首页滚动/首页点歌证据、播放控制 no-input 基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比”，但仍不能描述为“已完成系统化性能治理”。
+因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、原始输入型首页滚动/首页点歌证据、播放控制 no-input 基线、下载列表刷新 no-input 基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比”，但仍不能描述为“已完成系统化性能治理”。
 
 ## 目标定位
 
@@ -183,6 +184,41 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 - 已完成 marker 版 profile 固化、同设备前后对比和原始输入型首页滚动/首页点歌恢复验证；下一步转向下载列表刷新、歌词拖拽和更多优化前后对比。
 
+## 第七轮 下载列表刷新 no-input benchmark 记录
+
+日期：2026-05-24
+
+已完成：
+
+- 下载页 Compose 根节点和下载中/已下载列表补稳定 `testTag`，并允许 `DownloadActivity` 通过 intent extra 初始打开指定 tab。
+- 新增 benchmark-only `BenchmarkDownloadFixture`，用内存 `DownloadManager` 预置 18 条下载中任务，避免依赖真实网络下载或写入真实下载 DB。
+- 新增 benchmark-only `BenchmarkDownloadEntryActivity` 和 `BenchmarkDownloadActionReceiver`：入口负责准备下载任务并打开下载中 tab，receiver 负责推进进度、触发行级刷新，并在 benchmark 结束后清理测试下载行。
+- 新增 `DownloadListNoInputBenchmark.downloadingListRefreshNoInput`，以 3 次迭代覆盖下载中列表的进度刷新路径。
+
+验证：
+
+```bash
+./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.DownloadListNoInputBenchmark#downloadingListRefreshNoInput
+```
+
+结果：
+
+- Kotlin 编译通过。
+- `DownloadListNoInputBenchmark#downloadingListRefreshNoInput` 真机通过：1 个用例成功，耗时约 56s。
+- `frameCount` median 3；`frameDurationCpuMs` P50 11.2 ms / P90 15.4 ms / P95 15.7 ms / P99 15.9 ms；`frameOverrunMs` P50 2.9 ms / P90 8.2 ms / P95 8.3 ms / P99 8.3 ms。
+- Perfetto trace 已生成在 `macrobenchmark/build/outputs/connected_android_test_additional_output/devBenchmark/connected/25060RK16C - 16/DownloadListNoInputBenchmark_downloadingListRefreshNoInput_iter*.perfetto-trace`。
+
+边界：
+
+- 本轮是 no-input/app-internal 初始基线，覆盖的是 benchmark 内存 manager 下的 18 条下载中任务进度刷新；不等同于真实网络下载、暂停/继续/删除全链路人工冒烟。
+- 用户观察到 benchmark 结束时页面像“没下载完就闪退”；复查 logcat/crash buffer 未发现 `com.ixuea.courses.mymusic` 的 `AndroidRuntime`/`FATAL EXCEPTION`，更像测试框架收尾杀进程。为避免干扰真实下载状态，fixture 已从真实下载 DB/manager 改成 benchmark-only 内存 `DownloadManager`。
+- 后续若优化下载页，应围绕行级刷新、progress 状态持有和 `DownloadInfo` 可变对象读取路径做前后对比。
+
+下一步：
+
+- 继续补歌词拖拽 benchmark；下载列表刷新已经有初始可复测基线，后续转入优化前后对比。
+
 ## 第六轮 真机输入型 benchmark 恢复记录
 
 日期：2026-05-24
@@ -290,8 +326,8 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 下一步：
 
-- 真机 `INJECT_EVENTS` 限制已复测放行；继续补下载列表刷新、歌词拖拽和更多优化前后对比。
-- 原始输入型 benchmark 已在第六轮恢复；app-internal/no-input hook 继续作为下载列表刷新、歌词拖拽等难注入场景的补充手段。
+- 真机 `INJECT_EVENTS` 限制已复测放行；下载列表刷新已补 no-input 初始基线，继续补歌词拖拽和更多优化前后对比。
+- 原始输入型 benchmark 已在第六轮恢复；app-internal/no-input hook 继续作为歌词拖拽等难注入场景的补充手段。
 
 ## 第二阶段：播放链路稳定性
 
@@ -350,6 +386,6 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 优先级：
 
-1. 扩展下载列表刷新和歌词拖拽场景，形成更完整的可复测性能证据。
-2. 围绕“播放器首屏”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
-3. 基于已通过的播放器首屏、首页进播放器和 transport controls 场景做代码级优化，并用同一命令复测前后差异。
+1. 扩展歌词拖拽场景，形成更完整的可复测性能证据。
+2. 围绕下载列表刷新和播放器首屏查看 Perfetto trace，优先拆解行级刷新、播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
+3. 基于已通过的下载列表刷新、播放器首屏、首页进播放器和 transport controls 场景做代码级优化，并用同一命令复测前后差异。

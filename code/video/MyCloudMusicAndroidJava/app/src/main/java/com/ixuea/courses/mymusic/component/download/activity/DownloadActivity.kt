@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
 import com.ixuea.courses.mymusic.R
 import com.ixuea.courses.mymusic.activity.BaseLogicActivity
+import com.ixuea.courses.mymusic.component.download.ui.DOWNLOAD_INITIAL_TAB_EXTRA
 import com.ixuea.courses.mymusic.component.download.ui.DownloadScreen
 import com.ixuea.courses.mymusic.component.download.ui.DownloadedViewModel
 import com.ixuea.courses.mymusic.component.download.ui.DownloadingViewModel
@@ -63,6 +64,7 @@ class DownloadActivity : BaseLogicActivity() {
                             downloadingViewModel.removeAll(downloadingState.downloads)
                         }
                     },
+                    initialTab = intent.getIntExtra(DOWNLOAD_INITIAL_TAB_EXTRA, 0),
                 )
             }
         }

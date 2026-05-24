@@ -103,6 +103,7 @@
 - Marker 版 Baseline Profile 已固化到 `app/src/main/baseline-prof.txt`，并过滤掉仅存在于 `app/src/benchmark` 的 `BenchmarkPlayerEntryActivity` profile 条目；`mergeDevBenchmarkArtProfile`/`compileDevBenchmarkArtProfile` 通过，`devBenchmark` APK 已包含 `assets/dexopt/baseline.prof`/`baseline.profm`。固化后同一真机 no-input benchmark 通过，冷启动 median 302.5 ms，播放器首屏 `frameDurationCpuMs` P99 18.7 ms，`frameOverrunMs` P99 15.1 ms。
 - 播放控制 no-input 扩展已在同一真机通过：benchmark-only receiver 使用静音本地 WAV 和真实 `PlaybackService` 控制链路，覆盖 play/pause/resume/seek；`playbackTransportControlsNoInput` 3 次迭代通过，`frameDurationCpuMs` P99 11.7 ms，`frameOverrunMs` P99 8.0 ms。歌词面板 `playbackLyricPanelNoInput` 1 次覆盖通过，P99 分别为 22.8 ms / 18.5 ms，但只作为显示覆盖，不作为稳定性能结论。
 - 真机输入注入限制已在设备设置调整后复测放行：`adb shell input keyevent HOME` 和 `adb shell input swipe ...` 成功；原始输入型 `StartupAndPlayerBenchmark` 已恢复可跑，首页滚动原先暴露 `StaleObjectException`，已通过每次 fling 重新获取滚动根节点并短重试修复。修复后完整 3 用例套件在 Redmi 真机全绿，首页滚动 `frameDurationCpuMs` P99 6.4 ms / `frameOverrunMs` P99 -1.4 ms，首页点歌进播放器 `frameDurationCpuMs` P99 11.7 ms / `frameOverrunMs` P99 9.2 ms。
+- 下载列表刷新 no-input benchmark 已在同一真机通过：新增 benchmark-only 内存下载 manager/入口/receiver，预置 18 条下载中任务并通过 broadcast 推进进度触发行级刷新；`DownloadListNoInputBenchmark#downloadingListRefreshNoInput` 3 次迭代通过，`frameDurationCpuMs` P99 15.9 ms，`frameOverrunMs` P99 8.3 ms。
 
 当前尚未完成：
 
@@ -113,7 +114,7 @@
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 - 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
-- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展，以及原始输入型首页滚动/首页进播放器恢复验证；歌词拖拽、下载列表刷新和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
+- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展、原始输入型首页滚动/首页进播放器恢复验证，以及下载列表刷新 no-input 初始基线；歌词拖拽和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -123,9 +124,38 @@
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
 - 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
-- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek 和歌词面板显示，原始输入型首页滚动/首页进播放器已恢复验证；下一步继续扩展下载列表刷新、歌词拖拽和更多优化前后复测证据。
+- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek、歌词面板显示和下载列表刷新，原始输入型首页滚动/首页进播放器已恢复验证；下一步继续扩展歌词拖拽和更多优化前后复测证据。
 
 ## 最新执行记录
+
+### 2026-05-24 下载列表刷新 no-input benchmark
+
+本轮目标：
+
+- 延续性能稳定性治理主线，补齐下载列表刷新场景的第一条可复测 benchmark 证据。
+
+已完成：
+
+- `DownloadScreen` 补稳定 UI marker：下载页根节点、已下载列表和下载中列表均通过 `testTag` 暴露给 UiAutomator；`DownloadActivity` 支持通过 intent extra 初始打开下载中 tab。
+- 新增 benchmark-only `BenchmarkDownloadFixture`，用内存 `DownloadManager` 预置 18 条下载中任务，避免 benchmark 依赖真实网络下载或写入真实下载 DB。
+- 新增 benchmark-only `BenchmarkDownloadEntryActivity` 和 `BenchmarkDownloadActionReceiver`：入口负责准备 fixture 并打开下载页，receiver 负责推进进度、触发行级刷新，并在 benchmark 结束后清理测试下载行。
+- 新增 `DownloadListNoInputBenchmark.downloadingListRefreshNoInput`，以 3 次迭代覆盖下载中列表进度刷新路径。
+
+验证：
+
+- `./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- `ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.DownloadListNoInputBenchmark#downloadingListRefreshNoInput` 通过：1 个用例成功，耗时约 56s。
+- 下载列表刷新：`frameCount` median 3；`frameDurationCpuMs` P50 11.2 ms / P90 15.4 ms / P95 15.7 ms / P99 15.9 ms；`frameOverrunMs` P50 2.9 ms / P90 8.2 ms / P95 8.3 ms / P99 8.3 ms。
+
+边界：
+
+- 本轮覆盖的是 no-input/app-internal 内存 manager 下的下载中列表进度刷新，不等同于真实网络下载、暂停/继续/删除全链路人工冒烟。
+- 用户观察到 benchmark 结束时页面像“没下载完就闪退”；复查 logcat/crash buffer 未发现 `com.ixuea.courses.mymusic` 的 `AndroidRuntime`/`FATAL EXCEPTION`，更像测试框架收尾杀进程。为避免干扰真实下载状态，fixture 已从真实下载 DB/manager 改成 benchmark-only 内存 `DownloadManager`。
+- 后续若做下载页优化，应使用本用例做优化前后对比。
+
+后续：
+
+- 继续补歌词拖拽 benchmark；下载列表刷新已经有初始可复测基线，后续进入 trace 分析和优化前后对比。
 
 ### 2026-05-24 真机输入型 benchmark 恢复
 
