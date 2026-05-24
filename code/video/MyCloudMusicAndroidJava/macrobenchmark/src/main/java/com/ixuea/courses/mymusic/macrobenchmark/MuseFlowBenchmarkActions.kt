@@ -1,5 +1,6 @@
 package com.ixuea.courses.mymusic.macrobenchmark
 
+import android.content.Intent
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -8,6 +9,9 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 
 internal const val TARGET_PACKAGE = "com.ixuea.courses.mymusic"
+private const val MAIN_ACTIVITY = "$TARGET_PACKAGE.MainActivity"
+private const val BENCHMARK_PLAYER_ENTRY_ACTIVITY = "$TARGET_PACKAGE.benchmark.BenchmarkPlayerEntryActivity"
+private const val PLAYER_SCREEN_MARKER = "MuseFlowMusicPlayerScreen"
 
 internal fun MacrobenchmarkScope.waitForHome() {
     check(device.wait(Until.hasObject(By.pkg(TARGET_PACKAGE)), 5_000)) {
@@ -44,8 +48,28 @@ internal fun MacrobenchmarkScope.openPlayerFromHome() {
     checkNotNull(candidate) {
         "Home song/player entry was not found."
     }.click()
+    waitForPlayerScreen()
+}
+
+internal fun MacrobenchmarkScope.startHomeWithoutInput() {
+    startActivityAndWait(
+        Intent().setClassName(TARGET_PACKAGE, MAIN_ACTIVITY),
+    )
+    waitForHome()
+}
+
+internal fun MacrobenchmarkScope.openPlayerFromBenchmarkEntryWithoutInput() {
+    startActivityAndWait(
+        Intent().setClassName(TARGET_PACKAGE, BENCHMARK_PLAYER_ENTRY_ACTIVITY),
+    )
+    waitForPlayerScreen()
+}
+
+internal fun MacrobenchmarkScope.waitForPlayerScreen() {
+    check(device.wait(Until.hasObject(By.res(PLAYER_SCREEN_MARKER)), 5_000)) {
+        "Music player screen marker did not appear."
+    }
     device.waitForIdle()
-    device.wait(Until.hasObject(By.pkg(TARGET_PACKAGE)), 3_000)
 }
 
 private fun UiDevice.findScrollableRoot(): UiObject2? {

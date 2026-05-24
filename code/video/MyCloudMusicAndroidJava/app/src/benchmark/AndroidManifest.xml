@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".benchmark.BenchmarkPlayerEntryActivity"
+            android:exported="true"
+            android:theme="@style/SuperUI.NoActionBar.Light" />
+    </application>
+</manifest>

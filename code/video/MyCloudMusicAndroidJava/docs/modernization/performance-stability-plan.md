@@ -13,15 +13,17 @@
 - 部分列表已经使用稳定 key；播放器背景已经按 API 31+ `RenderEffect` 和低版本 Glide blur fallback 做过分层处理。
 - 2026-05-24 已新增 `:macrobenchmark` 模块、`benchmark` build type、启动/首页滚动/首页进播放器 Macrobenchmark 用例和 Baseline Profile 生成用例。
 - 2026-05-24 已在 API 36 模拟器上跑通第一轮性能基线和 Baseline Profile 生成，具体数据见下方“第一轮基线记录”。
+- 2026-05-24 已在 Redmi `25060RK16C` 真机上取得有效冷启动基线；此前 no-input “打开播放器”结果只证明触发过 action/包仍可见，未证明播放器页面可见，已更正为无效记录。
+- 2026-05-24 已给播放器 Compose 根节点补稳定 UI marker，并新增 benchmark-only 入口显式准备播放队列后打开真实 `MusicPlayerActivity`；marker 版 no-input 播放器 benchmark 和 Baseline Profile 生成已在 Redmi 真机通过。
 
 尚未完成的部分：
 
-- 尚未在真机上形成可代表用户设备的性能基线。
-- Baseline Profile 目前只是 generator 跑通并生成临时产物，尚未把真机确认后的 profile 固化到 app source set。
+- 真机已有有效冷启动基线和 marker 版 no-input 播放器首屏基线，但原始滚动/点击版用例被当前真机系统的 `INJECT_EVENTS` 权限限制拦截，尚未形成完整交互型真机基线。
+- Baseline Profile 已经在 marker 版真机 no-input 路径上生成 23,799 行产物，但尚未固化到 app source set，也尚未复测 profile 固化前后差异。
 - 尚未覆盖播放页播放/暂停、seek、歌词页拖拽、下载列表刷新等更细场景。
 - 尚未用优化前后对比数据证明 jank、启动耗时、帧耗时或核心页面首帧有改善。
 
-因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路并完成第一轮模拟器基线”，但仍不能描述为“已完成系统化性能治理”。
+因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，并完成模拟器基线、真机冷启动基线和可信播放器首屏基线”，但仍不能描述为“已完成系统化性能治理”。
 
 ## 目标定位
 
@@ -100,6 +102,86 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :macrobenchmark:connectedDevBenchmarkAndr
 - 首页进入播放器是当前最明显的性能热点，可能与播放器首屏 Compose 组合、背景图/高斯加载、黑胶 View 初始化、歌词 View 初始化和播放状态同步有关。
 - 冷启动已有可复测数字，但只代表 API 36 模拟器的首轮基线；是否需要优化要等真机和 release-like 环境复测后判断。
 
+## 第二轮真机冷启动与 no-input 纠偏记录
+
+日期：2026-05-24
+
+环境：
+
+- 设备：`adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp`
+- 型号：Redmi `25060RK16C`
+- 系统：Android 16 / API 36
+- 设备代号：`dali`
+- 构建指纹：`Redmi/dali/dali:16/BP2A.250605.031.A3/OS3.0.301.0.WONCNXM:user/release-keys`
+- CPU：8 cores，最高频率 3.73 GHz
+- 内存：约 16 GB
+- 构建：`:app` 的 `devBenchmark`，`:macrobenchmark` 的 `devBenchmark`
+
+已跑命令：
+
+```bash
+./gradlew :macrobenchmark:compileDevBenchmarkKotlin
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerNoInputBenchmark
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.BaselineProfileNoInputGenerator
+```
+
+结果：
+
+- `:macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- 原始 `StartupAndPlayerBenchmark` 在真机上执行到 3 个用例中的冷启动，冷启动 `timeToInitialDisplayMs` 为 min 296.8 ms / median 320.1 ms / max 359.6 ms；首页滚动和首页点歌两个输入型用例失败，错误为 `SecurityException: Injecting input events requires ... INJECT_EVENTS permission`。
+- 进一步验证 `adb shell input keyevent HOME` 也被同一真机系统策略拦截，因此为真机补充了无输入注入用例。
+- `StartupAndPlayerNoInputBenchmark.coldStartupNoInput` 通过，得到有效真机冷启动数据。
+- `StartupAndPlayerNoInputBenchmark.openPlayerViaMainActionNoInput` 当时通过，耗时约 1m28s，但后续复盘发现成功条件只等待 `TARGET_PACKAGE` 可见，未等待当前页面为 `MusicPlayerActivity`，也未等待播放器控件或稳定 UI marker，因此该用例结果不能作为“播放器页面已打开”或“播放器首屏性能”证据。
+- `BaselineProfileNoInputGenerator.generateNoInput` 当时通过并生成约 21,418 行 profile，但它同样依赖上述不充分的播放器 action 判定；该产物只能作为临时误差记录，不能固化到 app source set。
+
+关键指标：
+
+| 场景 | 指标 | 真机 no-input 结果 |
+| --- | --- | --- |
+| 冷启动 | `timeToInitialDisplayMs` | min 299.6 ms / median 318.3 ms / max 326.4 ms |
+| no-input 播放器 action | `frameDurationCpuMs` | 无效记录：P99 24.5 ms，但未证明播放器页面可见 |
+| no-input 播放器 action | `frameOverrunMs` | 无效记录：P99 22.3 ms，但未证明播放器页面可见 |
+
+初步判断：
+
+- 真机冷启动明显好于模拟器首轮基线，当前不应把冷启动当作首要优化对象。
+- 此轮没有形成可信的真机播放器页面首屏数据；之前的 no-input 播放器 action 指标不能用于判断播放器是否流畅。
+- 当前设备安全策略会阻断 UiAutomator/adb input 的点击滚动用例；后续要么在真机开发者选项里允许 USB 输入模拟后复跑原始用例，要么继续扩展 app-internal/no-input benchmark hook，并必须等待 `MusicPlayerActivity` 可见或播放器 UI marker 出现，才能记录播放器相关指标。
+
+## 第三轮播放器 UI marker 修正记录
+
+日期：2026-05-24
+
+已完成：
+
+- `MusicPlayerScreen` 根节点新增稳定 `testTag` marker：`MuseFlowMusicPlayerScreen`，并通过 `testTagsAsResourceId` 暴露给 UiAutomator。
+- 原始首页点击进播放器用例点击后也等待播放器 marker，不再接受只等待 `TARGET_PACKAGE` 可见的成功条件。
+- 新增 benchmark build type 专用 `BenchmarkPlayerEntryActivity`，用于准备一条 benchmark 播放队列并打开真实 `MusicPlayerActivity`。
+- `StartupAndPlayerNoInputBenchmark.openPlayerViaBenchmarkEntryNoInput` 和 `BaselineProfileNoInputGenerator.generateNoInput` 同步走 benchmark-only 入口并等待 marker，避免再次固化未进入播放器页的 profile。
+
+验证：
+
+```bash
+./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerNoInputBenchmark
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.BaselineProfileNoInputGenerator
+```
+
+结果：
+
+- 编译通过。
+- `StartupAndPlayerNoInputBenchmark` 真机通过：2 个用例全部成功。
+- `coldStartupNoInput`：`timeToInitialDisplayMs` min 307.7 ms / median 329.2 ms / max 382.5 ms。
+- `openPlayerViaBenchmarkEntryNoInput`：`frameCount` median 37；`frameDurationCpuMs` P50 3.1 ms / P90 4.5 ms / P95 5.3 ms / P99 26.9 ms；`frameOverrunMs` P50 -3.5 ms / P90 -1.3 ms / P95 -0.2 ms / P99 27.1 ms。
+- 手动 `uiautomator dump` 已确认当前播放器页存在 `resource-id="MuseFlowMusicPlayerScreen"`；手动 `am start -W -n com.ixuea.courses.mymusic/.benchmark.BenchmarkPlayerEntryActivity` 最终打开 `MusicPlayerActivity`，`TotalTime` 314 ms。
+- `BaselineProfileNoInputGenerator.generateNoInput` 真机通过，生成 profile 23,799 行；产物位于 `macrobenchmark/build/outputs/connected_android_test_additional_output/devBenchmark/connected/25060RK16C - 16/BaselineProfileNoInputGenerator_generateNoInput-baseline-prof.txt`。
+
+下一步：
+
+- 暂不直接固化 profile；下一步应确认 app source set 的 baseline profile 放置位置，再复制产物并做固化前后 benchmark 对比。
+- 真机原始输入型首页滚动/首页点歌仍被 `INJECT_EVENTS` 限制，后续继续作为设备策略问题单独处理。
+
 ## 第二阶段：播放链路稳定性
 
 范围：
@@ -157,7 +239,7 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :macrobenchmark:connectedDevBenchmarkAndr
 
 优先级：
 
-1. 在真机上复跑 `StartupAndPlayerBenchmark` 和 `BaselineProfileGenerator`，确认模拟器数据是否有代表性。
-2. 围绕“首页进播放器”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
-3. 只在真机确认后固化 Baseline Profile 到 app source set，并复测 profile 前后启动/进播放器数据。
+1. 确认 AGP 8.5.2 下 app source set 的 Baseline Profile 放置位置，固化 marker 版 profile 后复测冷启动/播放器入口前后差异。
+2. 处理当前真机 `INJECT_EVENTS` 限制：优先复跑原始输入型 benchmark；如设备仍不放行，就继续扩展 no-input/app-internal 替代场景。
+3. 围绕“首页进播放器”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
 4. 扩展播放页播放/暂停、seek、歌词页拖拽和下载列表刷新场景，再做代码级优化。

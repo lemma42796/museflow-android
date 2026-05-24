@@ -19,11 +19,15 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,6 +38,9 @@ import com.ixuea.courses.mymusic.component.player.view.RecordPageView
 import com.ixuea.courses.mymusic.util.PlayListUtil
 import com.ixuea.courses.mymusic.util.SuperDateUtil
 
+private const val MUSIC_PLAYER_SCREEN_MARKER = "MuseFlowMusicPlayerScreen"
+
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MusicPlayerScreen(
     title: String,
@@ -57,7 +64,12 @@ fun MusicPlayerScreen(
     onRecordReady: (RecordPageView) -> Unit,
     onLyricReady: (LyricListView) -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTagsAsResourceId = true }
+            .testTag(MUSIC_PLAYER_SCREEN_MARKER),
+    ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
