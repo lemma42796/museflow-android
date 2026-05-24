@@ -1,13 +1,9 @@
 package com.ixuea.courses.mymusic.component.lyric.adapter
 
-import android.content.Context
 import android.graphics.Color
-import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.annotation.AttrRes
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
@@ -65,15 +61,16 @@ class LyricAdapter : BaseQuickAdapter<Any, BaseViewHolder>(0) {
         val context = parent.context
         val contentView = LyricLineView(context).apply {
             id = R.id.content
-            setLyricTextColor(resolveColorAttr(context, R.attr.colorLightWhite))
-            setLyricSelectedTextColor(ContextCompat.getColor(context, R.color.primary))
+            setLyricTextColor(Color.argb(210, 255, 255, 255))
+            setLyricSelectedTextColor(Color.rgb(50, 244, 218))
+            setLyricSelectedBackgroundColor(Color.argb(42, 255, 255, 255))
             setLyricTextSize(context.resources.getDimensionPixelSize(R.dimen.text_large))
         }
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = RecyclerView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                context.resources.getDimensionPixelSize(R.dimen.d40),
+                context.resources.getDimensionPixelSize(R.dimen.d54),
             )
             addView(
                 contentView,
@@ -82,19 +79,6 @@ class LyricAdapter : BaseQuickAdapter<Any, BaseViewHolder>(0) {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 ),
             )
-        }
-    }
-
-    private fun resolveColorAttr(context: Context, @AttrRes attr: Int): Int {
-        val typedValue = TypedValue()
-        val resolved = context.theme.resolveAttribute(attr, typedValue, true)
-        if (!resolved) {
-            return Color.WHITE
-        }
-        return if (typedValue.resourceId != 0) {
-            ContextCompat.getColor(context, typedValue.resourceId)
-        } else {
-            typedValue.data
         }
     }
 }

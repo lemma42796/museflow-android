@@ -120,6 +120,60 @@
 
 ## 最新执行记录
 
+### 2026-05-24 歌词显示美化
+
+本轮目标：
+
+- 用户截图指出歌词页当前显示偏朴素，希望歌词视觉更精致。
+
+已完成：
+
+- `LyricLineView` 将当前行从原红色文字改为青绿色强调，并增加半透明圆角底、柔和文字阴影和选中态加粗，让亮色高斯背景上仍保持可读。
+- `LyricAdapter` 将歌词行高从 `d40` 调整到 `d54`，普通歌词改为半透明白色，当前行使用更贴近播放器进度色的青绿色。
+- `LyricListView` 同步使用新的行高计算居中偏移，关闭列表 overscroll，并把拖拽播放条改为浅色玻璃底和青绿色分隔线。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 1s`。
+- 已安装到 API 36 模拟器，强停后从首页 `Yesterday` 进入 `MusicPlayerActivity` 并切到歌词页，截图确认当前行圆角高亮、行距和背景可读性生效；最近 `AndroidRuntime:E` fatal 日志为空。
+
+### 2026-05-24 歌曲亮色封面替换
+
+本轮目标：
+
+- 用户要求把当前歌曲背景图换成更好看的亮色系图片。
+
+已完成：
+
+- 使用内置 imagegen 生成一张亮色抽象音乐封面，风格为浅色珍珠渐变、青绿/天蓝/淡紫音浪，无文字和品牌元素。
+- 新增 `discovery_song_cover_bright_1.png` 作为推荐单曲第一首的亮色封面，并把 `DiscoveryVisualAssets` 的歌曲封面池改为独立列表；这样 `Yesterday` 会使用新的资源名，避免继续命中旧 `android.resource://.../discovery_cover_android16_4` 的 Glide 磁盘缓存。
+- 修正 `MusicPlayerActivity.loadBackground(...)` 对 `android.resource://`、`content://`、`file://`、`http(s)://` 这类直接图片 URI 的处理，播放器背景不再把本地资源 URI 拼成远程资源地址。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 5s`。
+- 已安装到 API 36 模拟器，强停后从首页 `Yesterday` 入口重新点歌进入 `MusicPlayerActivity`，截图确认唱片中心和全屏高斯背景都切到亮色封面；最近 `AndroidRuntime:E` fatal 日志为空。
+
+### 2026-05-24 播放页高斯背景修正
+
+本轮目标：
+
+- 用户截图指出播放器页面的封面高斯模糊感像是消失了。
+
+已完成：
+
+- 确认播放器 Compose 迁移后仍保留 Glide `BlurTransformation` 封面背景，问题主要来自统一黑色遮罩和当前波纹封面让毛玻璃感变弱。
+- `MusicPlayerActivity` 将播放器背景模糊升级为双路径：API 31+ 加载原始封面后对背景 `ImageView` 应用平台 `RenderEffect.createBlurEffect(...)`；API 23-30 继续使用 Glide `BlurTransformation(25, 6)` 作为兼容 fallback。
+- `MusicPlayerScreen` 将统一 `35%` 黑色遮罩改为顶部/底部保护文字、中间更通透的 scrim，让黑胶中部能重新透出高斯封面层。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 4s`。
+- 已安装到 API 36 模拟器，从首页小播放条进入 `MusicPlayerActivity`，截图确认播放器背景走新模糊视觉且控制区可读；最近 `AndroidRuntime:E` fatal 日志为空。
+
 ### 2026-05-24 首页顶部栏删除
 
 本轮目标：
@@ -3608,6 +3662,8 @@ GitHub 发布策略：
 
 当前最新切片：
 
+- 播放页视觉链路完成一轮用户驱动 polish：推荐单曲 `Yesterday` 换成亮色抽象封面；播放器背景在 API 31+ 使用 `RenderEffect.createBlurEffect(...)` 做平台高斯模糊，API 23-30 保留 Glide `BlurTransformation` fallback；歌词页当前行改为青绿色圆角高亮、柔和阴影和更舒展行距。
+- `MusicPlayerActivity.loadBackground(...)` 已支持直接图片 URI（`android.resource://`、`content://`、`file://`、`http(s)://`），避免本地资源封面被误拼成远程资源地址；`DiscoveryVisualAssets` 为推荐单曲拆出独立封面池，避免旧封面资源名继续命中 Glide 磁盘缓存。
 - 桌面 Widget 已从最后一个 RemoteViews layout 迁到 Jetpack Glance：`MusicWidget` 改为 `GlanceAppWidgetReceiver` + Compose-style 内容，`WidgetUtil` 继续保留旧静态入口，`MusicWidgetStore` 持久化标题、进度、播放/歌词状态和封面，`app/src/main/res/layout/music_widget.xml` 已删除。
 - 本地未跟踪的 `docs/modernization/course-trace-cleanup-task.md` 继续作为图片生成任务说明；该文件不要 `git add`，不要 push。
 - `MainActivity` 已从 public-slim 占位页改回可用 Compose 主入口：底部导航包含发现、音乐、动态、消息和下载；发现/动态通过 Fragment host 承载已迁好的 Compose Fragment；小播放控件重新出现在首页底部；音乐、消息、下载和发布入口通过现有 Activity 打开。
@@ -3639,19 +3695,20 @@ GitHub 发布策略：
 
 - `git diff --check` 通过。
 - `./gradlew :app:assembleDevDebug` 通过。
+- 2026-05-24 播放页视觉链路已安装到 API 36 模拟器验证：从首页 `Yesterday` 进入 `MusicPlayerActivity`，确认亮色封面、高斯背景和歌词页圆角高亮生效；最近 `AndroidRuntime:E` fatal 日志为空。
 - 修复后已安装到 `emulator-5554` 并启动 `com.ixuea.courses.mymusic/.MainActivity`，`am start -W` 返回 `Status: ok`，随后 `pidof com.ixuea.courses.mymusic` 返回进程号，未出现启动后立刻崩溃。
 - 最新构建中 Kotlin 编译无 warning；剩余提示为既有 Hilt kapt 选项提示。
 - `rg` 扫描确认 app 源码/Gradle 中已无 EventBus、普通 Rx/RxJava、`HttpObserver`、`AsyncTask`、AutoDispose、BGABadge、旧 `FragmentStatePagerAdapter`、DropDownMenu、旧 `music_widget` layout 引用、`RemoteViews` 或 `AppWidgetProvider` 入口。
 - `find app/src/main/java -name '*.java' | wc -l` 输出 `0`；`rg --files app/src/main/res/layout` 无输出。
 - `@Composable` / `setContent` 扫描确认 Compose 已进入主启动入口、下载管理、会话列表、动态发布、评论页、歌单详情、发现页、动态列表、聊天详情、本地音乐、本地音乐扫描、自定义发现排序、选择歌词和 Jetpack Glance Widget。
-- 本轮未做设备端人工冒烟。
+- 本轮设备端冒烟只覆盖播放器视觉链路；播放控制、通知、Widget、桌面歌词、聊天/动态/下载/本地音乐等深度链路仍未复测。
 
 恢复步骤：
 
 - 先看 `git status --short` 和本节内容，确认是否有新会话产生的额外改动。
 - 纯编码收口已到当前项目可交付状态；下一会话不要继续按“清 Java/XML 数量”找任务。
-- 当前图片/图标资产已经生成并替换；下一步优先做首页真实可用性冒烟：发现页加载/滚动/点歌进入播放器、底部小播放控件、音乐 tab 打开本地音乐/扫描、动态 tab 发布入口、消息 tab、下载 tab。
-- 随后继续播放链路（播放/暂停、上一首/下一首、多歌曲队列、进度/歌词、后台通知）、Widget/桌面歌词、聊天发送/收消息、动态多图压缩上传、下载任务暂停/继续/删除、本地音乐真实扫描。
+- 当前播放器视觉问题已经修过并在模拟器确认；下一步优先做首页真实可用性冒烟：发现页加载/滚动/点歌进入播放器、底部小播放控件、音乐 tab 打开本地音乐/扫描、动态 tab 发布入口、消息 tab、下载 tab。
+- 随后继续播放链路（播放/暂停、上一首/下一首、多歌曲队列、seek/歌词、后台通知）、Widget/桌面歌词、聊天发送/收消息、动态多图压缩上传、下载任务暂停/继续/删除、本地音乐真实扫描。
 - 冒烟发现问题后，再按具体链路做小修；如果无问题，再评估既有 Hilt kapt 选项提示或后续 `core:*` / `feature:*` 模块拆分。
 - 每个切片继续保持 `./gradlew :app:assembleDevDebug` 和 `git diff --check` 可过；不主动做模拟器/真机冒烟，除非用户重新要求。
 

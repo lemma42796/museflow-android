@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -70,7 +71,7 @@ fun MusicPlayerScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.35f)),
+                .background(PlayerBackgroundScrim),
         )
 
         Column(
@@ -134,6 +135,14 @@ fun MusicPlayerScreen(
         }
     }
 }
+
+private val PlayerBackgroundScrim = Brush.verticalGradient(
+    colorStops = arrayOf(
+        0.0f to Color.Black.copy(alpha = 0.28f),
+        0.42f to Color.Black.copy(alpha = 0.12f),
+        1.0f to Color.Black.copy(alpha = 0.52f),
+    ),
+)
 
 @Composable
 private fun MusicPlayerTopBar(

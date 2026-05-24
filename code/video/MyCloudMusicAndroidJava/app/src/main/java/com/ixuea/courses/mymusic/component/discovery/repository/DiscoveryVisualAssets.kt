@@ -19,6 +19,15 @@ internal object DiscoveryVisualAssets {
         localDrawableUri("discovery_cover_android16_6"),
     )
 
+    private val songCoverImages = listOf(
+        localDrawableUri("discovery_song_cover_bright_1"),
+        localDrawableUri("discovery_cover_android16_5"),
+        localDrawableUri("discovery_cover_android16_6"),
+        localDrawableUri("discovery_cover_android16_1"),
+        localDrawableUri("discovery_cover_android16_2"),
+        localDrawableUri("discovery_cover_android16_3"),
+    )
+
     fun applyTo(
         ads: MutableList<Ad>,
         sheets: MutableList<Sheet>,
@@ -31,7 +40,7 @@ internal object DiscoveryVisualAssets {
             sheet.icon = coverImages[index % coverImages.size]
         }
         songs.forEachIndexed { index, song ->
-            song.icon = coverImages[(index + 3) % coverImages.size]
+            song.icon = songCoverImages[index % songCoverImages.size]
         }
     }
 

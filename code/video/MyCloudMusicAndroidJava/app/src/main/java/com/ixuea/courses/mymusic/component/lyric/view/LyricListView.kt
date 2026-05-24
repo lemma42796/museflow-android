@@ -3,6 +3,7 @@ package com.ixuea.courses.mymusic.component.lyric.view
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
@@ -12,9 +13,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.AttrRes
 import androidx.annotation.DimenRes
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ixuea.courses.mymusic.R
@@ -25,7 +24,6 @@ import com.ixuea.courses.mymusic.playback.PlaybackService
 import com.ixuea.courses.mymusic.util.Constant
 import com.ixuea.courses.mymusic.util.LyricUtil
 import com.ixuea.courses.mymusic.util.SuperDateUtil
-import com.ixuea.superui.util.DensityUtil
 import com.ixuea.superui.util.SuperViewUtil
 import timber.log.Timber
 import java.util.Timer
@@ -56,6 +54,8 @@ class LyricListView @JvmOverloads constructor(
     private var lyricTimer: Timer? = null
     private var scrollSelectedLyricLine: Line? = null
     private var lyricListListener: LyricListListener? = null
+    private val lyricRowHeight: Int
+        get() = dimenPx(R.dimen.d54)
 
     init {
         buildLayout()
@@ -186,6 +186,8 @@ class LyricListView @JvmOverloads constructor(
 
     private fun initViews() {
         lyricList.setHasFixedSize(true)
+        lyricList.overScrollMode = View.OVER_SCROLL_NEVER
+        lyricList.clipToPadding = false
         layoutManager = LinearLayoutManager(context)
         lyricList.layoutManager = layoutManager
     }
@@ -201,9 +203,9 @@ class LyricListView @JvmOverloads constructor(
             return
         }
 
-        lyricOffsetY = (measuredHeight / 2 - (DensityUtil.dip2px(context, 40f) / 2)).toInt()
+        lyricOffsetY = measuredHeight / 2 - lyricRowHeight / 2
         lyricPlaceholderSize = ceil(
-            measuredHeight / 1.0 / 2 / DensityUtil.dip2px(context, 40f),
+            measuredHeight / 1.0 / 2 / lyricRowHeight,
         ).toInt()
 
         next()
@@ -293,7 +295,8 @@ class LyricListView @JvmOverloads constructor(
             LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT),
         )
 
-        val lightWhite = resolveColorAttr(R.attr.colorLightWhite)
+        val lightWhite = Color.WHITE
+        val accent = Color.rgb(50, 244, 218)
         val dragButtonSize = dimenPx(R.dimen.d40)
         val dragButtonPadding = dimenPx(R.dimen.d10)
         lyricPlay.apply {
@@ -301,17 +304,26 @@ class LyricListView @JvmOverloads constructor(
             setPadding(dragButtonPadding, dragButtonPadding, dragButtonPadding, dragButtonPadding)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             setImageResource(R.drawable.play)
-            imageTintList = ColorStateList.valueOf(lightWhite)
+            imageTintList = ColorStateList.valueOf(accent)
         }
 
         lyricTime.setTextColor(lightWhite)
+        lyricTime.setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_small))
+        lyricTime.alpha = 0.9f
 
         lyricDragContainer.apply {
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
             visibility = View.GONE
+            background = roundedBackground(Color.argb(32, 255, 255, 255), dimenPx(R.dimen.d20).toFloat())
+            setPadding(
+                dimenPx(R.dimen.d4),
+                dimenPx(R.dimen.d4),
+                dimenPx(R.dimen.d10),
+                dimenPx(R.dimen.d4),
+            )
             addView(lyricPlay, LinearLayout.LayoutParams(dragButtonSize, dragButtonSize))
-            addView(createDragDivider(lightWhite))
+            addView(createDragDivider(Color.argb(190, 50, 244, 218)))
             addView(
                 lyricTime,
                 LinearLayout.LayoutParams(
@@ -346,22 +358,15 @@ class LyricListView @JvmOverloads constructor(
         }
     }
 
-    private fun dimenPx(@DimenRes resId: Int): Int {
-        return resources.getDimensionPixelSize(resId)
+    private fun roundedBackground(color: Int, radius: Float): GradientDrawable {
+        return GradientDrawable().apply {
+            setColor(color)
+            cornerRadius = radius
+        }
     }
 
-    private fun resolveColorAttr(@AttrRes attr: Int): Int {
-        val typedValue = TypedValue()
-        val resolved = context.theme.resolveAttribute(attr, typedValue, true)
-        if (!resolved) {
-            return Color.WHITE
-        }
-
-        return if (typedValue.resourceId != 0) {
-            ContextCompat.getColor(context, typedValue.resourceId)
-        } else {
-            typedValue.data
-        }
+    private fun dimenPx(@DimenRes resId: Int): Int {
+        return resources.getDimensionPixelSize(resId)
     }
 
     /**

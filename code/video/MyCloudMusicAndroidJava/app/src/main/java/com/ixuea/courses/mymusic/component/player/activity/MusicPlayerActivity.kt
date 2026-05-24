@@ -1,7 +1,10 @@
 package com.ixuea.courses.mymusic.component.player.activity
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.compose.setContent
@@ -465,16 +468,23 @@ class MusicPlayerActivity :
     private fun loadBackground(data: Song) {
         val targetView = backgroundView ?: return
         loadedBackgroundSongId = data.id
+        val icon = data.icon.orEmpty()
         val requestBuilder: RequestBuilder<Drawable> = Glide.with(this).asDrawable()
-        if (StringUtils.isBlank(data.icon)) {
+        if (StringUtils.isBlank(icon)) {
             requestBuilder.load(R.drawable.default_cover)
+        } else if (icon.isDirectImageUri()) {
+            requestBuilder.load(icon)
         } else {
-            requestBuilder.load(ResourceUtil.resourceUri(data.icon))
+            requestBuilder.load(ResourceUtil.resourceUri(icon))
         }
 
-        val options = bitmapTransform(BlurTransformation(25, 3))
-        requestBuilder
-            .apply(options)
+        val backgroundRequest = if (targetView.applyPlatformBlurIfSupported()) {
+            requestBuilder
+        } else {
+            requestBuilder.apply(bitmapTransform(BlurTransformation(BITMAP_BLUR_RADIUS, BITMAP_BLUR_SAMPLING)))
+        }
+
+        backgroundRequest
             .into(object : CustomTarget<Drawable>() {
                 override fun onResourceReady(
                     resource: Drawable,
@@ -491,6 +501,30 @@ class MusicPlayerActivity :
                 override fun onLoadCleared(placeholder: Drawable?) {
                 }
             })
+    }
+
+    private fun ImageView.applyPlatformBlurIfSupported(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return false
+        }
+
+        val radiusPx = resources.displayMetrics.density * PLATFORM_BLUR_RADIUS_DP
+        setRenderEffect(
+            RenderEffect.createBlurEffect(
+                radiusPx,
+                radiusPx,
+                Shader.TileMode.CLAMP
+            )
+        )
+        return true
+    }
+
+    private fun String.isDirectImageUri(): Boolean {
+        return startsWith("http://") ||
+            startsWith("https://") ||
+            startsWith("android.resource://") ||
+            startsWith("content://") ||
+            startsWith("file://")
     }
 
     private fun currentSong(): Song? {
@@ -567,5 +601,11 @@ class MusicPlayerActivity :
         view.setLyricListListener(this)
         view.setData(lyricData)
         view.setProgress(playbackProgress)
+    }
+
+    companion object {
+        private const val BITMAP_BLUR_RADIUS = 25
+        private const val BITMAP_BLUR_SAMPLING = 6
+        private const val PLATFORM_BLUR_RADIUS_DP = 22F
     }
 }

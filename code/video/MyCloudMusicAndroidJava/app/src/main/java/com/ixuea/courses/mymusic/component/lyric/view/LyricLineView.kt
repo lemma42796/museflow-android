@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.ixuea.courses.mymusic.R
@@ -25,11 +26,14 @@ class LyricLineView @JvmOverloads constructor(
     private var data: Line? = null
     private val backgroundTextPaint = Paint()
     private val foregroundTextPaint = Paint()
+    private val selectedBackgroundPaint = Paint()
     private val fontMetrics = Paint.FontMetrics()
+    private val selectedBackgroundBounds = RectF()
 
     private var lyricTextColor: Int = DEFAULT_LYRIC_TEXT_COLOR
     private var lyricTextSize: Int = DensityUtil.dip2px(context, DEFAULT_LYRIC_TEXT_SIZE).toInt()
     private var lyricSelectedTextColor: Int = DEFAULT_LYRIC_SELECTED_TEXT_COLOR
+    private var lyricSelectedBackgroundColor: Int = DEFAULT_SELECTED_BACKGROUND_COLOR
     private var lineSelected: Boolean = false
     private var accurate: Boolean = false
     private var lyricCurrentWordIndex: Int = 0
@@ -64,6 +68,11 @@ class LyricLineView @JvmOverloads constructor(
         foregroundTextPaint.isDither = true
         foregroundTextPaint.isAntiAlias = true
 
+        selectedBackgroundPaint.isDither = true
+        selectedBackgroundPaint.isAntiAlias = true
+        selectedBackgroundPaint.color = lyricSelectedBackgroundColor
+
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
         updateTextColor()
         updateTextSize()
     }
@@ -87,6 +96,10 @@ class LyricLineView @JvmOverloads constructor(
         backgroundTextPaint.getFontMetrics(fontMetrics)
         val centerY = (measuredHeight - textHeight) / 2 + kotlin.math.abs(fontMetrics.top)
 
+        if (lineSelected) {
+            drawSelectedBackground(canvas, centerX, textWidth)
+        }
+
         canvas.drawText(text, centerX, centerY, backgroundTextPaint)
 
         if (lineSelected) {
@@ -96,6 +109,27 @@ class LyricLineView @JvmOverloads constructor(
             }
             canvas.drawText(text, centerX, centerY, foregroundTextPaint)
         }
+    }
+
+    private fun drawSelectedBackground(canvas: Canvas, centerX: Float, textWidth: Float) {
+        val horizontalPadding = dp(24f)
+        val verticalPadding = dp(9f)
+        val backgroundWidth = (textWidth + horizontalPadding * 2)
+            .coerceAtMost(measuredWidth - dp(32f))
+        val left = (centerX - horizontalPadding)
+            .coerceAtLeast(dp(16f))
+            .coerceAtMost(measuredWidth - backgroundWidth - dp(16f))
+        val top = ((measuredHeight - lyricTextSize) / 2f - verticalPadding)
+            .coerceAtLeast(dp(4f))
+        val bottom = ((measuredHeight + lyricTextSize) / 2f + verticalPadding)
+            .coerceAtMost(measuredHeight - dp(4f))
+        selectedBackgroundBounds.set(left, top, left + backgroundWidth, bottom)
+        canvas.drawRoundRect(
+            selectedBackgroundBounds,
+            selectedBackgroundBounds.height() / 2f,
+            selectedBackgroundBounds.height() / 2f,
+            selectedBackgroundPaint,
+        )
     }
 
     private fun resolvePlayedWidth(line: Line, textWidth: Float): Float {
@@ -154,6 +188,11 @@ class LyricLineView @JvmOverloads constructor(
 
     fun setLineSelected(lineSelected: Boolean) {
         this.lineSelected = lineSelected
+        backgroundTextPaint.isFakeBoldText = lineSelected
+        foregroundTextPaint.isFakeBoldText = lineSelected
+        backgroundTextPaint.alpha = if (lineSelected) SELECTED_TEXT_ALPHA else NORMAL_TEXT_ALPHA
+        foregroundTextPaint.alpha = SELECTED_TEXT_ALPHA
+        invalidate()
     }
 
     fun setAccurate(accurate: Boolean) {
@@ -202,6 +241,8 @@ class LyricLineView @JvmOverloads constructor(
     private fun updateTextSize() {
         backgroundTextPaint.textSize = lyricTextSize.toFloat()
         foregroundTextPaint.textSize = lyricTextSize.toFloat()
+        backgroundTextPaint.setShadowLayer(dp(6f), 0f, dp(2f), Color.argb(80, 0, 0, 0))
+        foregroundTextPaint.setShadowLayer(dp(8f), 0f, dp(2f), Color.argb(100, 0, 0, 0))
         invalidate()
     }
 
@@ -210,10 +251,23 @@ class LyricLineView @JvmOverloads constructor(
         updateTextSize()
     }
 
+    fun setLyricSelectedBackgroundColor(color: Int) {
+        lyricSelectedBackgroundColor = color
+        selectedBackgroundPaint.color = color
+        invalidate()
+    }
+
+    private fun dp(value: Float): Float {
+        return DensityUtil.dip2px(context, value).toFloat()
+    }
+
     companion object {
         private const val DEFAULT_LYRIC_TEXT_SIZE = 16f
-        private const val DEFAULT_LYRIC_TEXT_COLOR = Color.WHITE
-        private val DEFAULT_LYRIC_SELECTED_TEXT_COLOR = Color.parseColor("#d6271c")
+        private val DEFAULT_LYRIC_TEXT_COLOR = Color.argb(204, 255, 255, 255)
+        private val DEFAULT_LYRIC_SELECTED_TEXT_COLOR = Color.parseColor("#3FF8DC")
+        private val DEFAULT_SELECTED_BACKGROUND_COLOR = Color.argb(38, 255, 255, 255)
+        private const val NORMAL_TEXT_ALPHA = 204
+        private const val SELECTED_TEXT_ALPHA = 255
         private const val GRAVITY_LEFT = 0x01
         private const val GRAVITY_CENTER = 0x10
     }
