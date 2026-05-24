@@ -1,0 +1,56 @@
+plugins {
+    id 'org.jetbrains.kotlin.android'
+}
+
+apply plugin: 'com.android.test'
+
+android {
+    namespace 'com.ixuea.courses.mymusic.macrobenchmark'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 23
+        targetSdk rootProject.ext.targetSdk
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments['androidx.benchmark.suppressErrors'] = 'EMULATOR,LOW-BATTERY'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    targetProjectPath = ':app'
+    experimentalProperties['android.experimental.self-instrumenting'] = true
+
+    buildTypes {
+        benchmark {
+            initWith debug
+            matchingFallbacks = ['debug']
+        }
+    }
+
+    flavorDimensions 'versionCode'
+    productFlavors {
+        local {
+            dimension 'versionCode'
+        }
+        dev {
+            dimension 'versionCode'
+        }
+        prod {
+            dimension 'versionCode'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.benchmark:benchmark-macro-junit4:1.4.1'
+    implementation 'androidx.test.ext:junit:1.1.5'
+    implementation 'androidx.test:runner:1.5.2'
+    implementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+}

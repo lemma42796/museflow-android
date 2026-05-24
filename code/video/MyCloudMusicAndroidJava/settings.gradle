@@ -31,6 +31,7 @@ dependencyResolutionManagement {
 }
 rootProject.name = "MuseFlowAndroid"
 include ':app'
+include ':macrobenchmark'
 include ':super-j'
 include ':glidepalette'
 include ':LRecyclerview'

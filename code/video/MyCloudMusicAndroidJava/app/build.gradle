@@ -100,6 +100,20 @@ android {
 
             manifestPlaceholders = [:]
         }
+
+        benchmark {
+            initWith release
+            matchingFallbacks = ['release']
+            debuggable false
+            profileable true
+            minifyEnabled false
+
+            //Macrobenchmark 需要可安装、非 debuggable 的目标包；本地用 debug 签名即可。
+            signingConfig signingConfigs.debug
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            manifestPlaceholders = [:]
+        }
     }
 
     viewBinding {
@@ -208,6 +222,7 @@ dependencies {
     implementation "androidx.media3:media3-ui:$media3_version"
     implementation "androidx.work:work-runtime-ktx:$work_version"
     implementation "androidx.datastore:datastore-preferences:$datastore_version"
+    implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     //endregion
 
     //Material Design组件，像FloatingActionButton就是该依赖里面的
@@ -278,6 +293,7 @@ dependencies {
     //https://github.com/ChuckerTeam/chucker
     debugImplementation "com.github.chuckerteam.chucker:library:4.0.0"
     releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0"
+    benchmarkImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0"
 
     //类似TabLayout的控件
     //https://github.com/H07000223/FlycoTabLayout

@@ -98,6 +98,7 @@
 - 发现 tab 已改名为“首页”；`DiscoveryScreen` 已完成第一轮首页化版式重构，保留原 `DiscoveryViewModel -> DiscoveryRepository` 数据链路，但 UI 改为首页问候、Hero 卡片、快捷胶囊、横向歌单 rail、媒体化单曲行和紧凑刷新/自定义入口。
 - 首页顶部 `MuseFlow / 首页 / 播放` 主壳品牌栏已删除，首页内容现在直接从推荐问候区开始。
 - Android 16 KB page-size 对齐已完成第一轮修复：AGP/Gradle 升级到 `8.5.2`/`8.7`，`DataStore`、`MMKV`、`RongCloud IMLib` 升级到带 16 KB arm64 native 对齐的版本；RongCloud `crash` Java wrapper 保留以满足初始化引用，但 `librongcloud_xcrash*.so` 和 `cpp_shared` 未对齐 native 包不再进入 APK。`app-dev-debug.apk` 的 arm64 `.so` 已全部达到 `2**14` 或更高 ELF LOAD 对齐，`zipalign -P 16` 通过。
+- 性能稳定性治理已完成第一轮工程化落地：新增 `:macrobenchmark` 模块、`devBenchmark` 测试构建、启动/首页滚动/首页进播放器 Macrobenchmark 用例和 Baseline Profile 生成用例；API 36 模拟器上 `StartupAndPlayerBenchmark` 三个用例与 `BaselineProfileGenerator.generate` 均已跑通，首轮指标已记录到 `performance-stability-plan.md`。
 
 当前尚未完成：
 
@@ -108,6 +109,7 @@
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 - 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
+- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架和模拟器首轮基线；真机基线、Baseline Profile 固化、播放页/歌词/下载列表扩展场景和优化前后证据尚未完成，当前不能对外表述为已完成性能治理体系。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -117,8 +119,52 @@
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
 - 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
+- 新增性能稳定性治理主线时，先按 `docs/modernization/performance-stability-plan.md` 真机复跑 benchmark/profile 基线，再做播放器、歌词、首页推荐流、下载列表的代码级优化；每个优化点都要留下可复测证据。
 
 ## 最新执行记录
+
+### 2026-05-24 Macrobenchmark/Baseline Profile 第一轮
+
+本轮目标：
+
+- 把“性能稳定性治理”从文档立项推进到可执行代码链路，先覆盖冷启动、首页滚动、首页进入播放器和 Baseline Profile 生成。
+
+已完成：
+
+- 新增 `:macrobenchmark` 模块，并在 `settings.gradle` 纳入工程。
+- `:app` 新增 `benchmark` build type，使用 release-like、profileable、debug signing 的测试构建，避免 benchmark APK 无法安装。
+- 接入 `androidx.benchmark:benchmark-macro-junit4:1.4.1` 和 `androidx.profileinstaller:profileinstaller:1.4.1`，避开 API 36 上旧 benchmark/profileinstaller 的兼容问题。
+- 新增 `StartupAndPlayerBenchmark`，覆盖冷启动、首页推荐流滚动、首页进入播放器三条最小性能路径。
+- 新增 `BaselineProfileGenerator`，覆盖启动、首页滚动和首页进播放器热路径，并生成临时 baseline profile 产物。
+- `performance-stability-plan.md` 已记录 API 36 模拟器首轮数据：冷启动 `timeToInitialDisplayMs` median 524.3 ms；首页滚动 `frameDurationCpuMs` P99 16.5 ms；首页进播放器 `frameDurationCpuMs` P99 83.6 ms、`frameOverrunMs` P99 103.1 ms。
+
+验证：
+
+- `./gradlew :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- `ANDROID_SERIAL=emulator-5554 ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark` 通过：3 个用例全部成功，耗时约 4m57s。
+- `ANDROID_SERIAL=emulator-5554 ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.BaselineProfileGenerator` 通过：1 个用例成功，耗时约 4m23s；临时 profile 产物约 28,484 行。
+- 收尾时已执行 `git diff --check` 通过，并用 `:macrobenchmark:clean` 清理 benchmark 生成物；`macrobenchmark/.gitignore` 已忽略后续本地 `build/` 输出。
+
+后续：
+
+- 模拟器结果不能代表真实用户设备；下一步应在真机上复跑，再决定是否固化 baseline profile。
+- 当前最大热点是“首页进入播放器”，优先看 Perfetto trace 并拆解播放器首屏 Compose、背景图、黑胶 View、歌词 View 和播放状态同步成本。
+
+### 2026-05-24 性能稳定性治理立项
+
+本轮目标：
+
+- 将“Media3 播放系统 + 性能稳定性治理”从对外表达拆成可执行工程计划，明确哪些已经完成、哪些必须继续补代码和数据。
+
+已完成：
+
+- 新增 `docs/modernization/performance-stability-plan.md`，记录当前真实基础、尚未完成项、四阶段推进顺序和对外表述边界。
+- `target-stack.md` 已把性能验证从“后续可补”升级为正式性能稳定性治理主线，并明确该体系尚未完成。
+- `execution-plan.md` 已登记后续恢复现场时应优先按性能文档补齐 benchmark/profile 基线，再进入代码级优化。
+
+验证：
+
+- 本轮仅做文档立项，未改业务代码，未新增 benchmark/profile 模块。
 
 ### 2026-05-24 首页歌单视觉设备收尾
 

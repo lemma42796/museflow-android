@@ -15,13 +15,14 @@
 - 列表：Paging 3 + Compose LazyList
 - 后台任务：WorkManager + CoroutineWorker
 - 偏好存储：DataStore
-- 性能验证：后续可补 Baseline Profile / Macrobenchmark
+- 性能稳定性治理：以 Media3 播放链路为核心，按 `performance-stability-plan.md` 建设 Macrobenchmark / Baseline Profile / 设备端指标记录
 
 ## 2026-05-24 落地状态补充
 
 - Kotlin/Compose/Flow/Media3 主线已经落到当前工作分支，`app/src/main/java` 下 Java 源码数为 `0`。
 - 常规 UI layout XML 已清零；桌面 Widget 改用 Jetpack Glance（Compose-style AppWidget），只保留 `res/xml/music_widget.xml` 作为 provider 元数据。
 - Compose 已覆盖主启动入口、播放器主页/播放列表、下载管理、会话列表、聊天详情、动态发布/动态列表、评论页、歌单详情、发现页、本地音乐、本地音乐扫描、自定义发现排序和选择歌词。
+- Media3 播放系统已具备代码基础；系统化性能稳定性治理已完成第一轮工程骨架和 API 36 模拟器基线，但真机基线、profile 固化和优化前后对比尚未完成，不能在对外材料中描述为已完成成果。
 - 后续图片/图标替换也要按 Android 最新系统风格执行：Material 3 / Material You / Material 3 Expressive、adaptive icon foreground/background/monochrome、themed icon、动态色兼容和系统 mask 安全边距。
 - 下一步不再新增 UI 框架；继续按当前 Kotlin/Compose/Flow 结构恢复和验证真实用户链路，不能再把启动入口退化为无功能占位页。
 
@@ -37,9 +38,11 @@
 - Media3：https://developer.android.com/media/media3
 - Media3 ExoPlayer：https://developer.android.com/media/media3/exoplayer
 - MediaSession：https://developer.android.com/media/media3/session/control-playback
+- AndroidX Benchmark：https://developer.android.com/jetpack/androidx/releases/benchmark
 - WorkManager：https://developer.android.com/topic/libraries/architecture/workmanager
 - Paging 3：https://developer.android.com/topic/libraries/architecture/paging/v3-overview
 - Baseline Profiles：https://developer.android.com/baseline-profiles
+- ProfileInstaller：https://developer.android.com/jetpack/androidx/releases/profileinstaller
 - Jetpack Glance：https://developer.android.com/develop/ui/compose/glance
 - Adaptive icons：https://developer.android.com/develop/ui/views/launch/icon_design_adaptive
 
