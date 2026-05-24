@@ -45,11 +45,19 @@ class DiscoveryRepository private constructor(
         sheets: ListResponse<Sheet>,
         songs: ListResponse<Song>,
     ): List<BaseMultiItemEntity> {
+        val displayAds = ads.data?.data.orEmpty().toMutableList()
+        val displaySheets = sheets.data?.data.orEmpty().toMutableList()
+        val displaySongs = songs.data?.data.orEmpty().toMutableList()
+        if (displayAds.isEmpty()) {
+            displayAds += DiscoveryVisualAssets.fallbackBanner()
+        }
+        DiscoveryVisualAssets.applyTo(displayAds, displaySheets, displaySongs)
+
         val sections = mutableListOf<BaseMultiItemEntity>()
-        sections += BannerData(ads.data?.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_BANNER))
+        sections += BannerData(displayAds, sp.getSort(Constant.STYLE_BANNER))
         sections += ButtonData(sp.getSort(Constant.STYLE_BUTTON))
-        sections += SheetData(sheets.data?.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_SHEET))
-        sections += SongData(songs.data?.data.orEmpty().toMutableList(), sp.getSort(Constant.STYLE_SONG))
+        sections += SheetData(displaySheets, sp.getSort(Constant.STYLE_SHEET))
+        sections += SongData(displaySongs, sp.getSort(Constant.STYLE_SONG))
         sections += FooterData()
         sections.sortWith { first, second ->
             (first as BaseSort).compareTo(second as BaseSort)

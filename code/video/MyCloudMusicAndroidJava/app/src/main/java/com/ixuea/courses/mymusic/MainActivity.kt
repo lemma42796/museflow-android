@@ -5,20 +5,23 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -142,20 +145,10 @@ private fun MainHome(
             )
         },
         bottomBar = {
-            NavigationBar {
-                MainTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { onTabSelected(tab) },
-                        icon = {
-                            TabDot(selected = selectedTab == tab)
-                        },
-                        label = {
-                            Text(tab.title)
-                        },
-                    )
-                }
-            }
+            MainBottomNavigation(
+                selectedTab = selectedTab,
+                onTabSelected = onTabSelected,
+            )
         },
     ) { padding ->
         Column(
@@ -211,6 +204,71 @@ private fun MainHome(
                     .heightIn(min = 64.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun MainBottomNavigation(
+    selectedTab: MainTab,
+    onTabSelected: (MainTab) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MainTab.entries.forEach { tab ->
+            MainBottomNavigationItem(
+                tab = tab,
+                selected = selectedTab == tab,
+                onClick = { onTabSelected(tab) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainBottomNavigationItem(
+    tab: MainTab,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .height(50.dp)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(42.dp)
+                .height(14.dp)
+                .background(
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f)
+                    },
+                    shape = RoundedCornerShape(999.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            TabDot(selected = selected)
+        }
+        Text(
+            text = tab.title,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }
 

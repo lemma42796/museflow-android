@@ -33,6 +33,11 @@ object ImageUtil {
             return
         }
 
+        if (imagePath.isDirectImageUri()) {
+            showFull(context, view, imagePath)
+            return
+        }
+
         showFull(context, view, ResourceUtil.resourceUri(imagePath))
     }
 
@@ -163,5 +168,13 @@ object ImageUtil {
 
     private fun Activity.canLoadImage(): Boolean {
         return !isFinishing && !isDestroyed
+    }
+
+    private fun String.isDirectImageUri(): Boolean {
+        return startsWith("http://") ||
+            startsWith("https://") ||
+            startsWith("android.resource://") ||
+            startsWith("content://") ||
+            startsWith("file://")
     }
 }

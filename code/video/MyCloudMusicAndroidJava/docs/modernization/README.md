@@ -33,12 +33,13 @@
 - 已完成一轮模拟器最小可信冒烟：安装启动、发现页、播放器、后台通知、动态列表、下载管理、会话列表、动态发布页和本地音乐扫描入口均可打开；完整深度人工冒烟仍未补齐。
 - 公开展示面的第一层文案/课程痕迹清理和 MuseFlow 图片/图标资产替换已完成。
 - 2026-05-24 已纠偏 `MainActivity` 的 public-slim 空壳问题：启动入口重新变为 Kotlin/Compose 可操作首页，接回发现、动态、小播放控件、本地音乐、消息、下载和发布入口。
+- 2026-05-24 已将发现页 banner、推荐歌单、推荐单曲和快捷入口图标统一替换为本地 Android 16 / Material 3 Expressive 风格资产，并将首页底部导航压缩为 52dp 紧凑 Compose 底栏。
 
 下一会话入口：
 
 - 先从 `docs/modernization/execution-plan.md` 的“最新交接”恢复现场。
 - 不要继续用“清 Java/XML 数量”或“public slim”作为删页面依据；现代化目标是保留可用产品链路。
-- 优先做设备端可视/人工冒烟：恢复后的首页导航、发现页加载/滚动/点歌、小播放控件、本地音乐/扫描、消息、下载、动态发布、launcher/themed icon、splash 和 Widget preview。
+- 优先做设备端可视/人工冒烟：恢复后的首页导航、发现页加载/滚动/点歌、小播放控件、本地音乐/扫描、消息、下载、动态发布、launcher/themed icon、splash 和 Widget preview；发现页新图片和 52dp 底栏已做过一轮模拟器截图确认。
 - 本地未跟踪的 `docs/modernization/course-trace-cleanup-task.md` 仍是私有任务说明；该文件不要 `git add`，不要 push。
 
 ## 初始项目状态

@@ -93,6 +93,8 @@
 - 已完成模拟器最小可信冒烟第一轮：安装启动、public slim Main、发现页网络数据/滚动、发现页点歌进入播放器、播放/暂停/seek/后台通知保活、动态列表、下载管理双 tab、会话列表空态、动态发布页和本地音乐扫描入口均已打开并复测无 crash。
 - 模拟器冒烟中修复两处运行时问题：`AppContext` 初始化 `EmojiCompat`，避免动态列表 `EmojiTextView` 崩溃；Manifest 补回 `LocalMusicActivity` / `ScanLocalMusicActivity`，避免 smoke 本地音乐入口 `ActivityNotFoundException`。
 - MuseFlow Android 视觉资产已生成并替换：launcher/playstore/adaptive foreground/monochrome、splash logo、默认头像/封面、placeholder/error、Widget preview、冻结 guide 图和旧网易登录图标资源均已换成青绿/深墨色 MuseFlow 风格；启动层改为使用 `splash_logo`。
+- 发现页图片已进一步收口为 Android 16 / Material 3 Expressive 风格：banner、推荐歌单封面、推荐单曲封面和 6 个快捷入口图标均换成本地 MuseFlow 资产；后端返回的旧课程/人像/旧 OSS 图片在发现页展示前会被 `DiscoveryVisualAssets` 映射为本地 `android.resource://` 资源。
+- 首页底部导航已从默认 Material3 `NavigationBarItem` 改为 52dp 紧凑 Compose 底栏，保留小圆点/胶囊选中态，避免默认导航栏在小圆点图标场景下显得过高。
 
 当前尚未完成：
 
@@ -101,7 +103,7 @@
 - 聊天 Kotlin 迁移后的设备端文本/图片发送、动态多图压缩上传、真实下载任务暂停/继续/删除和本地音乐真实扫描仍需继续验证。
 - 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；本轮后台播放和通知 id `100` 通过，通知统计未再出现 rate violation，后续长时间/多次切歌仍可继续观察。
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
-- 新视觉资产已通过本地预览和构建验证，但尚未在设备端做启动页、launcher mask/themed icon 和 Widget preview 的实际可视检查。
+- 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -113,6 +115,36 @@
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
 
 ## 最新执行记录
+
+### 2026-05-24 发现页 Android 16 视觉与首页底栏收口
+
+本轮目标：
+
+- 用户指出发现页仍有旧课程广告图、人像封面和旧视觉资产，要求“把发现页面的图片全部换了，Android 16 风格”。
+- 用户随后指出首页底部导航过高，要求压缩底栏高度。
+
+已完成：
+
+- 使用内置 imagegen 生成一张 Android 16 / Material 3 Expressive 风格 MuseFlow 音乐发现页视觉母版；源图保留在本机 `/Users/a123/.codex/generated_images/019e5867-3f68-7e21-a703-cf3930d55556/ig_03f3e810540e1c0f016a128a48a84c8199a5146daf4c9b6110.png`，repo 内只提交切片后的最终资产。
+- 新增 `app/src/main/res/drawable-nodpi/discovery_banner_android16.png` 和 `discovery_cover_android16_1..6.png`，覆盖发现页 banner、推荐歌单和推荐单曲封面。
+- 重绘 `day_recommend`、`person_fm`、`sheet`、`rank`、`button_live`、`digital_album` 6 个发现页快捷按钮 PNG，统一成青绿/紫/珊瑚/靛蓝的 Material 3 Expressive 小图标。
+- 新增 `DiscoveryVisualAssets`，在 `DiscoveryRepository.buildSections(...)` 里把后端返回的 `Ad.icon`、`Sheet.icon`、`Song.icon` 展示值映射成本地 `android.resource://` 资源；banner 数据为空时补一个 MuseFlow fallback banner，避免离线/接口空数据时暴露旧占位或空白。
+- 更新 `ImageUtil.show(...)`，让 `http://`、`https://`、`android.resource://`、`content://`、`file://` 这类直接图片 URI 不再被 `ResourceUtil.resourceUri(...)` 拼到旧 OSS 域名后面。
+- `MainActivity` 首页底栏从默认 Material3 `NavigationBar` / `NavigationBarItem` 改为自绘紧凑 Compose `Row`，底栏高度收为 52dp，单项高度 50dp，选中胶囊 42x14dp，文字上边距 2dp。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过。
+- 已安装到模拟器 `emulator-5554` 并打开 `MainActivity`。
+- 截图检查通过：顶部 banner、快捷按钮、推荐歌单、推荐单曲均为新本地 Android 16 风格资产；旧“高仿微信商业级项目实战”、旧人像和旧课程广告图不再出现在发现页。
+- 截图检查通过：首页底部导航明显低于默认 Material3 `NavigationBarItem` 高度，文字未挤压，仍保留可点击区域和选中态。
+
+交接边界：
+
+- 小播放条此前已经迁到 `SmallAudioControlScreen` Compose 主体和 `HorizontalPager`；但封面图与歌词行仍通过 `AndroidView` 复用 `ImageView`/`LyricLineView`，本轮只回答并记录边界，没有继续改这部分。
+- 本轮不提交 `.idea/*`、`.idea/migrations.xml` 和本地未跟踪的 `docs/modernization/course-trace-cleanup-task.md`。
+- 下一会话若继续 UI 收口，优先从设备端视觉问题出发；不要再按“清数量”继续拆已经稳定的兼容桥。
 
 ### 2026-05-24 MuseFlow 图片资产生成与替换
 
