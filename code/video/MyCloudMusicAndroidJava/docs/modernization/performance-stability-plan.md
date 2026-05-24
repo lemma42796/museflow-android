@@ -17,14 +17,15 @@
 - 2026-05-24 已给播放器 Compose 根节点补稳定 UI marker，并新增 benchmark-only 入口显式准备播放队列后打开真实 `MusicPlayerActivity`；marker 版 no-input 播放器 benchmark 和 Baseline Profile 生成已在 Redmi 真机通过。
 - 2026-05-24 已将 marker 版 Baseline Profile 固化到 `app/src/main/baseline-prof.txt`，过滤 benchmark-only profile 条目后由 `devBenchmark` 构建打包进 `assets/dexopt/baseline.prof`/`baseline.profm`，并完成同设备 no-input benchmark 前后对比。
 - 2026-05-24 已继续扩展 app-internal/no-input benchmark hook：用 benchmark-only receiver、静音本地 WAV 和真实 `PlaybackService` 控制链路覆盖播放/暂停/恢复/seek，并以 1 次迭代覆盖歌词面板显示 marker。
+- 2026-05-24 已重新验证真机输入注入：`adb shell input keyevent HOME` 和 `adb shell input swipe ...` 均成功；原始输入型 `StartupAndPlayerBenchmark` 已恢复可跑，冷启动、首页点歌进播放器和修复后的首页滚动均有同设备通过证据。
 
 尚未完成的部分：
 
-- 真机已有有效冷启动基线和 marker 版 no-input 播放器首屏基线，但原始滚动/点击版用例被当前真机系统的 `INJECT_EVENTS` 权限限制拦截，尚未形成完整交互型真机基线。
+- 真机已有有效冷启动基线、marker 版 no-input 播放器首屏基线和原始输入型首页滚动/首页点歌证据；修复后完整原始输入型 3 用例套件已全绿，仍需继续扩展更多交互型场景。
 - 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，但歌词拖拽、下载列表刷新等更细场景尚未覆盖。
 - 已有 marker/no-input 路径上的 Baseline Profile 固化前后对比，但尚未用更多交互型场景和优化前后多轮数据证明首页滚动、播放控制、歌词拖拽或下载列表刷新有稳定改善。
 
-因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、播放控制 no-input 基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比”，但仍不能描述为“已完成系统化性能治理”。
+因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、原始输入型首页滚动/首页点歌证据、播放控制 no-input 基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比”，但仍不能描述为“已完成系统化性能治理”。
 
 ## 目标定位
 
@@ -180,8 +181,42 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 下一步：
 
-- 已完成 marker 版 profile 固化和同设备前后对比；下一步转向补齐原始输入型或 app-internal/no-input 扩展场景。
-- 真机原始输入型首页滚动/首页点歌仍被 `INJECT_EVENTS` 限制，后续继续作为设备策略问题单独处理。
+- 已完成 marker 版 profile 固化、同设备前后对比和原始输入型首页滚动/首页点歌恢复验证；下一步转向下载列表刷新、歌词拖拽和更多优化前后对比。
+
+## 第六轮 真机输入型 benchmark 恢复记录
+
+日期：2026-05-24
+
+已完成：
+
+- 在用户确认真机已开启 USB 调试后，重新验证当前设备输入注入状态。
+- `adb shell input keyevent HOME` 和 `adb shell input swipe 500 1500 500 500 300` 均成功，说明当前真机输入注入已放行。
+- 复跑原始输入型 `StartupAndPlayerBenchmark`，冷启动和首页点歌进播放器通过；首页滚动不再报 `INJECT_EVENTS`，但暴露 `StaleObjectException`。
+- 修复 `scrollHomeFeed()`：每次 fling 前重新获取滚动根节点，并对 `StaleObjectException` 做短重试，避免 Compose 滚动后复用失效 `UiObject2`。
+
+验证：
+
+```bash
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark#homeFeedScroll
+```
+
+结果：
+
+- 完整原始输入型套件复跑到真机：冷启动和 `openPlayerFromHome` 通过，`homeFeedScroll` 因 `StaleObjectException` 失败；失败已确认不是权限限制。
+- 修复后单独复跑 `homeFeedScroll` 通过：1 个用例成功，耗时约 4m02s。
+- 修复后继续复跑完整 `StartupAndPlayerBenchmark` 3 用例套件通过：3 个用例全部成功，耗时约 8m25s。
+- 完整套件冷启动：`timeToInitialDisplayMs` min 299.4 ms / median 348.3 ms / max 415.7 ms。
+- 完整套件首页滚动：`frameCount` median 352；`frameDurationCpuMs` P50 4.2 ms / P90 5.0 ms / P95 5.3 ms / P99 6.4 ms；`frameOverrunMs` P50 -4.9 ms / P90 -3.8 ms / P95 -3.3 ms / P99 -1.4 ms。
+- 完整套件首页点歌进播放器：`frameCount` median 286；`frameDurationCpuMs` P50 6.9 ms / P90 9.3 ms / P95 10.2 ms / P99 11.7 ms；`frameOverrunMs` P50 -0.6 ms / P90 1.4 ms / P95 3.3 ms / P99 9.2 ms。
+
+边界：
+
+- `StaleObjectException` 修复属于 benchmark 脚本稳定性修复，不代表产品 UI 逻辑改动。
+
+下一步：
+
+- 继续补下载列表刷新和歌词拖拽场景，形成更完整的可复测性能证据。
 
 ## 第五轮 播放控制与歌词面板 no-input 扩展记录
 
@@ -214,11 +249,11 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 - 当前 MIUI 真机偶发出现 UTP 自动安装后目标包查不到的问题；成功运行前用 `adb install -r -t app/build/outputs/apk/dev/benchmark/app-dev-benchmark.apk` 手动重装目标 APK。
 - Transport controls 是 3 次迭代的可复测主基线；歌词面板当前只有 1 次迭代，只证明 marker 与显示路径可被 no-input 覆盖，暂不作为稳定性能改善结论。
-- 仍未覆盖真实输入型首页滚动/点击、歌词拖拽和下载列表刷新。
+- 真实输入型首页滚动/点击已恢复验证；仍未覆盖歌词拖拽和下载列表刷新。
 
 下一步：
 
-- 继续补下载列表刷新 no-input 场景，或在设备策略允许后复跑原始输入型 benchmark。
+- 继续补下载列表刷新和歌词拖拽场景。
 - 若继续优化播放器，优先用 transport controls 和播放器首屏两条已通过路径做前后对比。
 
 ## 第四轮 Baseline Profile 固化与前后对比记录
@@ -255,8 +290,8 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 下一步：
 
-- 继续处理真机 `INJECT_EVENTS` 限制，争取复跑原始输入型首页滚动/首页点歌 benchmark。
-- 若设备策略仍不放行，继续扩展 app-internal/no-input benchmark hook，覆盖播放/暂停、seek、歌词页拖拽和下载列表刷新。
+- 真机 `INJECT_EVENTS` 限制已复测放行；继续补下载列表刷新、歌词拖拽和更多优化前后对比。
+- 原始输入型 benchmark 已在第六轮恢复；app-internal/no-input hook 继续作为下载列表刷新、歌词拖拽等难注入场景的补充手段。
 
 ## 第二阶段：播放链路稳定性
 
@@ -315,7 +350,6 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 优先级：
 
-1. 处理当前真机 `INJECT_EVENTS` 限制：优先复跑原始输入型 benchmark；如设备仍不放行，就继续扩展 no-input/app-internal 替代场景。
-2. 扩展下载列表刷新和歌词拖拽场景，形成更完整的可复测性能证据。
-3. 围绕“播放器首屏”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
-4. 基于已通过的播放器首屏和 transport controls 场景做代码级优化，并用同一命令复测前后差异。
+1. 扩展下载列表刷新和歌词拖拽场景，形成更完整的可复测性能证据。
+2. 围绕“播放器首屏”查看 Perfetto trace，优先拆解播放器首屏组合、背景图加载、歌词/黑胶初始化和状态同步成本。
+3. 基于已通过的播放器首屏、首页进播放器和 transport controls 场景做代码级优化，并用同一命令复测前后差异。

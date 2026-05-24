@@ -99,9 +99,10 @@
 - 首页顶部 `MuseFlow / 首页 / 播放` 主壳品牌栏已删除，首页内容现在直接从推荐问候区开始。
 - Android 16 KB page-size 对齐已完成第一轮修复：AGP/Gradle 升级到 `8.5.2`/`8.7`，`DataStore`、`MMKV`、`RongCloud IMLib` 升级到带 16 KB arm64 native 对齐的版本；RongCloud `crash` Java wrapper 保留以满足初始化引用，但 `librongcloud_xcrash*.so` 和 `cpp_shared` 未对齐 native 包不再进入 APK。`app-dev-debug.apk` 的 arm64 `.so` 已全部达到 `2**14` 或更高 ELF LOAD 对齐，`zipalign -P 16` 通过。
 - 性能稳定性治理已完成第一轮工程化落地：新增 `:macrobenchmark` 模块、`devBenchmark` 测试构建、启动/首页滚动/首页进播放器 Macrobenchmark 用例和 Baseline Profile 生成用例；API 36 模拟器上 `StartupAndPlayerBenchmark` 三个用例与 `BaselineProfileGenerator.generate` 均已跑通，首轮指标已记录到 `performance-stability-plan.md`。
-- Redmi `25060RK16C` 真机已取得有效冷启动基线：marker 版 no-input 复跑 median 329.2 ms。此前 no-input “打开播放器”指标只证明触发过 action/包仍可见，未证明播放器页面可见，已更正为无效记录；当前已给播放器 Compose 根节点补稳定 UI marker，并新增 benchmark-only 入口显式准备播放队列后打开真实 `MusicPlayerActivity`。marker 版播放器首屏帧数据已取得：`frameDurationCpuMs` P99 26.9 ms，`frameOverrunMs` P99 27.1 ms。原始滚动/点击版真机 benchmark 仍被当前设备 `INJECT_EVENTS` 安全策略拦截，完整交互型真机基线仍需补齐。
+- Redmi `25060RK16C` 真机已取得有效冷启动基线：marker 版 no-input 复跑 median 329.2 ms。此前 no-input “打开播放器”指标只证明触发过 action/包仍可见，未证明播放器页面可见，已更正为无效记录；当前已给播放器 Compose 根节点补稳定 UI marker，并新增 benchmark-only 入口显式准备播放队列后打开真实 `MusicPlayerActivity`。marker 版播放器首屏帧数据已取得：`frameDurationCpuMs` P99 26.9 ms，`frameOverrunMs` P99 27.1 ms。
 - Marker 版 Baseline Profile 已固化到 `app/src/main/baseline-prof.txt`，并过滤掉仅存在于 `app/src/benchmark` 的 `BenchmarkPlayerEntryActivity` profile 条目；`mergeDevBenchmarkArtProfile`/`compileDevBenchmarkArtProfile` 通过，`devBenchmark` APK 已包含 `assets/dexopt/baseline.prof`/`baseline.profm`。固化后同一真机 no-input benchmark 通过，冷启动 median 302.5 ms，播放器首屏 `frameDurationCpuMs` P99 18.7 ms，`frameOverrunMs` P99 15.1 ms。
 - 播放控制 no-input 扩展已在同一真机通过：benchmark-only receiver 使用静音本地 WAV 和真实 `PlaybackService` 控制链路，覆盖 play/pause/resume/seek；`playbackTransportControlsNoInput` 3 次迭代通过，`frameDurationCpuMs` P99 11.7 ms，`frameOverrunMs` P99 8.0 ms。歌词面板 `playbackLyricPanelNoInput` 1 次覆盖通过，P99 分别为 22.8 ms / 18.5 ms，但只作为显示覆盖，不作为稳定性能结论。
+- 真机输入注入限制已在设备设置调整后复测放行：`adb shell input keyevent HOME` 和 `adb shell input swipe ...` 成功；原始输入型 `StartupAndPlayerBenchmark` 已恢复可跑，首页滚动原先暴露 `StaleObjectException`，已通过每次 fling 重新获取滚动根节点并短重试修复。修复后完整 3 用例套件在 Redmi 真机全绿，首页滚动 `frameDurationCpuMs` P99 6.4 ms / `frameOverrunMs` P99 -1.4 ms，首页点歌进播放器 `frameDurationCpuMs` P99 11.7 ms / `frameOverrunMs` P99 9.2 ms。
 
 当前尚未完成：
 
@@ -112,7 +113,7 @@
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 - 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
-- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比和 app-internal/no-input 播放控制/歌词面板扩展；原始输入型真机基线、歌词拖拽、下载列表刷新和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
+- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展，以及原始输入型首页滚动/首页进播放器恢复验证；歌词拖拽、下载列表刷新和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -122,9 +123,38 @@
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
 - 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
-- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek 和歌词面板显示；下一步应处理真机 `INJECT_EVENTS` 限制，或继续扩展下载列表刷新、歌词拖拽和更多优化前后复测证据。
+- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek 和歌词面板显示，原始输入型首页滚动/首页进播放器已恢复验证；下一步继续扩展下载列表刷新、歌词拖拽和更多优化前后复测证据。
 
 ## 最新执行记录
+
+### 2026-05-24 真机输入型 benchmark 恢复
+
+本轮目标：
+
+- 在用户确认真机已开启 USB 调试后，重新验证原始输入型 benchmark 是否仍受 `INJECT_EVENTS` 阻塞，并修复复跑时暴露的 benchmark 脚本稳定性问题。
+
+已完成：
+
+- 用真机 serial `adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp` 验证 `adb shell input keyevent HOME` 和 `adb shell input swipe 500 1500 500 500 300` 均成功，说明当前设备输入注入已放行。
+- 复跑原始输入型 `StartupAndPlayerBenchmark`，3 个用例中冷启动和首页点歌进播放器通过；首页滚动不再报 `INJECT_EVENTS`，但暴露 `StaleObjectException`。
+- 修复 `scrollHomeFeed()`：不再复用滚动前获取的同一个 `UiObject2`，每次 fling 前重新获取滚动根节点，并对 `StaleObjectException` 做短重试，适配 Compose 滚动后节点失效的情况。
+
+验证：
+
+- `ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark` 跑到真机，冷启动和 `openPlayerFromHome` 通过，`homeFeedScroll` 因 `StaleObjectException` 失败。
+- 修复后单独复跑 `ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.StartupAndPlayerBenchmark#homeFeedScroll` 通过：1 个用例成功，耗时约 4m02s。
+- 修复后继续复跑完整 `StartupAndPlayerBenchmark` 3 用例套件通过：3 个用例全部成功，耗时约 8m25s。
+- 完整套件冷启动：`timeToInitialDisplayMs` min 299.4 ms / median 348.3 ms / max 415.7 ms。
+- 完整套件首页滚动：`frameCount` median 352；`frameDurationCpuMs` P50 4.2 ms / P90 5.0 ms / P95 5.3 ms / P99 6.4 ms；`frameOverrunMs` P50 -4.9 ms / P90 -3.8 ms / P95 -3.3 ms / P99 -1.4 ms。
+- 完整套件首页点歌进播放器：`frameCount` median 286；`frameDurationCpuMs` P50 6.9 ms / P90 9.3 ms / P95 10.2 ms / P99 11.7 ms；`frameOverrunMs` P50 -0.6 ms / P90 1.4 ms / P95 3.3 ms / P99 9.2 ms。
+
+边界：
+
+- 后续仍需补歌词拖拽、下载列表刷新，以及更多优化前后对比证据。
+
+后续：
+
+- 优先补下载列表刷新和歌词拖拽 benchmark；若继续优化播放器，使用已通过的播放器首屏、播放控制和首页进播放器路径做前后对比。
 
 ### 2026-05-24 播放控制与歌词面板 no-input benchmark 扩展
 
@@ -151,11 +181,11 @@
 边界：
 
 - Transport controls 是 3 次迭代的可复测主基线；歌词面板当前只有 1 次迭代，只证明 marker 与显示路径可被 no-input 覆盖，暂不作为稳定性能改善结论。
-- 仍未覆盖真实输入型首页滚动/点击、歌词拖拽和下载列表刷新。
+- 真实输入型首页滚动/点击已恢复验证；仍未覆盖歌词拖拽和下载列表刷新。
 
 后续：
 
-- 若继续性能主线，优先补下载列表刷新 no-input 场景，或在设备策略允许后复跑原始输入型 benchmark。
+- 后续已在“真机输入型 benchmark 恢复”记录中复跑原始输入型 benchmark；当前优先补下载列表刷新和歌词拖拽场景。
 
 ### 2026-05-24 Baseline Profile 固化与前后对比
 

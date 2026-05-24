@@ -6,6 +6,7 @@ import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -34,16 +35,11 @@ internal fun MacrobenchmarkScope.waitForHome() {
 
 internal fun MacrobenchmarkScope.scrollHomeFeed() {
     waitForHome()
-    val root = checkNotNull(device.findScrollableRoot()) {
-        "Scrollable home content was not found."
-    }
     repeat(3) {
-        root.fling(Direction.DOWN)
-        device.waitForIdle()
+        flingHomeContent(Direction.DOWN)
     }
     repeat(2) {
-        root.fling(Direction.UP)
-        device.waitForIdle()
+        flingHomeContent(Direction.UP)
     }
 }
 
@@ -141,4 +137,22 @@ private fun UiDevice.findScrollableRoot(): UiObject2? {
     return findObject(By.scrollable(true))
         ?: findObject(By.res(TARGET_PACKAGE, "content"))
         ?: findObject(By.pkg(TARGET_PACKAGE))
+}
+
+private fun MacrobenchmarkScope.flingHomeContent(direction: Direction) {
+    var staleNode: StaleObjectException? = null
+    repeat(3) {
+        val root = checkNotNull(device.findScrollableRoot()) {
+            "Scrollable home content was not found."
+        }
+        try {
+            root.fling(direction)
+            device.waitForIdle()
+            return
+        } catch (error: StaleObjectException) {
+            staleNode = error
+            device.waitForIdle()
+        }
+    }
+    throw staleNode ?: IllegalStateException("Scrollable home content became unavailable.")
 }
