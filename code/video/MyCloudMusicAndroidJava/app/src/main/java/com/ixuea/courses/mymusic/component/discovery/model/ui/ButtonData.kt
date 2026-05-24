@@ -22,7 +22,6 @@ class ButtonData(sort: Int) : BaseSort(sort), BaseMultiItemEntity {
             IconTitleButtonData(R.drawable.rank, R.string.rank),
             IconTitleButtonData(R.drawable.button_live, R.string.live),
             IconTitleButtonData(R.drawable.digital_album, R.string.digital_album),
-            IconTitleButtonData(R.drawable.digital_album, R.string.digital_album),
         )
     }
 }

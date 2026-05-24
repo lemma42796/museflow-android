@@ -3,7 +3,6 @@ package com.ixuea.courses.mymusic.component.discovery.ui
 import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,19 +16,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -59,12 +58,12 @@ import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.model.ui.BaseMultiItemEntity
 import com.ixuea.courses.mymusic.ui.compose.EmptyContent
 import com.ixuea.courses.mymusic.util.ImageUtil
-import com.ixuea.superui.util.DensityUtil
-import com.youth.banner.Banner
-import com.youth.banner.adapter.BannerImageAdapter
-import com.youth.banner.holder.BannerImageHolder
-import com.youth.banner.indicator.CircleIndicator
 
+private val HomeHorizontalPadding = 16.dp
+private val HeroShape = RoundedCornerShape(28.dp)
+private val SectionShape = RoundedCornerShape(24.dp)
+
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun DiscoveryScreen(
     state: DiscoveryUiState,
@@ -74,6 +73,18 @@ fun DiscoveryScreen(
     onRefreshClick: () -> Unit,
     onCustomDiscoveryClick: () -> Unit,
 ) {
+    val heroAd = state.sections
+        .asSequence()
+        .filterIsInstance<BannerData>()
+        .flatMap { it.data.asSequence() }
+        .firstOrNull()
+    val heroSong = state.sections
+        .asSequence()
+        .filterIsInstance<SongData>()
+        .flatMap { it.data.asSequence() }
+        .firstOrNull()
+    val contentSections = state.sections.filterNot { it is BannerData }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (state.sections.isEmpty() && !state.isLoading) {
             EmptyContent(
@@ -83,15 +94,29 @@ fun DiscoveryScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
+                contentPadding = PaddingValues(bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                item(key = "home-header") {
+                    HomeGreeting()
+                }
+
+                if (heroAd != null) {
+                    item(key = "home-hero") {
+                        HomeHeroCard(
+                            ad = heroAd,
+                            song = heroSong,
+                            onSongClick = onSongClick,
+                        )
+                    }
+                }
+
                 items(
-                    items = state.sections,
+                    items = contentSections,
                     key = { section -> section.discoveryStableKey() },
                 ) { section ->
                     DiscoverySection(
                         section = section,
-                        lifecycleOwner = lifecycleOwner,
                         onSheetClick = onSheetClick,
                         onSongClick = onSongClick,
                         onRefreshClick = onRefreshClick,
@@ -119,20 +144,121 @@ private fun BaseMultiItemEntity.discoveryStableKey(): String {
 }
 
 @Composable
+private fun HomeGreeting() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = HomeHorizontalPadding,
+                top = 14.dp,
+                end = HomeHorizontalPadding,
+                bottom = 2.dp,
+            ),
+    ) {
+        Text(
+            text = "今天想听什么？",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = "为你整理今日推荐和正在流动的新声音",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun HomeHeroCard(
+    ad: Ad,
+    song: Song?,
+    onSongClick: (Song) -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(184.dp)
+            .padding(horizontal = HomeHorizontalPadding),
+        shape = HeroShape,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            RemoteImage(
+                url = ad.icon,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.30f)),
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(20.dp),
+            ) {
+                Text(
+                    text = "MuseFlow 今日首页",
+                    color = Color.White.copy(alpha = 0.84f),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = ad.title?.takeIf { it.isNotBlank() } ?: "跟随节奏开始播放",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+
+                if (song != null) {
+                    Surface(
+                        modifier = Modifier
+                            .padding(top = 14.dp)
+                            .clickable { onSongClick(song) },
+                        color = Color.White.copy(alpha = 0.92f),
+                        contentColor = Color(0xFF10231E),
+                        shape = RoundedCornerShape(999.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.play_solid),
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Text(
+                                text = song.title?.takeIf { it.isNotBlank() } ?: "立即播放",
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun DiscoverySection(
     section: BaseMultiItemEntity,
-    lifecycleOwner: LifecycleOwner,
     onSheetClick: (Sheet) -> Unit,
     onSongClick: (Song) -> Unit,
     onRefreshClick: () -> Unit,
     onCustomDiscoveryClick: () -> Unit,
 ) {
     when (section) {
-        is BannerData -> DiscoveryBanner(
-            ads = section.data,
-            lifecycleOwner = lifecycleOwner,
-        )
-
         is ButtonData -> DiscoveryButtons(data = section.data)
 
         is SheetData -> DiscoverySheetSection(
@@ -153,89 +279,67 @@ private fun DiscoverySection(
 }
 
 @Composable
-private fun DiscoveryBanner(
-    ads: List<Ad>,
-    lifecycleOwner: LifecycleOwner,
-) {
-    if (ads.isEmpty()) {
+private fun DiscoveryButtons(data: List<IconTitleButtonData>) {
+    if (data.isEmpty()) {
         return
     }
 
-    AndroidView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .aspectRatio(2.57f),
-        factory = { context ->
-            Banner<Ad, BannerImageAdapter<Ad>>(context).apply {
-                setBannerRound(DensityUtil.dip2px(context, 10F))
-                setIndicator(CircleIndicator(context))
-                addBannerLifecycleObserver(lifecycleOwner)
-            }
-        },
-        update = { banner ->
-            val adapter = object : BannerImageAdapter<Ad>(ads) {
-                override fun onBindView(
-                    holder: BannerImageHolder,
-                    data: Ad,
-                    position: Int,
-                    size: Int,
-                ) {
-                    ImageUtil.show(holder.itemView.context, holder.itemView as ImageView, data.icon)
-                }
-            }
-            banner.setAdapter(adapter)
-        },
-    )
-}
-
-@Composable
-private fun DiscoveryButtons(data: List<IconTitleButtonData>) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 10.dp, vertical = 16.dp),
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = HomeHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        data.forEach { item ->
-            DiscoveryButtonItem(item)
+        itemsIndexed(
+            items = data,
+            key = { index, item -> "${item.title}-$index" },
+        ) { index, item ->
+            DiscoveryButtonItem(
+                item = item,
+                tone = chipTone(index),
+            )
         }
     }
 }
 
 @Composable
-private fun DiscoveryButtonItem(item: IconTitleButtonData) {
+private fun DiscoveryButtonItem(
+    item: IconTitleButtonData,
+    tone: Color,
+) {
     val label = stringResource(item.title)
 
-    Column(
-        modifier = Modifier
-            .widthIn(min = 58.dp, max = 72.dp)
-            .clickable { },
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Surface(
+        modifier = Modifier.clickable { },
+        color = tone,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = RoundedCornerShape(999.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            Icon(
-                painter = painterResource(item.icon),
-                contentDescription = label,
-                tint = Unspecified,
-                modifier = Modifier.size(28.dp),
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.76f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(item.icon),
+                    contentDescription = label,
+                    tint = Unspecified,
+                    modifier = Modifier.size(23.dp),
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
     }
 }
 
@@ -253,28 +357,20 @@ private fun DiscoverySheetSection(
         showMore = true,
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = HomeHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        sheets.chunked(3).forEach { rowSheets ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                rowSheets.forEach { sheet ->
-                    SheetCard(
-                        sheet = sheet,
-                        onClick = { onSheetClick(sheet) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                repeat(3 - rowSheets.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
+        itemsIndexed(
+            items = sheets,
+            key = { index, sheet -> sheet.id ?: "sheet-$index" },
+        ) { index, sheet ->
+            SheetCard(
+                sheet = sheet,
+                onClick = { onSheetClick(sheet) },
+                modifier = Modifier.width(if (index == 0) 176.dp else 148.dp),
+            )
         }
     }
 }
@@ -293,11 +389,13 @@ private fun DiscoverySongSection(
         showMore = true,
     )
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        songs.forEachIndexed { index, song ->
+    Column(
+        modifier = Modifier.padding(horizontal = HomeHorizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        songs.forEach { song ->
             SongRow(
                 song = song,
-                showDivider = index != songs.lastIndex,
                 onClick = { onSongClick(song) },
             )
         }
@@ -312,7 +410,7 @@ private fun DiscoverySectionTitle(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = HomeHorizontalPadding, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -345,15 +443,15 @@ private fun SheetCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(SectionShape),
             )
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.Black.copy(alpha = 0.36f))
-                    .padding(horizontal = 6.dp, vertical = 3.dp),
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color.Black.copy(alpha = 0.38f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -364,7 +462,7 @@ private fun SheetCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = sheet.clicksCount.toString(),
+                    text = formatPlayCount(sheet.clicksCount),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -375,9 +473,10 @@ private fun SheetCard(
             text = sheet.title.orEmpty(),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+            modifier = Modifier.padding(top = 9.dp),
         )
     }
 }
@@ -385,25 +484,25 @@ private fun SheetCard(
 @Composable
 private fun SongRow(
     song: Song,
-    showDivider: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.46f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = RoundedCornerShape(20.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RemoteImage(
                 url = song.icon,
                 modifier = Modifier
-                    .size(51.dp)
-                    .clip(RoundedCornerShape(6.dp)),
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(16.dp)),
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -411,13 +510,13 @@ private fun SongRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = song.title.orEmpty(),
-                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "%s-%s".format(song.singer?.nickname.orEmpty(), "专辑名称"),
+                    text = song.singer?.nickname?.takeIf { it.isNotBlank() } ?: "MuseFlow 推荐",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
@@ -425,9 +524,20 @@ private fun SongRow(
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
-        }
-        if (showDivider) {
-            HorizontalDivider()
+
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.play_solid),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(14.dp),
+                )
+            }
         }
     }
 }
@@ -437,33 +547,34 @@ private fun DiscoveryFooter(
     onRefreshClick: () -> Unit,
     onCustomDiscoveryClick: () -> Unit,
 ) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = HomeHorizontalPadding),
+        color = MaterialTheme.colorScheme.surface,
+        shape = SectionShape,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.click_refresh),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.clickable(onClick = onRefreshClick),
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.change_content),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-
-        Button(
-            onClick = onCustomDiscoveryClick,
-            modifier = Modifier.padding(top = 16.dp),
-            shape = RoundedCornerShape(16.dp),
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(stringResource(R.string.custom_discovery))
+            Button(
+                onClick = onRefreshClick,
+                shape = RoundedCornerShape(999.dp),
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 12.dp),
+            ) {
+                Text(stringResource(R.string.change_content))
+            }
+
+            TextButton(
+                onClick = onCustomDiscoveryClick,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 12.dp),
+            ) {
+                Text(stringResource(R.string.custom_discovery))
+            }
         }
     }
 }
@@ -491,4 +602,23 @@ private fun RemoteImage(
             }
         },
     )
+}
+
+@Composable
+private fun chipTone(index: Int): Color {
+    val colorScheme = MaterialTheme.colorScheme
+    return when (index % 4) {
+        0 -> colorScheme.primaryContainer.copy(alpha = 0.72f)
+        1 -> colorScheme.secondaryContainer.copy(alpha = 0.72f)
+        2 -> colorScheme.tertiaryContainer.copy(alpha = 0.72f)
+        else -> colorScheme.surfaceVariant.copy(alpha = 0.88f)
+    }
+}
+
+private fun formatPlayCount(count: Int): String {
+    return when {
+        count >= 10000 -> "${count / 10000}万"
+        count > 0 -> count.toString()
+        else -> "推荐"
+    }
 }

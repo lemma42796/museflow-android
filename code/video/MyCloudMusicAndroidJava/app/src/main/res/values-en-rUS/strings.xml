@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">CloudMusic</string>
 
-    <!--发现界面-->
-    <string name="discovery">Discovery</string>
+    <!--首页界面-->
+    <string name="discovery">Home</string>
     <string name="video">Video</string>
     <string name="me">Me</string>
     <string name="feed">Feed</string>

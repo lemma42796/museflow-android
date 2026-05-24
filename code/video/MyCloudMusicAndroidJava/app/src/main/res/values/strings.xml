@@ -25,8 +25,8 @@
     <string name="not_found_activity">找不到对应的应用</string>
     <string name="wifi_preload">WiFi预加载</string>
 
-    <!--发现界面-->
-    <string name="discovery">发现</string>
+    <!--首页界面-->
+    <string name="discovery">首页</string>
     <string name="video">视频</string>
     <string name="me">我的</string>
     <string name="feed">动态</string>

@@ -94,7 +94,10 @@
 - 模拟器冒烟中修复两处运行时问题：`AppContext` 初始化 `EmojiCompat`，避免动态列表 `EmojiTextView` 崩溃；Manifest 补回 `LocalMusicActivity` / `ScanLocalMusicActivity`，避免 smoke 本地音乐入口 `ActivityNotFoundException`。
 - MuseFlow Android 视觉资产已生成并替换：launcher/playstore/adaptive foreground/monochrome、splash logo、默认头像/封面、placeholder/error、Widget preview、冻结 guide 图和旧网易登录图标资源均已换成青绿/深墨色 MuseFlow 风格；启动层改为使用 `splash_logo`。
 - 发现页图片已进一步收口为 Android 16 / Material 3 Expressive 风格：banner、推荐歌单封面、推荐单曲封面和 6 个快捷入口图标均换成本地 MuseFlow 资产；后端返回的旧课程/人像/旧 OSS 图片在发现页展示前会被 `DiscoveryVisualAssets` 映射为本地 `android.resource://` 资源。
-- 首页底部导航已从默认 Material3 `NavigationBarItem` 改为 52dp 紧凑 Compose 底栏，保留小圆点/胶囊选中态，避免默认导航栏在小圆点图标场景下显得过高。
+- 首页底部导航已从默认 Material3 `NavigationBarItem` 改为紧凑 Compose 底栏；按用户反馈删除小圆点后，当前以文字胶囊、颜色和字重表达选中状态。小播放条已从硬边白条改为圆角浮层卡片，封面、播放按钮、列表按钮和进度条统一到 MuseFlow 青绿/淡紫视觉。
+- 发现 tab 已改名为“首页”；`DiscoveryScreen` 已完成第一轮首页化版式重构，保留原 `DiscoveryViewModel -> DiscoveryRepository` 数据链路，但 UI 改为首页问候、Hero 卡片、快捷胶囊、横向歌单 rail、媒体化单曲行和紧凑刷新/自定义入口。
+- 首页顶部 `MuseFlow / 首页 / 播放` 主壳品牌栏已删除，首页内容现在直接从推荐问候区开始。
+- Android 16 KB page-size 对齐已完成第一轮修复：AGP/Gradle 升级到 `8.5.2`/`8.7`，`DataStore`、`MMKV`、`RongCloud IMLib` 升级到带 16 KB arm64 native 对齐的版本；RongCloud `crash` Java wrapper 保留以满足初始化引用，但 `librongcloud_xcrash*.so` 和 `cpp_shared` 未对齐 native 包不再进入 APK。`app-dev-debug.apk` 的 arm64 `.so` 已全部达到 `2**14` 或更高 ELF LOAD 对齐，`zipalign -P 16` 通过。
 
 当前尚未完成：
 
@@ -104,6 +107,7 @@
 - 播放通知已切到 Media3 `PlaybackService` 默认通知 provider；本轮后台播放和通知 id `100` 通过，通知统计未再出现 rate violation，后续长时间/多次切歌仍可继续观察。
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
+- 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -115,6 +119,82 @@
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
 
 ## 最新执行记录
+
+### 2026-05-24 首页顶部栏删除
+
+本轮目标：
+
+- 用户指出首页顶部 `MuseFlow / 首页 / 播放` 主壳品牌栏需要删除。
+- 用户随后指出底部导航每个 tab 上方的小圆点需要删除。
+- 用户继续要求美化小播放条和底部导航区域。
+
+已完成：
+
+- `MainActivity` 删除 `Scaffold.topBar` 中的 `MainHeader`，首页内容直接从 `DiscoveryScreen` 的问候和 Hero 区域开始。
+- 移除 `MainHeader` 函数及主壳中只为顶部栏传递的 `onPublishFeed`、`onOpenPlayer` 参数。
+- `MainBottomNavigationItem` 删除小圆点和选中胶囊，底栏只保留文字；当前 tab 用 `primary` 文字色和 SemiBold 字重表示。
+- `SmallAudioControlScreen` 改为圆角浮层卡片：封面放大并圆角化，播放按钮改为实心青绿圆按钮，列表按钮改为淡紫/青绿辅助按钮，进度条收进卡片底部。
+- `MainBottomNavigation` 改为白底 58dp 底栏，当前 tab 使用淡紫文字胶囊，未选中项用低对比文字，整体和小播放条留出更清爽的层级。
+
+验证：
+
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 6s`。
+- 美化后再次 `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 4s`；已安装到模拟器并截图确认小播放条/底栏视觉生效。
+
+### 2026-05-24 Android 16 KB 对齐修复
+
+本轮目标：
+
+- 用户截图中 Android Studio 提示 `app-dev-debug.apk` 不兼容 16 KB devices，涉及 RongCloud、MMKV、DataStore、sqlite、xcrash 和 `libc++_shared.so` 等 native 库。
+- 先修 native packaging / ELF 对齐问题，再继续首页视觉重构。
+
+已完成：
+
+- 顶层 AGP 从 `8.2.0` 升到 `8.5.2`，Gradle Wrapper 从 `8.2` 升到 `8.7`，满足 16 KB native packaging 基线。
+- `androidx.datastore:datastore-preferences` 从 `1.1.1` 升到 `1.2.1`，`libdatastore_shared_counter.so` 变为 `2**14` 对齐。
+- `com.tencent:mmkv-static` 从 `1.2.13` 升到 `1.3.14`，`libmmkv.so` 变为 `2**14` 对齐。
+- RongCloud IMLib 从 `cn.rongcloud.sdk:im_lib:5.8.0` 换到 Maven Central 上的 `net.rongcloud.sdk:im_lib:5.22.202`，`libRongIMLib.so` 变为 `2**14` 对齐。
+- 保留 RongCloud `im_libcore` 传递引入的 `cn.rongcloud.sdk:crash:1.0.8` Java wrapper，避免初始化时 `NoClassDefFoundError`；通过 `packaging.jniLibs.excludes` 移除未 16 KB 对齐的 `librongcloud_xcrash*.so`，并继续排除 `cn.rongcloud.sdk:cpp_shared:0.0.1`，因为 `libRongIMLib.so` 的 `NEEDED` 不依赖 `libc++_shared.so`。
+
+验证：
+
+- `./gradlew :app:assembleDevDebug` 通过：最终复测构建 `BUILD SUCCESSFUL in 29s`。
+- `/Users/a123/Library/Android/sdk/build-tools/35.0.0/zipalign -c -P 16 4 app/build/outputs/apk/dev/debug/app-dev-debug.apk` 通过。
+- 最终 APK 的 `lib/arm64-v8a/` 只剩 `libRongIMLib.so`、`libdatastore_shared_counter.so`、`libmmkv.so`、`libsqlite.so`。
+- 从最终 APK 解包后用 `objdump -p` 检查：`libRongIMLib.so`、`libdatastore_shared_counter.so`、`libmmkv.so` 均为 `align 2**14`，`libsqlite.so` 为 `align 2**16`。
+- 安装到模拟器 `emulator-5554` 后先复现到 RongCloud 初始化 crash：`NoClassDefFoundError: cn/rongcloud/wrapper/RongCloudCrash`；修正为保留 crash wrapper、只排除未对齐 native 后，覆盖安装、清 logcat、强停并重启 `MainActivity`，应用停留在 MuseFlow 首页，`AndroidRuntime:E` fatal 日志为空，进程仍存活。
+
+边界：
+
+- 本轮未改 `targetSdk`，当前仍以现有 `targetSdk 33` 保持项目运行边界。
+- 本轮未启动 16 KB page-size 模拟器做运行时复测；后续发版前应补聊天入口和 MMKV 读写在 16 KB page-size 环境下的专项冒烟。
+
+### 2026-05-24 首页第一轮版式重构
+
+本轮目标：
+
+- 用户要求把“发现”改成“首页”，随后要求开始重构首页。
+- 在不改数据层、路由和播放链路的前提下，先把原发现页从旧列表样式改成更接近 Android 16 / Material 3 Expressive 音乐首页的 Compose 版式。
+
+已完成：
+
+- `MainActivity` 底部 tab 文案从“发现”改为“首页”，中文 `discovery` 资源同步改为“首页”，英文资源从 `Discovery` 改为 `Home`。
+- `DiscoveryScreen` 去掉第三方 Banner View 嵌入，banner 数据改为 Compose Hero 卡片展示；Hero 内可用推荐单曲作为播放入口。
+- 快捷入口从圆形图标横排改为 Material 3 tonal chip rail，保留原 `ButtonData` 数据来源。
+- 清理 `ButtonData` 中重复的 `数字专辑` 快捷入口，首页恢复为 6 个入口。
+- 推荐歌单从三列网格改为横向 rail，第一张卡片更大，封面圆角和播放量胶囊统一到首页视觉。
+- 推荐单曲从普通分割线列表改为圆角媒体行，右侧增加播放按钮视觉，点击仍走原 `onSongClick` 播放/进入播放器链路。
+- 页脚改成紧凑的“换一批内容 / 自定义首页”双入口，保留原刷新和自定义排序能力。
+
+验证：
+
+- `git diff --check` 通过。
+- `./gradlew :app:assembleDevDebug` 通过：`BUILD SUCCESSFUL in 3s`。
+
+边界：
+
+- 本轮没有改 `DiscoveryRepository`、`DiscoveryViewModel`、排序模型、点击路由或远程数据映射。
+- 本轮未启动模拟器做截图复核；下一步若继续首页重构，优先做设备端可视检查，再根据截图调整 hero 高度、chip 密度、歌单 rail 和单曲行间距。
 
 ### 2026-05-24 发现页 Android 16 视觉与首页底栏收口
 

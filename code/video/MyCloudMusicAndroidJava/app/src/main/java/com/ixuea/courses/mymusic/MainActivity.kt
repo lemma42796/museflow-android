@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
@@ -47,7 +43,6 @@ import com.ixuea.courses.mymusic.component.ad.model.Ad
 import com.ixuea.courses.mymusic.component.conversation.activity.ConversationActivity
 import com.ixuea.courses.mymusic.component.discovery.fragment.DiscoveryFragment
 import com.ixuea.courses.mymusic.component.download.activity.DownloadActivity
-import com.ixuea.courses.mymusic.component.feed.activity.PublishFeedActivity
 import com.ixuea.courses.mymusic.component.feed.fragment.FeedFragment
 import com.ixuea.courses.mymusic.component.login.activity.LoginHomeActivity
 import com.ixuea.courses.mymusic.component.music.activity.LocalMusicActivity
@@ -73,8 +68,6 @@ class MainActivity : BaseLogicActivity() {
                     onScanLocalMusic = { startActivity(ScanLocalMusicActivity::class.java) },
                     onOpenDownloads = { startActivity(DownloadActivity::class.java) },
                     onOpenMessages = { startActivity(ConversationActivity::class.java) },
-                    onPublishFeed = { startActivity(PublishFeedActivity::class.java) },
-                    onOpenPlayer = { startMusicPlayerActivity() },
                 )
             }
         }
@@ -133,17 +126,8 @@ private fun MainHome(
     onScanLocalMusic: () -> Unit,
     onOpenDownloads: () -> Unit,
     onOpenMessages: () -> Unit,
-    onPublishFeed: () -> Unit,
-    onOpenPlayer: () -> Unit,
 ) {
     Scaffold(
-        topBar = {
-            MainHeader(
-                selectedTab = selectedTab,
-                onPublishFeed = onPublishFeed,
-                onOpenPlayer = onOpenPlayer,
-            )
-        },
         bottomBar = {
             MainBottomNavigation(
                 selectedTab = selectedTab,
@@ -215,9 +199,9 @@ private fun MainBottomNavigation(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
-            .padding(horizontal = 8.dp),
+            .height(58.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -241,72 +225,34 @@ private fun MainBottomNavigationItem(
 ) {
     Column(
         modifier = modifier
-            .height(50.dp)
+            .height(44.dp)
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(42.dp)
-                .height(14.dp)
                 .background(
                     color = if (selected) {
-                        MaterialTheme.colorScheme.primaryContainer
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.80f)
                     } else {
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f)
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0f)
                     },
-                    shape = RoundedCornerShape(999.dp),
-                ),
+                    shape = BottomNavShape,
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center,
         ) {
-            TabDot(selected = selected)
-        }
-        Text(
-            text = tab.title,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
-
-@Composable
-private fun MainHeader(
-    selectedTab: MainTab,
-    onPublishFeed: () -> Unit,
-    onOpenPlayer: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "MuseFlow",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
+                text = tab.title,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             )
-            Text(
-                text = selectedTab.title,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-
-        if (selectedTab == MainTab.Feed) {
-            TextButton(onClick = onPublishFeed) {
-                Text("发布")
-            }
-        }
-
-        TextButton(onClick = onOpenPlayer) {
-            Text("播放")
         }
     }
 }
@@ -416,29 +362,12 @@ private fun ShortcutContent(
     }
 }
 
-@Composable
-private fun TabDot(
-    selected: Boolean,
-    size: Dp = 8.dp,
-) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .background(
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-                },
-                shape = CircleShape,
-            ),
-    )
-}
-
 private enum class MainTab(val title: String) {
-    Discover("发现"),
+    Discover("首页"),
     Library("音乐"),
     Feed("动态"),
     Messages("消息"),
     Downloads("下载"),
 }
+
+private val BottomNavShape = RoundedCornerShape(999.dp)
