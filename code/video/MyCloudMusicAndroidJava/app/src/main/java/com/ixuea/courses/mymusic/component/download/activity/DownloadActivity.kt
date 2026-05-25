@@ -1,6 +1,7 @@
 package com.ixuea.courses.mymusic.component.download.activity
 
 import android.os.Bundle
+import android.os.Trace
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,57 +24,74 @@ class DownloadActivity : BaseLogicActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        downloadedViewModel = ViewModelProvider(this)[DownloadedViewModel::class.java]
-        downloadingViewModel = ViewModelProvider(this)[DownloadingViewModel::class.java]
+        traceSection("DLP.activity.viewModels") {
+            downloadedViewModel = ViewModelProvider(this)[DownloadedViewModel::class.java]
+            downloadingViewModel = ViewModelProvider(this)[DownloadingViewModel::class.java]
+        }
 
-        setContent {
-            val downloadedState by downloadedViewModel.uiState.collectAsState()
-            val downloadingState by downloadingViewModel.uiState.collectAsState()
+        traceSection("DLP.activity.setContent") {
+            setContent {
+                val downloadedState by downloadedViewModel.uiState.collectAsState()
+                val downloadingState by downloadingViewModel.uiState.collectAsState()
 
-            MuseFlowTheme {
-                DownloadScreen(
-                    downloadedState = downloadedState,
-                    downloadingState = downloadingState,
-                    songTitleForDownload = { download ->
-                        orm.querySong(download.id)?.title.orEmpty()
-                    },
-                    onBack = { onBackPressedDispatcher.onBackPressed() },
-                    onDownloadedSongClick = { song ->
-                        musicListManager.datum = downloadedState.songs
-                        musicListManager.play(song)
-                        startMusicPlayerActivity()
-                    },
-                    onToggleDownload = downloadingViewModel::toggle,
-                    onDeleteDownload = downloadingViewModel::remove,
-                    onDownloadTerminalState = {
-                        downloadingViewModel.onDownloadTerminalState()
-                    },
-                    onToggleAllDownloads = {
-                        if (downloadingState.downloads.isEmpty()) {
-                            SuperToast.show(R.string.error_not_download)
-                        } else if (downloadingState.isDownloading) {
-                            downloadingViewModel.pauseAll()
-                        } else {
-                            downloadingViewModel.resumeAll()
-                        }
-                    },
-                    onDeleteAllDownloads = {
-                        if (downloadingState.downloads.isEmpty()) {
-                            SuperToast.show(R.string.error_not_download)
-                        } else {
-                            downloadingViewModel.removeAll(downloadingState.downloads)
-                        }
-                    },
-                    initialTab = intent.getIntExtra(DOWNLOAD_INITIAL_TAB_EXTRA, 0),
-                )
+                MuseFlowTheme {
+                    DownloadScreen(
+                        downloadedState = downloadedState,
+                        downloadingState = downloadingState,
+                        songTitleForDownload = { download ->
+                            traceSection("DLP.activity.songTitleLookup") {
+                                orm.querySong(download.id)?.title.orEmpty()
+                            }
+                        },
+                        onBack = { onBackPressedDispatcher.onBackPressed() },
+                        onDownloadedSongClick = { song ->
+                            musicListManager.datum = downloadedState.songs
+                            musicListManager.play(song)
+                            startMusicPlayerActivity()
+                        },
+                        onToggleDownload = downloadingViewModel::toggle,
+                        onDeleteDownload = downloadingViewModel::remove,
+                        onDownloadTerminalState = {
+                            downloadingViewModel.onDownloadTerminalState()
+                        },
+                        onToggleAllDownloads = {
+                            if (downloadingState.downloads.isEmpty()) {
+                                SuperToast.show(R.string.error_not_download)
+                            } else if (downloadingState.isDownloading) {
+                                downloadingViewModel.pauseAll()
+                            } else {
+                                downloadingViewModel.resumeAll()
+                            }
+                        },
+                        onDeleteAllDownloads = {
+                            if (downloadingState.downloads.isEmpty()) {
+                                SuperToast.show(R.string.error_not_download)
+                            } else {
+                                downloadingViewModel.removeAll(downloadingState.downloads)
+                            }
+                        },
+                        initialTab = intent.getIntExtra(DOWNLOAD_INITIAL_TAB_EXTRA, 0),
+                    )
+                }
             }
         }
     }
 
     override fun initDatum() {
-        super.initDatum()
-        downloadedViewModel.observeDownloadedChanges(orm)
-        downloadedViewModel.load(orm)
-        downloadingViewModel.load()
+        traceSection("DLP.activity.initDatum") {
+            super.initDatum()
+            downloadedViewModel.observeDownloadedChanges(orm)
+            downloadedViewModel.load(orm)
+            downloadingViewModel.load()
+        }
+    }
+}
+
+private inline fun <T> traceSection(name: String, block: () -> T): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }

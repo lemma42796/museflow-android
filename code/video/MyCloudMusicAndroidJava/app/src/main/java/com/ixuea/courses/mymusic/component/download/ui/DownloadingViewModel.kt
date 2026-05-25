@@ -1,5 +1,6 @@
 package com.ixuea.courses.mymusic.component.download.ui
 
+import android.os.Trace
 import androidx.lifecycle.ViewModel
 import com.ixuea.android.downloader.domain.DownloadInfo
 import com.ixuea.courses.mymusic.component.download.domain.DownloadActionsUseCase
@@ -58,13 +59,31 @@ class DownloadingViewModel(
     }
 
     private fun publishDownloads() {
-        val downloads = loadDownloading()
-        _uiState.update {
-            it.copy(
-                downloads = downloads,
-                isDownloading = downloadActions.isDownloading(downloads),
-                dataVersion = it.dataVersion + 1,
-            )
+        traceSection("DLP.vm.publishDownloads") {
+            val downloads = traceSection("DLP.vm.loadDownloading") {
+                loadDownloading()
+            }
+            val isDownloading = traceSection("DLP.vm.isDownloading") {
+                downloadActions.isDownloading(downloads)
+            }
+            traceSection("DLP.vm.updateState") {
+                _uiState.update {
+                    it.copy(
+                        downloads = downloads,
+                        isDownloading = isDownloading,
+                        dataVersion = it.dataVersion + 1,
+                    )
+                }
+            }
         }
+    }
+}
+
+private inline fun <T> traceSection(name: String, block: () -> T): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }

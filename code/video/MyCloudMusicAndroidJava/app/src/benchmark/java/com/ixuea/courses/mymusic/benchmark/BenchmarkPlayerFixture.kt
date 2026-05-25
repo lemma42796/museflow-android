@@ -1,6 +1,7 @@
 package com.ixuea.courses.mymusic.benchmark
 
 import android.content.Context
+import com.ixuea.courses.mymusic.component.lyric.parser.LyricParser
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.component.user.model.User
 import com.ixuea.courses.mymusic.playback.PlaybackService
@@ -38,6 +39,7 @@ internal object BenchmarkPlayerFixture {
             source = Song.SOURCE_LOCAL
             path = ensureBenchmarkAudioFile(context).absolutePath
             lyric = BENCHMARK_LYRIC
+            parsedLyric = LyricParser.parse(style, lyric)
         }
     }
 
@@ -50,7 +52,7 @@ internal object BenchmarkPlayerFixture {
     }
 
     private fun createSilentWav(): ByteArray {
-        val dataSize = SAMPLE_RATE * AUDIO_SECONDS * BYTES_PER_SAMPLE
+        val dataSize = SAMPLE_RATE * AUDIO_SECONDS * CHANNELS * BYTES_PER_SAMPLE
         val buffer = ByteBuffer.allocate(WAV_HEADER_BYTES + dataSize)
             .order(ByteOrder.LITTLE_ENDIAN)
 
@@ -79,15 +81,21 @@ internal object BenchmarkPlayerFixture {
 
     private const val BENCHMARK_SONG_ID = "benchmark-player-track"
     private const val BENCHMARK_SINGER_ID = "benchmark-player-singer"
-    private const val BENCHMARK_AUDIO_FILE = "museflow-benchmark-silence.wav"
-    private const val BENCHMARK_AUDIO_DURATION_MS = 5_000L
+    private const val BENCHMARK_AUDIO_FILE = "museflow-benchmark-silence-60s.wav"
     private const val SAMPLE_RATE = 8_000
-    private const val AUDIO_SECONDS = 5
+    private const val AUDIO_SECONDS = 60
+    private const val BENCHMARK_AUDIO_DURATION_MS = AUDIO_SECONDS * 1_000L
     private const val CHANNELS = 1
     private const val BITS_PER_SAMPLE = 16
     private const val BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8
     private const val WAV_HEADER_BYTES = 44
-    private const val BENCHMARK_LYRIC = "[00:00.00]Benchmark intro\n" +
-        "[00:01.00]Benchmark verse\n" +
-        "[00:03.00]Benchmark chorus\n"
+    private val BENCHMARK_LYRIC = buildString {
+        repeat(AUDIO_SECONDS) { second ->
+            append("[00:")
+            append(second.toString().padStart(2, '0'))
+            append(".00]Benchmark lyric line ")
+            append(second + 1)
+            append('\n')
+        }
+    }
 }

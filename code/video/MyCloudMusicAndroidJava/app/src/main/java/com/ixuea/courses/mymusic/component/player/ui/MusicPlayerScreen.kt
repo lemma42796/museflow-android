@@ -1,5 +1,6 @@
 package com.ixuea.courses.mymusic.component.player.ui
 
+import android.os.Trace
 import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -74,12 +75,18 @@ fun MusicPlayerScreen(
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
-                ImageView(context).apply {
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setImageResource(R.drawable.default_cover)
+                traceSection("MFP.background.factory") {
+                    ImageView(context).apply {
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                        setImageResource(R.drawable.default_cover)
+                    }
                 }
             },
-            update = onBackgroundReady,
+            update = { view ->
+                traceSection("MFP.background.update") {
+                    onBackgroundReady(view)
+                }
+            },
         )
         Box(
             modifier = Modifier
@@ -107,10 +114,16 @@ fun MusicPlayerScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(if (isLyricVisible) 0f else 1f),
-                    factory = { context -> RecordPageView(context) },
+                    factory = { context ->
+                        traceSection("MFP.record.factory") {
+                            RecordPageView(context)
+                        }
+                    },
                     update = { view ->
-                        onRecordReady(view)
-                        view.setPlaying(isPlaying && !isLyricVisible)
+                        traceSection("MFP.record.update") {
+                            onRecordReady(view)
+                            view.setPlaying(isPlaying && !isLyricVisible)
+                        }
                     },
                 )
                 if (isLyricVisible) {
@@ -121,10 +134,16 @@ fun MusicPlayerScreen(
                     ) {
                         AndroidView(
                             modifier = Modifier.fillMaxSize(),
-                            factory = { context -> LyricListView(context) },
+                            factory = { context ->
+                                traceSection("MFP.lyric.factory") {
+                                    LyricListView(context)
+                                }
+                            },
                             update = { view ->
-                                onLyricReady(view)
-                                view.setProgress(progress)
+                                traceSection("MFP.lyric.update") {
+                                    onLyricReady(view)
+                                    view.setProgress(progress)
+                                }
                             },
                         )
                     }
@@ -152,6 +171,15 @@ fun MusicPlayerScreen(
                 modifier = Modifier.padding(bottom = 20.dp),
             )
         }
+    }
+}
+
+private inline fun <T> traceSection(name: String, block: () -> T): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }
 

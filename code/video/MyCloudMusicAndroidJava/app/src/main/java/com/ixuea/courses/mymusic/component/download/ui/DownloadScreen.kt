@@ -1,5 +1,6 @@
 package com.ixuea.courses.mymusic.component.download.ui
 
+import android.os.Trace
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -107,18 +108,22 @@ fun DownloadScreen(
             }
 
             when (selectedTab) {
-                0 -> DownloadedList(
-                    songs = downloadedState.songs,
-                    onSongClick = onDownloadedSongClick,
-                )
+                0 -> traceComposable("DLP.downloaded.list") {
+                    DownloadedList(
+                        songs = downloadedState.songs,
+                        onSongClick = onDownloadedSongClick,
+                    )
+                }
 
-                else -> DownloadingList(
-                    downloads = downloadingState.downloads,
-                    songTitleForDownload = songTitleForDownload,
-                    onToggleDownload = onToggleDownload,
-                    onDeleteClick = { pendingDelete = it },
-                    onDownloadTerminalState = onDownloadTerminalState,
-                )
+                else -> traceComposable("DLP.downloading.list") {
+                    DownloadingList(
+                        downloads = downloadingState.downloads,
+                        songTitleForDownload = songTitleForDownload,
+                        onToggleDownload = onToggleDownload,
+                        onDeleteClick = { pendingDelete = it },
+                        onDownloadTerminalState = onDownloadTerminalState,
+                    )
+                }
             }
         }
     }
@@ -184,32 +189,38 @@ private fun DownloadingList(
     onDeleteClick: (DownloadInfo) -> Unit,
     onDownloadTerminalState: (DownloadInfo) -> Unit,
 ) {
-    if (downloads.isEmpty()) {
-        EmptyContent(text = stringResource(R.string.no_downloading_task))
-        return
-    }
+    traceComposable("DLP.downloading.listBody") {
+        if (downloads.isEmpty()) {
+            EmptyContent(text = stringResource(R.string.no_downloading_task))
+            return@traceComposable
+        }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag(DOWNLOADING_LIST_MARKER),
-        contentPadding = PaddingValues(vertical = 8.dp),
-    ) {
-        itemsIndexed(
-            items = downloads,
-            key = { index, download -> download.id ?: "downloading-$index" },
-        ) { _, download ->
-            val title = remember(download.id) {
-                songTitleForDownload(download)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(DOWNLOADING_LIST_MARKER),
+            contentPadding = PaddingValues(vertical = 8.dp),
+        ) {
+            itemsIndexed(
+                items = downloads,
+                key = { index, download -> download.id ?: "downloading-$index" },
+            ) { _, download ->
+                traceComposable("DLP.downloading.item") {
+                    val title = remember(download.id) {
+                        traceSection("DLP.downloading.title") {
+                            songTitleForDownload(download)
+                        }
+                    }
+                    DownloadingTaskRow(
+                        download = download,
+                        title = title,
+                        onClick = { onToggleDownload(download) },
+                        onDeleteClick = { onDeleteClick(download) },
+                        onDownloadTerminalState = { onDownloadTerminalState(download) },
+                    )
+                    HorizontalDivider()
+                }
             }
-            DownloadingTaskRow(
-                download = download,
-                title = title,
-                onClick = { onToggleDownload(download) },
-                onDeleteClick = { onDeleteClick(download) },
-                onDownloadTerminalState = { onDownloadTerminalState(download) },
-            )
-            HorizontalDivider()
         }
     }
 }
@@ -261,47 +272,51 @@ private fun DownloadingTaskRow(
     onDeleteClick: () -> Unit,
     onDownloadTerminalState: () -> Unit,
 ) {
-    var refreshTick by remember(download) { mutableStateOf(0) }
-    DisposableEffect(download) {
-        val listener = object : MyDownloadListener() {
-            override fun onRefresh() {
-                refreshTick += 1
-                if (!download.isVisibleDownloadingState()) {
-                    onDownloadTerminalState()
+    traceComposable("DLP.downloading.row") {
+        var refreshTick by remember(download) { mutableStateOf(0) }
+        DisposableEffect(download) {
+            val listener = object : MyDownloadListener() {
+                override fun onRefresh() {
+                    traceSection("DLP.downloading.listenerRefresh") {
+                        refreshTick += 1
+                        if (!download.isVisibleDownloadingState()) {
+                            onDownloadTerminalState()
+                        }
+                    }
+                }
+            }
+            download.downloadListener = listener
+            onDispose {
+                if (download.downloadListener === listener) {
+                    download.downloadListener = null
                 }
             }
         }
-        download.downloadListener = listener
-        onDispose {
-            if (download.downloadListener === listener) {
-                download.downloadListener = null
-            }
-        }
-    }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title.ifBlank { download.id.orEmpty() },
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            DownloadStatus(
-                download = download,
-                refreshTick = refreshTick,
-            )
-        }
-        TextButton(onClick = onDeleteClick) {
-            Text(stringResource(R.string.delete))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title.ifBlank { download.id.orEmpty() },
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                DownloadStatus(
+                    download = download,
+                    refreshTick = refreshTick,
+                )
+            }
+            TextButton(onClick = onDeleteClick) {
+                Text(stringResource(R.string.delete))
+            }
         }
     }
 }
@@ -311,36 +326,44 @@ private fun DownloadStatus(
     download: DownloadInfo,
     @Suppress("UNUSED_PARAMETER") refreshTick: Int,
 ) {
-    val statusText = when (download.status) {
-        DownloadInfo.STATUS_PAUSED -> stringResource(R.string.click_download)
-        DownloadInfo.STATUS_ERROR -> stringResource(R.string.download_failed)
-        DownloadInfo.STATUS_WAIT -> stringResource(R.string.wait_download)
-        DownloadInfo.STATUS_DOWNLOADING,
-        DownloadInfo.STATUS_PREPARE_DOWNLOAD -> {
-            val start = FileUtil.formatFileSize(download.progress)
-            val size = FileUtil.formatFileSize(download.size)
-            stringResource(R.string.download_progress, start, size)
+    traceComposable("DLP.downloading.status") {
+        val statusText = when (download.status) {
+            DownloadInfo.STATUS_PAUSED -> stringResource(R.string.click_download)
+            DownloadInfo.STATUS_ERROR -> stringResource(R.string.download_failed)
+            DownloadInfo.STATUS_WAIT -> stringResource(R.string.wait_download)
+            DownloadInfo.STATUS_DOWNLOADING,
+            DownloadInfo.STATUS_PREPARE_DOWNLOAD -> {
+                val start = traceSection("DLP.downloading.formatStart") {
+                    FileUtil.formatFileSize(download.progress)
+                }
+                val size = traceSection("DLP.downloading.formatSize") {
+                    FileUtil.formatFileSize(download.size)
+                }
+                stringResource(R.string.download_progress, start, size)
+            }
+
+            else -> ""
         }
+        val showProgress = download.status == DownloadInfo.STATUS_DOWNLOADING ||
+            download.status == DownloadInfo.STATUS_PREPARE_DOWNLOAD
 
-        else -> ""
-    }
-    val showProgress = download.status == DownloadInfo.STATUS_DOWNLOADING ||
-        download.status == DownloadInfo.STATUS_PREPARE_DOWNLOAD
-
-    Column {
-        Text(
-            text = statusText,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        if (showProgress && download.size > 0) {
-            Spacer(modifier = Modifier.height(6.dp))
-            LinearProgressIndicator(
-                progress = {
-                    (download.progress.toFloat() / download.size.toFloat()).coerceIn(0f, 1f)
-                },
-                modifier = Modifier.fillMaxWidth(),
+        Column {
+            Text(
+                text = statusText,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
             )
+            if (showProgress && download.size > 0) {
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = {
+                        traceSection("DLP.downloading.progressFraction") {
+                            (download.progress.toFloat() / download.size.toFloat()).coerceIn(0f, 1f)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }
@@ -387,4 +410,20 @@ private fun DownloadInfo.isVisibleDownloadingState(): Boolean {
 
         else -> false
     }
+}
+
+private inline fun <T> traceSection(name: String, block: () -> T): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
+    }
+}
+
+@Composable
+private inline fun traceComposable(name: String, content: @Composable () -> Unit) {
+    Trace.beginSection(name)
+    content()
+    Trace.endSection()
 }

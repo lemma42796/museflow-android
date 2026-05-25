@@ -31,6 +31,7 @@ private const val PLAYER_SCREEN_MARKER = "MuseFlowMusicPlayerScreen"
 private const val PLAYER_LYRIC_MARKER = "MuseFlowMusicPlayerLyricPanel"
 private const val DOWNLOAD_SCREEN_MARKER = "MuseFlowDownloadScreen"
 private const val DOWNLOADING_LIST_MARKER = "MuseFlowDownloadingList"
+private const val LYRIC_LIST_RES_ID = "lyric_list"
 
 internal fun MacrobenchmarkScope.waitForHome() {
     check(device.wait(Until.hasObject(By.pkg(TARGET_PACKAGE)), 5_000)) {
@@ -103,10 +104,33 @@ internal fun MacrobenchmarkScope.runPlaybackTransportControlsWithoutInput() {
 }
 
 internal fun MacrobenchmarkScope.runPlaybackLyricPanelWithoutInput() {
-    sendPlaybackCommand(COMMAND_SHOW_LYRIC)
-    waitForLyricPanel()
+    showPlaybackLyricPanelWithoutInput()
     sendPlaybackCommand(COMMAND_SEEK, positionMs = 3_200)
     waitForPlayerWork()
+}
+
+internal fun MacrobenchmarkScope.showPlaybackLyricPanelWithoutInput() {
+    sendPlaybackCommand(COMMAND_SHOW_LYRIC)
+    waitForLyricPanel()
+    waitForLyricList()
+}
+
+internal fun MacrobenchmarkScope.runPlaybackLyricDrag() {
+    repeat(2) {
+        swipeLyricList(Direction.UP)
+        waitForLyricDragWork()
+    }
+    repeat(2) {
+        swipeLyricList(Direction.DOWN)
+        waitForLyricDragWork()
+    }
+}
+
+internal fun MacrobenchmarkScope.runPlaybackLyricDragSmoke() {
+    swipeLyricList(Direction.UP)
+    waitForLyricDragWork()
+    swipeLyricList(Direction.DOWN)
+    waitForLyricDragWork()
 }
 
 internal fun MacrobenchmarkScope.runDownloadListRefreshWithoutInput() {
@@ -133,6 +157,23 @@ private fun MacrobenchmarkScope.waitForLyricPanel() {
         "Music player lyric marker did not appear."
     }
     waitForPlayerMarker()
+}
+
+private fun MacrobenchmarkScope.waitForLyricList(): UiObject2 {
+    return checkNotNull(
+        device.wait(
+            Until.findObject(By.res(TARGET_PACKAGE, LYRIC_LIST_RES_ID)),
+            5_000,
+        ),
+    ) {
+        "Lyric list marker did not appear."
+    }
+}
+
+private fun MacrobenchmarkScope.waitForLyricDragWork(delayMs: Long = 250) {
+    Thread.sleep(delayMs)
+    waitForLyricList()
+    waitForPlayerMarker(delayMs = 0)
 }
 
 private fun MacrobenchmarkScope.waitForDownloadingList() {
@@ -208,4 +249,28 @@ private fun MacrobenchmarkScope.flingHomeContent(direction: Direction) {
         }
     }
     throw staleNode ?: IllegalStateException("Scrollable home content became unavailable.")
+}
+
+private fun MacrobenchmarkScope.swipeLyricList(direction: Direction) {
+    var staleNode: StaleObjectException? = null
+    repeat(3) {
+        val list = waitForLyricList()
+        try {
+            val bounds = list.visibleBounds
+            val x = bounds.centerX()
+            val top = bounds.top + bounds.height() / 5
+            val bottom = bounds.bottom - bounds.height() / 5
+            when (direction) {
+                Direction.UP -> device.swipe(x, bottom, x, top, 16)
+                Direction.DOWN -> device.swipe(x, top, x, bottom, 16)
+                else -> error("Unsupported lyric swipe direction: $direction")
+            }
+            device.waitForIdle()
+            return
+        } catch (error: StaleObjectException) {
+            staleNode = error
+            device.waitForIdle()
+        }
+    }
+    throw staleNode ?: IllegalStateException("Lyric list became unavailable.")
 }

@@ -104,6 +104,10 @@
 - 播放控制 no-input 扩展已在同一真机通过：benchmark-only receiver 使用静音本地 WAV 和真实 `PlaybackService` 控制链路，覆盖 play/pause/resume/seek；`playbackTransportControlsNoInput` 3 次迭代通过，`frameDurationCpuMs` P99 11.7 ms，`frameOverrunMs` P99 8.0 ms。歌词面板 `playbackLyricPanelNoInput` 1 次覆盖通过，P99 分别为 22.8 ms / 18.5 ms，但只作为显示覆盖，不作为稳定性能结论。
 - 真机输入注入限制已在设备设置调整后复测放行：`adb shell input keyevent HOME` 和 `adb shell input swipe ...` 成功；原始输入型 `StartupAndPlayerBenchmark` 已恢复可跑，首页滚动原先暴露 `StaleObjectException`，已通过每次 fling 重新获取滚动根节点并短重试修复。修复后完整 3 用例套件在 Redmi 真机全绿，首页滚动 `frameDurationCpuMs` P99 6.4 ms / `frameOverrunMs` P99 -1.4 ms，首页点歌进播放器 `frameDurationCpuMs` P99 11.7 ms / `frameOverrunMs` P99 9.2 ms。
 - 下载列表刷新 no-input benchmark 已在同一真机通过：新增 benchmark-only 内存下载 manager/入口/receiver，预置 18 条下载中任务并通过 broadcast 推进进度触发行级刷新；`DownloadListNoInputBenchmark#downloadingListRefreshNoInput` 3 次迭代通过，`frameDurationCpuMs` P99 15.9 ms，`frameOverrunMs` P99 8.3 ms。
+- 歌词拖拽 benchmark 已在同一真机通过：benchmark-only 播放器 fixture 改为 60 秒静音 WAV 和 60 行歌词，`PlaybackLyricDragBenchmark#playbackLyricDragSmoke` 单迭代通过，正式 `PlaybackLyricDragBenchmark#playbackLyricDrag` 3 次迭代通过；正式结果 `frameDurationCpuMs` P99 11.5 ms，`frameOverrunMs` P99 4.3 ms。
+- 播放器首屏已开始进入 Perfetto trace + 优化前后复测：`MusicPlayerActivity.loadBackground(...)` 对 API 31+ 空封面路径跳过重复 Glide 默认封面加载；同设备两轮复测 P50/P90/P95 均较优化前改善，P99 与优化前同级且仍主要受首帧 `traversal`/`relayoutWindow` 尾帧影响，不能表述为 P99 稳定改善。
+- 播放器首屏已补 `MFP.*` 自定义 trace section 并在真机 Perfetto 中验证：`RecordPageView` 创建约 1.37 ms、`onCreate.setContent` 约 1.01 ms、默认封面 fast path 约 0.001 ms；当前没有暴露新的业务级长耗时，剩余大头仍在首帧 traversal/layout。
+- 下载列表刷新已补 `DLP.*` 自定义 trace section 并在真机 Perfetto 中验证：listener refresh、整行重组、状态区、文件大小格式化和进度比例计算均可拆分观察；`refreshTick` 下沉到状态区的试验指标变差，已回退，当前只保留埋点和分析证据。
 
 当前尚未完成：
 
@@ -114,7 +118,7 @@
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 - 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
-- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展、原始输入型首页滚动/首页进播放器恢复验证，以及下载列表刷新 no-input 初始基线；歌词拖拽和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
+- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展、原始输入型首页滚动/首页进播放器恢复验证、下载列表刷新 no-input 初始基线、歌词拖拽初始基线、播放器首屏默认封面路径的一处局部优化前后复测、播放器首屏 `MFP.*` 自定义 trace section 验证，以及下载列表刷新 `DLP.*` 自定义 trace section 验证；持续播放中的歌词拖拽、逐字高亮/seek 联动和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -124,9 +128,112 @@
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
 - 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
-- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek、歌词面板显示和下载列表刷新，原始输入型首页滚动/首页进播放器已恢复验证；下一步继续扩展歌词拖拽和更多优化前后复测证据。
+- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek、歌词面板显示、下载列表刷新和歌词拖拽，原始输入型首页滚动/首页进播放器已恢复验证，播放器首屏已完成一轮 Perfetto trace、默认封面路径局部优化和 `MFP.*` 自定义 trace section 验证，下载列表刷新已完成 `DLP.*` 自定义 trace section 验证；下一步继续拆歌词持续播放/逐字高亮/seek 联动，或围绕下载列表刷新可见行数量、进度条 draw/animation 成本和批量进度节流做前后对比。
+
+## 当前交接备注
+
+- 本轮保留的代码变化包括：60 秒 benchmark 播放 fixture、歌词拖拽 benchmark、歌词列表稳定 id、播放器首屏默认封面 fast path、播放器 `MFP.*` trace section、下载刷新 `DLP.*` trace section。
+- 本轮验证已覆盖：`./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin`、歌词拖拽 smoke/正式 benchmark、播放器首屏 no-input benchmark、下载列表刷新 no-input benchmark，以及设备侧 trace processor 对 `MFP.*`/`DLP.*` 的查询。
+- 本轮明确不保留的尝试：下载刷新里把 `refreshTick` 从整行下沉到 `DownloadStatus` 的状态拆分，因为正式帧指标变差；后续不要把它当作优化成果。
+- 当前尚未提交、未 push；`docs/modernization/course-trace-cleanup-task.md` 仍是本地未跟踪规划文件，除非用户明确要求，不要纳入仓库。
+- 下一步优先级：先补持续播放中的歌词拖拽、逐字高亮和 seek 联动；若继续性能优化，播放器首屏聚焦首帧 layout/relayout，下载刷新聚焦可见行数量、进度条 draw/animation 成本或批量进度节流。
 
 ## 最新执行记录
+
+### 2026-05-25 下载列表刷新 DLP trace
+
+本轮目标：
+
+- 把下载列表刷新从“有 benchmark 数字”推进到“能解释刷新成本在哪里”。
+
+已完成：
+
+- `DownloadActivity`、`DownloadingViewModel`、`DownloadScreen` 补 `DLP.*` trace section，覆盖 ViewModel 发布、标题查询、下载中列表、行、状态、listener refresh、文件大小格式化和进度比例计算。
+- 复跑 `DownloadListNoInputBenchmark#downloadingListRefreshNoInput`，确认 `DLP.*` 切片能在 Perfetto trace processor 中查询。
+- 尝试把 `refreshTick` 从整行 `DownloadingTaskRow` 下沉到 `DownloadStatus`，但正式帧指标变差，已回退；当前只保留 DLP 埋点，不保留该优化。
+
+验证：
+
+- `./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- DLP 初始埋点复跑：`frameCount` median 3；`frameDurationCpuMs` P50 14.6 ms / P90 16.5 ms / P95 16.6 ms / P99 16.8 ms；`frameOverrunMs` P50 7.4 ms / P90 8.6 ms / P95 8.6 ms / P99 8.7 ms。
+- `refreshTick` 下沉试验复跑：`frameDurationCpuMs` P50 15.1 ms / P90 18.4 ms / P95 20.2 ms / P99 21.7 ms；`frameOverrunMs` P50 7.1 ms / P90 9.2 ms / P95 9.5 ms / P99 9.8 ms；该试验已回退。
+- 最终保留版本复跑：`frameCount` median 3；`frameDurationCpuMs` P50 11.9 ms / P90 16.4 ms / P95 17.1 ms / P99 17.7 ms；`frameOverrunMs` P50 7.3 ms / P90 9.5 ms / P95 10.2 ms / P99 10.8 ms。
+
+Trace 结论：
+
+- 最终保留版本 median trace：`DLP.downloading.listenerRefresh` 24 次，max 0.565 ms / total 1.275 ms；`DLP.downloading.row` 24 次，max 0.533 ms / total 5.178 ms；`DLP.downloading.status` 24 次，max 0.290 ms / total 3.394 ms。
+- 文件大小格式化和进度比例不是热点：`DLP.downloading.formatStart` total 0.706 ms，`DLP.downloading.formatSize` total 0.236 ms，`DLP.downloading.progressFraction` total 0.481 ms。
+- 主线程最长仍是框架/Compose 级切片：`Choreographer#doFrame` 约 8.6 ms，`traversal` 约 4.9 ms，`draw-VRI[DownloadActivity]` 约 4.6 ms，`Recomposer:recompose` 约 3.5 ms，`AndroidOwner:measureAndLayout` 约 2.5 ms。
+
+结论：
+
+- 下载刷新业务回调和单行状态组合都不是明显独占瓶颈。
+- “更细粒度状态拆分”不能直接当成优化结论；本轮下沉试验证明需要以 benchmark 结果为准。
+
+后续：
+
+- 若继续下载列表优化，优先围绕减少每次刷新触发的可见行数量、降低进度条 draw/animation 成本或批量进度节流做前后对比。
+- 也可以转向持续播放中的歌词拖拽、逐字高亮和 seek 联动场景。
+
+### 2026-05-25 播放器首屏 trace 与默认封面路径优化
+
+本轮目标：
+
+- 从“继续补 benchmark”转入“看 trace 做可解释的小优化”，先处理已稳定可跑的播放器首屏 no-input 路径。
+
+已完成：
+
+- 复跑 `StartupAndPlayerNoInputBenchmark#openPlayerViaBenchmarkEntryNoInput`，取得优化前同设备基线。
+- 使用设备侧 `trace_processor_shell` 查看播放器首屏 Perfetto trace；主线程最长切片集中在首帧 `Choreographer#doFrame`/`traversal` 和窗口 `relayoutWindow`，没有看到单个业务函数独占耗时。
+- `MusicPlayerActivity.loadBackground(...)` 增加 API 31+ 空封面快速路径：平台 `RenderEffect` 可用时，空封面直接复用背景 ImageView 默认 `default_cover`，不再额外走 Glide 加载同一张默认封面和切换动画；低版本 Glide blur fallback 保持不变。
+
+验证：
+
+- `./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- 优化前播放器首屏复跑：`frameCount` median 37；`frameDurationCpuMs` P50 3.0 ms / P90 4.8 ms / P95 5.3 ms / P99 15.8 ms；`frameOverrunMs` P50 -3.4 ms / P90 -1.3 ms / P95 -0.5 ms / P99 15.4 ms。
+- 优化后第 1 轮：`frameCount` median 36；`frameDurationCpuMs` P50 2.6 ms / P90 4.0 ms / P95 4.8 ms / P99 18.7 ms；`frameOverrunMs` P50 -6.6 ms / P90 -4.7 ms / P95 -3.4 ms / P99 17.1 ms。
+- 优化后第 2 轮：`frameCount` median 38；`frameDurationCpuMs` P50 2.7 ms / P90 4.1 ms / P95 4.9 ms / P99 17.1 ms；`frameOverrunMs` P50 -6.6 ms / P90 -5.0 ms / P95 -3.4 ms / P99 15.4 ms。
+- 优化后 median trace：首帧 `Choreographer#doFrame` 约 19.0 ms，`traversal` 约 19.0 ms，`MusicPlayerActivity` 首次 `relayoutWindow` 约 7.6 ms，`performCreate:MusicPlayerActivity` 约 1.7 ms。
+- 补 `MFP.*` 自定义 trace section 后复跑同一 benchmark 通过：`frameCount` median 38；`frameDurationCpuMs` P50 2.6 ms / P90 4.0 ms / P95 4.7 ms / P99 17.4 ms；`frameOverrunMs` P50 -6.6 ms / P90 -4.7 ms / P95 -3.6 ms / P99 8.5 ms。
+- 自定义切片已在 median trace 中可见：`MFP.record.factory` 约 1.37 ms，`MFP.onCreate.setContent` 约 1.01 ms，`MFP.initViews` 约 0.49 ms，`MFP.download.lookup` 约 0.15 ms，`MFP.background.defaultCoverFastPath` 约 0.001 ms；同一 trace 的主线程最长切片仍是 `Choreographer#doFrame`/`traversal` 约 14.4 ms。
+
+结论：
+
+- 这处优化可以保留：两轮复测都降低了典型帧 P50/P90/P95。
+- 不能宣传为 P99 稳定改善：P99 第一轮变差、第二轮回到优化前同级，剩余尾帧主要还是首帧 layout/relayout。
+- 自定义 trace section 没有暴露新的业务级长耗时，下一步播放器首屏优化应聚焦首帧 layout/relayout 范围，而不是继续围绕默认封面加载猜测。
+
+后续：
+
+- 若继续播放器首屏，下一步应看是否能延后非首屏控件初始化、缩小首帧可见树或进一步拆 `RecordPageView`/ViewPager2 首帧布局。
+- 也可以转向下载列表刷新 trace 或持续播放中的歌词拖拽/逐字高亮/seek 联动场景。
+
+### 2026-05-25 歌词拖拽 benchmark
+
+本轮目标：
+
+- 补齐性能稳定性治理里缺失的播放器歌词列表拖拽初始基线。
+
+已完成：
+
+- `BenchmarkPlayerFixture` 的测试歌曲从 5 秒静音 WAV 改成 60 秒静音 WAV，并生成 60 行每秒一行的 LRC 歌词；fixture 预填 `parsedLyric`，避免歌词面板打开后列表为空。
+- `LyricListView` 补 `lyric_list`、`lyric_drag_container`、`lyric_drag_play` 稳定 resource id。
+- 新增 `PlaybackLyricDragBenchmark`：`playbackLyricDragSmoke` 用单迭代少量拖拽验证路径闭环，`playbackLyricDrag` 用 3 次迭代覆盖歌词列表上下拖拽。
+- 早期持续启动播放的版本会长时间卡在 benchmark 收尾；当前用例不持续播放，只测已加载歌词列表的真实坐标 swipe 拖拽帧表现。
+
+验证：
+
+- `./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- `ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.PlaybackLyricDragBenchmark#playbackLyricDragSmoke` 通过：1 个用例成功，耗时约 54s；`frameDurationCpuMs` P99 10.4 ms，`frameOverrunMs` P99 4.2 ms。
+- `ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.PlaybackLyricDragBenchmark#playbackLyricDrag` 通过：1 个用例成功，3 次迭代，耗时约 2m18s；`frameCount` median 956；`frameDurationCpuMs` P50 4.6 ms / P90 9.5 ms / P95 10.3 ms / P99 11.5 ms；`frameOverrunMs` P50 -3.6 ms / P90 1.6 ms / P95 2.6 ms / P99 4.3 ms。
+
+边界：
+
+- 本轮覆盖的是 benchmark-only 静音 60 秒歌曲、已加载歌词列表、非持续播放状态下的播放器歌词列表拖拽；不等同于真实歌曲持续播放中的逐字高亮、拖拽后点击 seek、长时间播放和桌面歌词拖拽。
+
+后续：
+
+- 进入 Perfetto trace 分析和优化前后复测；若继续补歌词场景，优先做持续播放/逐字高亮/seek 联动。
 
 ### 2026-05-24 下载列表刷新 no-input benchmark
 

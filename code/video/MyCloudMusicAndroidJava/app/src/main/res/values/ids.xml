@@ -3,4 +3,7 @@
     <item name="content" type="id" />
     <item name="placeholder" type="id" />
     <item name="small_audio_control" type="id" />
+    <item name="lyric_list" type="id" />
+    <item name="lyric_drag_container" type="id" />
+    <item name="lyric_drag_play" type="id" />
 </resources>

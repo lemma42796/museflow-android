@@ -288,6 +288,7 @@ class LyricListView @JvmOverloads constructor(
 
     private fun buildLayout() {
         lyricList.apply {
+            id = R.id.lyric_list
             isVerticalScrollBarEnabled = false
         }
         addView(
@@ -300,6 +301,7 @@ class LyricListView @JvmOverloads constructor(
         val dragButtonSize = dimenPx(R.dimen.d40)
         val dragButtonPadding = dimenPx(R.dimen.d10)
         lyricPlay.apply {
+            id = R.id.lyric_drag_play
             background = null
             setPadding(dragButtonPadding, dragButtonPadding, dragButtonPadding, dragButtonPadding)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -312,6 +314,7 @@ class LyricListView @JvmOverloads constructor(
         lyricTime.alpha = 0.9f
 
         lyricDragContainer.apply {
+            id = R.id.lyric_drag_container
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
             visibility = View.GONE

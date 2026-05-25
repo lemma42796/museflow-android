@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.os.Trace
 import android.widget.ImageView
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
@@ -88,51 +89,57 @@ class MusicPlayerActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
-        downloadActionsUseCase = DownloadActionsUseCase()
-        setContent {
-            MuseFlowTheme {
-                MusicPlayerScreen(
-                    title = titleText.ifBlank { getString(R.string.activity_music_player) },
-                    subtitle = subtitleText,
-                    isPlaying = isPlaying,
-                    isLyricVisible = isLyricVisible,
-                    progress = playbackProgress,
-                    duration = playbackDuration,
-                    loopModel = loopModel,
-                    downloadIcon = downloadIcon,
-                    onBack = { onBackPressedDispatcher.onBackPressed() },
-                    onDownloadClick = ::downloadClick,
-                    onLoopClick = {
-                        musicListManager.changeLoopModel()
-                        showLoopModel()
-                    },
-                    onPreviousClick = ::playPrevious,
-                    onPlayPauseClick = ::playOrPause,
-                    onNextClick = ::playNext,
-                    onListClick = {
-                        MusicPlayListDialogFragment.show(supportFragmentManager)
-                    },
-                    onSeekChange = { value ->
-                        isSeekTracking = true
-                        playbackProgress = value
-                        musicListManager.seekTo(value)
-                    },
-                    onSeekFinished = {
-                        isSeekTracking = false
-                    },
-                    onBackgroundReady = ::bindBackgroundView,
-                    onRecordReady = ::bindRecordPageView,
-                    onLyricReady = ::bindLyricListView,
-                )
+        traceSection("MFP.onCreate.dependencies") {
+            musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
+            downloadActionsUseCase = DownloadActionsUseCase()
+        }
+        traceSection("MFP.onCreate.setContent") {
+            setContent {
+                MuseFlowTheme {
+                    MusicPlayerScreen(
+                        title = titleText.ifBlank { getString(R.string.activity_music_player) },
+                        subtitle = subtitleText,
+                        isPlaying = isPlaying,
+                        isLyricVisible = isLyricVisible,
+                        progress = playbackProgress,
+                        duration = playbackDuration,
+                        loopModel = loopModel,
+                        downloadIcon = downloadIcon,
+                        onBack = { onBackPressedDispatcher.onBackPressed() },
+                        onDownloadClick = ::downloadClick,
+                        onLoopClick = {
+                            musicListManager.changeLoopModel()
+                            showLoopModel()
+                        },
+                        onPreviousClick = ::playPrevious,
+                        onPlayPauseClick = ::playOrPause,
+                        onNextClick = ::playNext,
+                        onListClick = {
+                            MusicPlayListDialogFragment.show(supportFragmentManager)
+                        },
+                        onSeekChange = { value ->
+                            isSeekTracking = true
+                            playbackProgress = value
+                            musicListManager.seekTo(value)
+                        },
+                        onSeekFinished = {
+                            isSeekTracking = false
+                        },
+                        onBackgroundReady = ::bindBackgroundView,
+                        onRecordReady = ::bindRecordPageView,
+                        onLyricReady = ::bindLyricListView,
+                    )
+                }
             }
         }
     }
 
     override fun initViews() {
-        super.initViews()
-        QMUIStatusBarHelper.setStatusBarDarkMode(this)
-        QMUIStatusBarHelper.translucent(this)
+        traceSection("MFP.initViews") {
+            super.initViews()
+            QMUIStatusBarHelper.setStatusBarDarkMode(this)
+            QMUIStatusBarHelper.translucent(this)
+        }
     }
 
     /**
@@ -193,15 +200,17 @@ class MusicPlayerActivity :
     }
 
     override fun initDatum() {
-        super.initDatum()
-        if (!::musicPlayerManager.isInitialized) {
-            musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
-        }
-        if (!::downloadActionsUseCase.isInitialized) {
-            downloadActionsUseCase = DownloadActionsUseCase()
-        }
+        traceSection("MFP.initDatum") {
+            super.initDatum()
+            if (!::musicPlayerManager.isInitialized) {
+                musicPlayerManager = PlaybackService.getMusicPlayerManager(applicationContext)
+            }
+            if (!::downloadActionsUseCase.isInitialized) {
+                downloadActionsUseCase = DownloadActionsUseCase()
+            }
 
-        observePlayerEvents()
+            observePlayerEvents()
+        }
     }
 
     private fun observePlayerEvents() {
@@ -361,26 +370,32 @@ class MusicPlayerActivity :
      * 选中当前音乐
      */
     private fun scrollPosition() {
-        val index = musicListManager.datum.indexOf(currentSong())
-        recordPageView?.scrollPosition(index)
+        traceSection("MFP.scrollPosition") {
+            val index = musicListManager.datum.indexOf(currentSong())
+            recordPageView?.scrollPosition(index)
+        }
     }
 
     private fun showLyricData() {
-        lyricData = currentSong()?.parsedLyric
-        lyricListView?.setData(lyricData)
+        traceSection("MFP.showLyricData") {
+            lyricData = currentSong()?.parsedLyric
+            lyricListView?.setData(lyricData)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        showInitData()
-        showDuration()
-        showProgress()
-        showMusicPlayStatus()
-        showLoopModel()
-        scrollPosition()
-        showLyricData()
+        traceSection("MFP.onResume.bindState") {
+            showInitData()
+            showDuration()
+            showProgress()
+            showMusicPlayStatus()
+            showLoopModel()
+            scrollPosition()
+            showLyricData()
 
-        musicPlayerManager.addMusicPlayerListener(this)
+            musicPlayerManager.addMusicPlayerListener(this)
+        }
     }
 
     /**
@@ -447,76 +462,99 @@ class MusicPlayerActivity :
      * 显示初始化数据
      */
     private fun showInitData() {
-        val data = currentSong()
-        if (data == null) {
-            finish()
-            return
+        traceSection("MFP.showInitData") {
+            val data = currentSong()
+            if (data == null) {
+                finish()
+                return
+            }
+
+            titleText = data.title.orEmpty()
+            subtitleText = data.singer?.nickname.orEmpty()
+            loadBackground(data)
+
+            downloadInfo = traceSection("MFP.download.lookup") {
+                data.id?.let { songId -> downloadActionsUseCase.getDownloadById(songId) }
+            }
+            if (downloadInfo != null) {
+                setDownloadCallback()
+            }
+
+            refresh()
         }
-
-        titleText = data.title.orEmpty()
-        subtitleText = data.singer?.nickname.orEmpty()
-        loadBackground(data)
-
-        downloadInfo = data.id?.let { songId -> downloadActionsUseCase.getDownloadById(songId) }
-        if (downloadInfo != null) {
-            setDownloadCallback()
-        }
-
-        refresh()
     }
 
     private fun loadBackground(data: Song) {
-        val targetView = backgroundView ?: return
-        loadedBackgroundSongId = data.id
-        val icon = data.icon.orEmpty()
-        val requestBuilder: RequestBuilder<Drawable> = Glide.with(this).asDrawable()
-        if (StringUtils.isBlank(icon)) {
-            requestBuilder.load(R.drawable.default_cover)
-        } else if (icon.isDirectImageUri()) {
-            requestBuilder.load(icon)
-        } else {
-            requestBuilder.load(ResourceUtil.resourceUri(icon))
-        }
-
-        val backgroundRequest = if (targetView.applyPlatformBlurIfSupported()) {
-            requestBuilder
-        } else {
-            requestBuilder.apply(bitmapTransform(BlurTransformation(BITMAP_BLUR_RADIUS, BITMAP_BLUR_SAMPLING)))
-        }
-
-        backgroundRequest
-            .into(object : CustomTarget<Drawable>() {
-                override fun onResourceReady(
-                    resource: Drawable,
-                    transition: Transition<in Drawable>?
-                ) {
-                    val switchDrawableUtil = SwitchDrawableUtil(
-                        targetView.drawable,
-                        resource
-                    )
-                    targetView.setImageDrawable(switchDrawableUtil.drawable)
-                    switchDrawableUtil.start()
+        traceSection("MFP.loadBackground") {
+            val targetView = backgroundView ?: return
+            loadedBackgroundSongId = data.id
+            val icon = data.icon.orEmpty()
+            if (StringUtils.isBlank(icon) && targetView.applyPlatformBlurIfSupported()) {
+                traceSection("MFP.background.defaultCoverFastPath") {
+                    if (targetView.drawable == null) {
+                        targetView.setImageResource(R.drawable.default_cover)
+                    }
                 }
+                return
+            }
 
-                override fun onLoadCleared(placeholder: Drawable?) {
+            val requestBuilder: RequestBuilder<Drawable> = traceSection("MFP.background.glideBuild") {
+                Glide.with(this).asDrawable()
+            }
+            if (StringUtils.isBlank(icon)) {
+                requestBuilder.load(R.drawable.default_cover)
+            } else if (icon.isDirectImageUri()) {
+                requestBuilder.load(icon)
+            } else {
+                requestBuilder.load(ResourceUtil.resourceUri(icon))
+            }
+
+            val backgroundRequest = if (targetView.applyPlatformBlurIfSupported()) {
+                requestBuilder
+            } else {
+                traceSection("MFP.background.glideBlurTransform") {
+                    requestBuilder.apply(bitmapTransform(BlurTransformation(BITMAP_BLUR_RADIUS, BITMAP_BLUR_SAMPLING)))
                 }
-            })
+            }
+
+            backgroundRequest
+                .into(object : CustomTarget<Drawable>() {
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        transition: Transition<in Drawable>?
+                    ) {
+                        traceSection("MFP.background.onResourceReady") {
+                            val switchDrawableUtil = SwitchDrawableUtil(
+                                targetView.drawable,
+                                resource
+                            )
+                            targetView.setImageDrawable(switchDrawableUtil.drawable)
+                            switchDrawableUtil.start()
+                        }
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+                })
+        }
     }
 
     private fun ImageView.applyPlatformBlurIfSupported(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            return false
-        }
+        return traceSection("MFP.background.platformBlur") {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                return@traceSection false
+            }
 
-        val radiusPx = resources.displayMetrics.density * PLATFORM_BLUR_RADIUS_DP
-        setRenderEffect(
-            RenderEffect.createBlurEffect(
-                radiusPx,
-                radiusPx,
-                Shader.TileMode.CLAMP
+            val radiusPx = resources.displayMetrics.density * PLATFORM_BLUR_RADIUS_DP
+            setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    radiusPx,
+                    radiusPx,
+                    Shader.TileMode.CLAMP
+                )
             )
-        )
-        return true
+            true
+        }
     }
 
     private fun String.isDirectImageUri(): Boolean {
@@ -544,9 +582,11 @@ class MusicPlayerActivity :
     }
 
     override fun onPrepared(mp: MediaPlayer?, data: Song) {
-        showInitData()
-        showDuration()
-        scrollPosition()
+        traceSection("MFP.onPrepared.bindState") {
+            showInitData()
+            showDuration()
+            scrollPosition()
+        }
     }
 
     override fun onProgress(data: Song) {
@@ -568,44 +608,63 @@ class MusicPlayerActivity :
     }
 
     private fun bindBackgroundView(view: ImageView) {
-        backgroundView = view
-        currentSong()
-            ?.takeIf { song -> loadedBackgroundSongId != song.id }
-            ?.let(::loadBackground)
+        traceSection("MFP.bindBackgroundView") {
+            backgroundView = view
+            currentSong()
+                ?.takeIf { song -> loadedBackgroundSongId != song.id }
+                ?.let(::loadBackground)
+        }
     }
 
     private fun bindRecordPageView(view: RecordPageView) {
-        if (recordPageView !== view) {
-            recordPageView = view
-        }
+        traceSection("MFP.bindRecordPageView") {
+            if (recordPageView !== view) {
+                recordPageView = view
+            }
 
-        if (view.adapter == null) {
-            view.initAdapter(hostActivity)
-        }
+            if (view.adapter == null) {
+                traceSection("MFP.record.initAdapter") {
+                    view.initAdapter(hostActivity)
+                }
+            }
 
-        val songs = musicListManager.datum.toList()
-        if (recordSongsSnapshot != songs) {
-            view.setData(songs)
-            recordSongsSnapshot = songs
-        }
+            val songs = musicListManager.datum.toList()
+            if (recordSongsSnapshot != songs) {
+                traceSection("MFP.record.setData") {
+                    view.setData(songs)
+                }
+                recordSongsSnapshot = songs
+            }
 
-        if (registeredRecordPageView !== view) {
-            registeredRecordPageView?.list?.unregisterOnPageChangeCallback(pageChangeCallback)
-            view.list.registerOnPageChangeCallback(pageChangeCallback)
-            registeredRecordPageView = view
+            if (registeredRecordPageView !== view) {
+                registeredRecordPageView?.list?.unregisterOnPageChangeCallback(pageChangeCallback)
+                view.list.registerOnPageChangeCallback(pageChangeCallback)
+                registeredRecordPageView = view
+            }
         }
     }
 
     private fun bindLyricListView(view: LyricListView) {
-        lyricListView = view
-        view.setLyricListListener(this)
-        view.setData(lyricData)
-        view.setProgress(playbackProgress)
+        traceSection("MFP.bindLyricListView") {
+            lyricListView = view
+            view.setLyricListListener(this)
+            view.setData(lyricData)
+            view.setProgress(playbackProgress)
+        }
     }
 
     companion object {
         private const val BITMAP_BLUR_RADIUS = 25
         private const val BITMAP_BLUR_SAMPLING = 6
         private const val PLATFORM_BLUR_RADIUS_DP = 22F
+    }
+}
+
+private inline fun <T> traceSection(name: String, block: () -> T): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }
