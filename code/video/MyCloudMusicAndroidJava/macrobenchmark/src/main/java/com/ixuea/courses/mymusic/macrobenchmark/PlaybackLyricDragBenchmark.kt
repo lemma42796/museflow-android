@@ -47,4 +47,20 @@ class PlaybackLyricDragBenchmark {
     ) {
         runPlaybackLyricDrag()
     }
+
+    @Test
+    fun playbackLyricDragSeekLinkage() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.Partial(),
+        startupMode = StartupMode.WARM,
+        iterations = 1,
+        setupBlock = {
+            startHomeWithoutInput()
+            openPlayerFromBenchmarkEntryWithoutInput()
+            showPlaybackLyricPanelWithoutInput()
+        },
+    ) {
+        runPlaybackLyricDragSeekLinkage()
+    }
 }

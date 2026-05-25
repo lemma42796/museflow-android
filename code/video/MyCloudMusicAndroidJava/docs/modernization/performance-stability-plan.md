@@ -27,7 +27,7 @@
 尚未完成的部分：
 
 - 真机已有有效冷启动基线、marker 版 no-input 播放器首屏基线和原始输入型首页滚动/首页点歌证据；修复后完整原始输入型 3 用例套件已全绿，仍需继续扩展更多交互型场景。
-- 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，下载列表刷新和播放器歌词拖拽也已有初始真机基线，但持续播放中的歌词拖拽、逐字高亮/seek 联动和真实歌曲长时间交互仍未覆盖。
+- 播放页播放/暂停/恢复/seek 已有 no-input 真机基线；歌词面板已完成 1 次覆盖验证，下载列表刷新和播放器歌词拖拽也已有初始真机基线，歌词 KSC 逐字 + 拖拽 + seek 联动已补入口；持续播放组合和真实歌曲长时间交互仍未覆盖。
 - 已有 marker/no-input 路径上的 Baseline Profile 固化前后对比，以及播放器首屏默认封面路径的一处局部优化前后复测；但尚未用更多交互型场景和优化前后多轮数据证明首页滚动、播放控制、歌词拖拽或下载列表刷新有稳定改善。
 
 因此当前可以对外描述为“已建设 Macrobenchmark + Baseline Profile 性能验证链路，完成模拟器基线、真机冷启动基线、可信播放器首屏基线、原始输入型首页滚动/首页点歌证据、播放控制 no-input 基线、下载列表刷新 no-input 基线、歌词拖拽基线，并固化了 marker 版 Baseline Profile 取得同设备前后对比，已开始用 Perfetto 和自定义 trace section 做播放器首屏、下载刷新局部优化复测”，但仍不能描述为“已完成系统化性能治理”。
@@ -195,7 +195,7 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 已完成：
 
 - 新增 `PlaybackLyricDragBenchmark`，包含单迭代 `playbackLyricDragSmoke` 和 3 次迭代 `playbackLyricDrag` 两个用例。
-- `BenchmarkPlayerFixture` 从 5 秒静音 WAV 改为 60 秒静音 WAV，并生成 60 行每秒一行的 LRC 歌词；fixture 预填 `parsedLyric`，避免播放器打开后歌词列表为空。
+- `BenchmarkPlayerFixture` 从 5 秒静音 WAV 改为 60 秒静音 WAV，并生成 60 行每秒一行的 KSC 逐字歌词；fixture 预填 `parsedLyric`，避免播放器打开后歌词列表为空，并覆盖 accurate lyric 高亮分支。
 - `LyricListView` 补稳定 resource id：`lyric_list`、`lyric_drag_container`、`lyric_drag_play`，benchmark 通过播放器 benchmark-only 入口打开真实 `MusicPlayerActivity` 后切到歌词面板，再用真实坐标 swipe 覆盖歌词列表上下拖拽。
 - 长时间卡住的早期尝试已定位为持续播放/进度刷新会干扰该拖拽用例收尾；当前歌词拖拽 benchmark 的 setup 不持续启动播放，只测已加载歌词列表的真实拖拽帧表现。
 
@@ -216,12 +216,39 @@ ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macr
 
 边界：
 
-- 本轮覆盖的是 benchmark-only 静音 60 秒歌曲、已加载歌词列表、非持续播放状态下的播放器歌词列表拖拽帧表现；不等同于真实歌曲播放中逐字高亮、拖拽后点击 seek、长时间播放和桌面歌词拖拽。
-- 后续若优化歌词链路，应继续补持续播放/逐字高亮/seek 联动场景，或用当前 `playbackLyricDrag` 做优化前后对比。
+- 本轮最初覆盖的是 benchmark-only 静音 60 秒歌曲、已加载歌词列表、非持续播放状态下的播放器歌词列表拖拽帧表现；后续已补 KSC 逐字 + 拖拽 + seek 联动入口，但仍不等同于真实歌曲长时间播放和桌面歌词拖拽。
+- 后续若优化歌词链路，可用当前 `playbackLyricDrag` 和 `playbackLyricDragSeekLinkage` 做优化前后对比。
+
+## 第八轮补充 歌词 seek 联动入口
+
+日期：2026-05-25
+
+已完成：
+
+- 歌词 benchmark fixture 切到 KSC 逐字歌词，保留 60 秒静音 WAV 和 60 行歌词，触发 `LyricListView` accurate lyric 高亮逻辑。
+- `PlaybackLyricDragBenchmark.playbackLyricDragSeekLinkage` 新增歌词联动覆盖：打开真实播放器、切换歌词面板、执行多段 seek 和歌词拖拽。
+
+验证：
+
+```bash
+./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin
+ANDROID_SERIAL=adb-5TJRHINFJJHMLVMJ-EYNgJg._adb-tls-connect._tcp ./gradlew :macrobenchmark:connectedDevBenchmarkAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.ixuea.courses.mymusic.macrobenchmark.PlaybackLyricDragBenchmark#playbackLyricDragSeekLinkage
+```
+
+结果：
+
+- `:app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- `playbackLyricDragSmoke` 真机复跑通过，确认 KSC fixture 没有破坏原有歌词拖拽路径。
+- `playbackLyricDragSeekLinkage` 真机通过：1 个用例成功，耗时约 1m02s；`frameCount` 293；`frameDurationCpuMs` P50 4.4 ms / P90 5.5 ms / P95 7.8 ms / P99 10.8 ms；`frameOverrunMs` P50 -4.1 ms / P90 -2.5 ms / P95 -0.5 ms / P99 4.5 ms。
+- Perfetto trace 已生成在 `macrobenchmark/build/outputs/connected_android_test_additional_output/devBenchmark/connected/25060RK16C - 16/PlaybackLyricDragBenchmark_playbackLyricDragSeekLinkage_iter000_2026-05-25-11-26-32.perfetto-trace`。
+
+边界：
+
+- 新用例是 benchmark-only KSC fixture，目标是形成可复跑的歌词拖拽/seek 联动基线；持续播放组合真机收尾仍会卡住，真实歌曲、桌面歌词和长时间播放仍属于后续人工冒烟范围。
 
 下一步：
 
-- 转入 trace 分析和优化前后复测；优先看下载列表刷新、歌词拖拽、播放器首屏和首页进播放器的 Perfetto 热点。
+- 转入真机基线、trace 分析和优化前后复测；优先看歌词拖拽/seek 联动、下载列表刷新、播放器首屏和首页进播放器的 Perfetto 热点。
 
 ## 第九轮 播放器首屏 trace 与默认封面优化记录
 

@@ -118,7 +118,7 @@
 - 纯编码主线已没有明确剩余旧 XML/Java/Rx/EventBus 目标；`music_widget.xml` 已按用户要求迁到 Jetpack Glance 并删除。后续若继续编码，应以设备端冒烟发现的问题修复为准。
 - 新视觉资产中发现页已通过模拟器可视检查；启动页、launcher mask/themed icon 和 Widget preview 仍未做设备端实际可视检查。
 - 16 KB 对齐本轮已在普通模拟器完成安装、强停重启、首页截图和 fatal 日志检查；尚未启动 16 KB page-size 模拟器做聊天入口和 MMKV 读写专项复测。
-- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展、原始输入型首页滚动/首页进播放器恢复验证、下载列表刷新 no-input 初始基线、歌词拖拽初始基线、播放器首屏默认封面路径的一处局部优化前后复测、播放器首屏 `MFP.*` 自定义 trace section 验证，以及下载列表刷新 `DLP.*` 自定义 trace section 验证；持续播放中的歌词拖拽、逐字高亮/seek 联动和更多优化前后证据尚未完成，当前仍不能对外表述为已完成系统化性能治理体系。
+- “Media3 播放系统 + 性能稳定性治理”已完成 benchmark/profile 工程骨架、模拟器首轮基线、真机冷启动基线、marker 版可信播放器首屏基线、marker 版 Baseline Profile 固化、同设备前后对比、app-internal/no-input 播放控制/歌词面板扩展、原始输入型首页滚动/首页进播放器恢复验证、下载列表刷新 no-input 初始基线、歌词拖拽初始基线、播放器首屏默认封面路径的一处局部优化前后复测、播放器首屏 `MFP.*` 自定义 trace section 验证，以及下载列表刷新 `DLP.*` 自定义 trace section 验证；歌词 KSC 逐字 + 拖拽 + seek 联动已补稳定 benchmark 入口，持续播放组合真机收尾仍不稳定，当前仍不能对外表述为已完成系统化性能治理体系。
 
 用户已明确要求直接进入阶段 8；阶段 7 深度人工冒烟仍未补齐，阶段 8 后续编码需要默认带着这个验证风险前进。
 
@@ -128,17 +128,38 @@
 - 新项目只作为最新 Gradle、Compose、Hilt、Navigation 配置参考，不作为主开发战场。
 - 当前五条链路的 Repository/ViewModel/Compose UI 主线和旧 Java/Rx/EventBus/XML 尾巴已完成到可交付代码收尾状态；后续重点转向设备端冒烟、冒烟问题修复和边界稳定后的 `core:*` / `feature:*` 模块拆分。
 - RxJava/EventBus 主线已收口；后续不要再为了数量继续拆无明确收益的兼容边界。
-- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek、歌词面板显示、下载列表刷新和歌词拖拽，原始输入型首页滚动/首页进播放器已恢复验证，播放器首屏已完成一轮 Perfetto trace、默认封面路径局部优化和 `MFP.*` 自定义 trace section 验证，下载列表刷新已完成 `DLP.*` 自定义 trace section 验证；下一步继续拆歌词持续播放/逐字高亮/seek 联动，或围绕下载列表刷新可见行数量、进度条 draw/animation 成本和批量进度节流做前后对比。
+- 性能稳定性治理主线继续按 `docs/modernization/performance-stability-plan.md` 推进：marker 版 Baseline Profile 已固化并取得同设备前后对比，app-internal/no-input 场景已继续覆盖播放/暂停/恢复/seek、歌词面板显示、下载列表刷新和歌词拖拽，原始输入型首页滚动/首页进播放器已恢复验证，播放器首屏已完成一轮 Perfetto trace、默认封面路径局部优化和 `MFP.*` 自定义 trace section 验证，下载列表刷新已完成 `DLP.*` 自定义 trace section 验证；歌词 benchmark fixture 已切到 KSC 逐字歌词并补拖拽 + seek 联动用例；下一步继续跑真机基线并视结果决定是否优化，或围绕下载列表刷新可见行数量、进度条 draw/animation 成本和批量进度节流做前后对比。
 
 ## 当前交接备注
 
-- 本轮保留的代码变化包括：60 秒 benchmark 播放 fixture、歌词拖拽 benchmark、歌词列表稳定 id、播放器首屏默认封面 fast path、播放器 `MFP.*` trace section、下载刷新 `DLP.*` trace section。
-- 本轮验证已覆盖：`./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin`、歌词拖拽 smoke/正式 benchmark、播放器首屏 no-input benchmark、下载列表刷新 no-input benchmark，以及设备侧 trace processor 对 `MFP.*`/`DLP.*` 的查询。
+- 本轮保留的代码变化包括：60 秒 benchmark 播放 fixture、KSC 逐字歌词 fixture、歌词拖拽 benchmark、歌词拖拽 + seek 联动 benchmark、歌词列表稳定 id、播放器首屏默认封面 fast path、播放器 `MFP.*` trace section、下载刷新 `DLP.*` trace section。
+- 本轮验证已覆盖：`./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin`、歌词拖拽 smoke/正式 benchmark、歌词拖拽 seek 联动 benchmark、播放器首屏 no-input benchmark、下载列表刷新 no-input benchmark，以及设备侧 trace processor 对 `MFP.*`/`DLP.*` 的查询。
 - 本轮明确不保留的尝试：下载刷新里把 `refreshTick` 从整行下沉到 `DownloadStatus` 的状态拆分，因为正式帧指标变差；后续不要把它当作优化成果。
 - 当前尚未提交、未 push；`docs/modernization/course-trace-cleanup-task.md` 仍是本地未跟踪规划文件，除非用户明确要求，不要纳入仓库。
-- 下一步优先级：先补持续播放中的歌词拖拽、逐字高亮和 seek 联动；若继续性能优化，播放器首屏聚焦首帧 layout/relayout，下载刷新聚焦可见行数量、进度条 draw/animation 成本或批量进度节流。
+- 下一步优先级：先跑新增歌词拖拽/逐字高亮/seek 联动 benchmark 的真机基线；持续播放组合需要先拆收尾卡住问题；若继续性能优化，播放器首屏聚焦首帧 layout/relayout，下载刷新聚焦可见行数量、进度条 draw/animation 成本或批量进度节流。
 
 ## 最新执行记录
+
+### 2026-05-25 歌词拖拽 seek 联动 benchmark
+
+本轮目标：
+
+- 快速补上歌词逐字高亮、拖拽和 seek 联动的 benchmark 覆盖入口。
+
+已完成：
+
+- `BenchmarkPlayerFixture` 从普通 LRC 切到 KSC 逐字歌词 fixture：60 秒静音 WAV 仍保留，歌词改为 60 行逐字 timing，触发 `LyricListView.setProgress(...)` 的 accurate lyric 分支。
+- `PlaybackLyricDragBenchmark` 新增 `playbackLyricDragSeekLinkage`：打开真实 `MusicPlayerActivity`，切歌词面板，执行多段 seek 和歌词列表上下拖拽，覆盖进度刷新、逐字高亮和拖拽/seek 联动。
+
+验证：
+
+- `./gradlew :app:compileDevBenchmarkKotlin :macrobenchmark:compileDevBenchmarkKotlin` 通过。
+- `PlaybackLyricDragBenchmark#playbackLyricDragSmoke` 在 Redmi `25060RK16C` 真机通过，确认 KSC fixture 没有破坏原有歌词拖拽基线。
+- `PlaybackLyricDragBenchmark#playbackLyricDragSeekLinkage` 在同一真机通过：1 个用例成功，耗时约 1m02s；`frameCount` 293；`frameDurationCpuMs` P50 4.4 ms / P90 5.5 ms / P95 7.8 ms / P99 10.8 ms；`frameOverrunMs` P50 -4.1 ms / P90 -2.5 ms / P95 -0.5 ms / P99 4.5 ms。
+
+边界：
+
+- 这是 benchmark-only 静音音频和 KSC fixture，不等同于真实歌曲全链路人工冒烟；它用于补稳定、可复跑的性能/联动基线入口。持续播放组合的真机收尾仍会卡住，后续需要单独拆。
 
 ### 2026-05-25 下载列表刷新 DLP trace
 

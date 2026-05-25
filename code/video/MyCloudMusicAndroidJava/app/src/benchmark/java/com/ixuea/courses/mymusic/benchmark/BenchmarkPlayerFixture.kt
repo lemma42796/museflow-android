@@ -5,6 +5,7 @@ import com.ixuea.courses.mymusic.component.lyric.parser.LyricParser
 import com.ixuea.courses.mymusic.component.song.model.Song
 import com.ixuea.courses.mymusic.component.user.model.User
 import com.ixuea.courses.mymusic.playback.PlaybackService
+import com.ixuea.courses.mymusic.util.Constant
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -38,7 +39,8 @@ internal object BenchmarkPlayerFixture {
             isPlayList = true
             source = Song.SOURCE_LOCAL
             path = ensureBenchmarkAudioFile(context).absolutePath
-            lyric = BENCHMARK_LYRIC
+            style = Constant.KSC
+            lyric = BENCHMARK_KSC_LYRIC
             parsedLyric = LyricParser.parse(style, lyric)
         }
     }
@@ -89,13 +91,28 @@ internal object BenchmarkPlayerFixture {
     private const val BITS_PER_SAMPLE = 16
     private const val BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8
     private const val WAV_HEADER_BYTES = 44
-    private val BENCHMARK_LYRIC = buildString {
+    private val BENCHMARK_KSC_LYRIC = buildString {
         repeat(AUDIO_SECONDS) { second ->
-            append("[00:")
-            append(second.toString().padStart(2, '0'))
-            append(".00]Benchmark lyric line ")
-            append(second + 1)
-            append('\n')
+            val start = (second * 1000).formatBenchmarkTime()
+            val end = (second * 1000 + 900).formatBenchmarkTime()
+            val lineNumber = (second + 1).toString().padStart(2, '0')
+            append("karaoke.add('")
+            append(start)
+            append("', '")
+            append(end)
+            append("', '[Muse ][Flow ][line ][")
+            append(lineNumber)
+            append("]', '220,220,220,240');")
         }
+    }
+
+    private fun Int.formatBenchmarkTime(): String {
+        val totalMs = this
+        val minute = totalMs / 60_000
+        val second = totalMs % 60_000 / 1_000
+        val millis = totalMs % 1_000
+        return "${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}.${
+            millis.toString().padStart(3, '0')
+        }"
     }
 }

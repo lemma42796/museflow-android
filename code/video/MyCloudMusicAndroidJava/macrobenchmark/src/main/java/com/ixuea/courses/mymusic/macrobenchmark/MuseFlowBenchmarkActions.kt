@@ -110,7 +110,22 @@ internal fun MacrobenchmarkScope.runPlaybackLyricPanelWithoutInput() {
 }
 
 internal fun MacrobenchmarkScope.showPlaybackLyricPanelWithoutInput() {
-    sendPlaybackCommand(COMMAND_SHOW_LYRIC)
+    repeat(2) { attempt ->
+        sendPlaybackCommand(COMMAND_SHOW_LYRIC)
+        val panelVisible = device.wait(Until.hasObject(By.res(PLAYER_LYRIC_MARKER)), 3_000)
+        val listVisible = if (panelVisible) {
+            device.wait(Until.hasObject(By.res(TARGET_PACKAGE, LYRIC_LIST_RES_ID)), 3_000)
+        } else {
+            false
+        }
+        if (panelVisible && listVisible) {
+            waitForPlayerMarker(delayMs = 0)
+            return
+        }
+        if (attempt == 0) {
+            waitForPlayerMarker(delayMs = 100)
+        }
+    }
     waitForLyricPanel()
     waitForLyricList()
 }
@@ -131,6 +146,26 @@ internal fun MacrobenchmarkScope.runPlaybackLyricDragSmoke() {
     waitForLyricDragWork()
     swipeLyricList(Direction.DOWN)
     waitForLyricDragWork()
+}
+
+internal fun MacrobenchmarkScope.runPlaybackLyricDragSeekLinkage() {
+    try {
+        sendPlaybackCommand(COMMAND_SEEK, positionMs = 12_000)
+        waitForLyricPlaybackWork()
+        swipeLyricList(Direction.UP)
+        waitForLyricPlaybackWork()
+        sendPlaybackCommand(COMMAND_SEEK, positionMs = 18_000)
+        waitForLyricPlaybackWork()
+        sendPlaybackCommand(COMMAND_SEEK, positionMs = 24_000)
+        waitForLyricPlaybackWork()
+        swipeLyricList(Direction.DOWN)
+        waitForLyricPlaybackWork()
+        sendPlaybackCommand(COMMAND_SEEK, positionMs = 30_000)
+        waitForLyricPlaybackWork()
+    } finally {
+        sendPlaybackCommand(COMMAND_PAUSE)
+        waitForPlayerMarker(delayMs = 150)
+    }
 }
 
 internal fun MacrobenchmarkScope.runDownloadListRefreshWithoutInput() {
@@ -171,6 +206,12 @@ private fun MacrobenchmarkScope.waitForLyricList(): UiObject2 {
 }
 
 private fun MacrobenchmarkScope.waitForLyricDragWork(delayMs: Long = 250) {
+    Thread.sleep(delayMs)
+    waitForLyricList()
+    waitForPlayerMarker(delayMs = 0)
+}
+
+private fun MacrobenchmarkScope.waitForLyricPlaybackWork(delayMs: Long = 600) {
     Thread.sleep(delayMs)
     waitForLyricList()
     waitForPlayerMarker(delayMs = 0)
